@@ -32,7 +32,9 @@ const Navbar = () => {
           <Link to="/contacto" className="font-medium text-gray-700 hover:text-primary transition-colors">
             Contacto
           </Link>
-          <Button className="bg-brand-blue hover:bg-primary/90">Área de Cliente</Button>
+          <Button asChild className="bg-brand-blue hover:bg-primary/90">
+            <Link to="/area-cliente">Área de Cliente</Link>
+          </Button>
         </nav>
 
         {/* Mobile menu */}
@@ -79,8 +81,10 @@ const Navbar = () => {
               >
                 Contacto
               </Link>
-              <Button className="bg-brand-blue hover:bg-primary/90 mt-4">
-                Área de Cliente
+              <Button asChild className="bg-brand-blue hover:bg-primary/90 mt-4">
+                <Link to="/area-cliente" onClick={() => setIsOpen(false)}>
+                  Área de Cliente
+                </Link>
               </Button>
             </nav>
           </SheetContent>
