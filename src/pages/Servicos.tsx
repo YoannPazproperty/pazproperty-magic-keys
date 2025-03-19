@@ -1,3 +1,4 @@
+
 import { ArrowRight, Clipboard, Wrench, Home, ClipboardCheck, Search, Settings, Shield } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
