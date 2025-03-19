@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, Shield } from "lucide-react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,6 +34,9 @@ const Navbar = () => {
           </Link>
           <Button asChild className="bg-brand-blue hover:bg-primary/90">
             <Link to="/area-cliente">Área de Cliente</Link>
+          </Button>
+          <Button asChild variant="ghost" size="icon" title="Administration">
+            <Link to="/admin"><Shield className="h-5 w-5" /></Link>
           </Button>
         </nav>
 
@@ -86,6 +89,13 @@ const Navbar = () => {
                   Área de Cliente
                 </Link>
               </Button>
+              <Link 
+                to="/admin" 
+                className="px-4 py-2 text-lg font-medium hover:bg-gray-100 rounded-md flex items-center" 
+                onClick={() => setIsOpen(false)}
+              >
+                <Shield className="h-5 w-5 mr-2" /> Administration
+              </Link>
             </nav>
           </SheetContent>
         </Sheet>
