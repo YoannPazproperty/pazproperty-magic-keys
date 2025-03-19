@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Home, Tool, Settings, Phone, Check } from "lucide-react";
+import { ArrowRight, Home, Wrench, Settings, Phone, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -81,7 +80,7 @@ const Index = () => {
             
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
-                <Tool className="h-8 w-8 text-primary" />
+                <Wrench className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-4">Manutenção</h3>
               <p className="text-gray-600 mb-4">

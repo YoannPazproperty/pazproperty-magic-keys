@@ -1,5 +1,4 @@
-
-import { ArrowRight, Clipboard, Tool, Home, ClipboardCheck, Search, Settings, Shield } from "lucide-react";
+import { ArrowRight, Clipboard, Wrench, Home, ClipboardCheck, Search, Settings, Shield } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -92,7 +91,7 @@ const Servicos = () => {
             </div>
             <div className="order-1 lg:order-2">
               <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
-                <Tool className="h-10 w-10 text-primary" />
+                <Wrench className="h-10 w-10 text-primary" />
               </div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Manutenção</h2>
               <p className="text-lg text-gray-600 mb-6">
@@ -260,7 +259,7 @@ const Servicos = () => {
             </div>
             
             <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-100">
-              <Tool className="h-8 w-8 text-primary mb-4" />
+              <Wrench className="h-8 w-8 text-primary mb-4" />
               <h3 className="text-xl font-semibold mb-2">Manutenção</h3>
               <p className="text-gray-600 mb-4">Serviços de manutenção e reparação para o seu imóvel.</p>
               <Link to="#manutencao" className="text-primary hover:underline inline-flex items-center">

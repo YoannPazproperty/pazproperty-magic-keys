@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { Search, BedDouble, Bath, SquareFeet, MapPin } from "lucide-react";
+import { Search, BedDouble, Bath, Square, MapPin } from "lucide-react";
 
 // Dados de exemplo de propriedades
 const propriedadesData = [
@@ -194,7 +193,7 @@ const Propriedades = () => {
                         </span>
                         <Bath className="h-4 w-4 mr-1" />
                         <span className="text-sm mr-3">{propriedade.banheiros} WC</span>
-                        <SquareFeet className="h-4 w-4 mr-1" />
+                        <Square className="h-4 w-4 mr-1" />
                         <span className="text-sm">{propriedade.area} m²</span>
                       </div>
                     </div>
