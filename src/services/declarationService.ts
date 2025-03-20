@@ -80,6 +80,24 @@ const saveDeclarations = (declarations: Declaration[]) => {
 // Initialize declarations
 let declarations = loadDeclarations();
 
+// Translation maps for Monday.com
+const issueTypeToMondayMap: Record<string, string> = {
+  plumbing: "Plomberie",
+  electrical: "Électrique",
+  appliance: "Électroménager",
+  heating: "Chauffage/Climatisation",
+  structural: "Structurel",
+  pest: "Nuisibles",
+  other: "Autre"
+};
+
+const urgencyToMondayMap: Record<string, string> = {
+  low: "Basse",
+  medium: "Moyenne",
+  high: "Élevée",
+  emergency: "Urgence"
+};
+
 // Declaration service
 const declarationService = {
   // Get all declarations
@@ -110,22 +128,157 @@ const declarationService = {
     return declarations.find(d => d.id === id);
   },
   
-  // Send declaration to external service (e.g. Monday.com)
+  // Send declaration to Monday.com
   sendToExternalService: async (declaration: Declaration) => {
     try {
-      // This is a mock implementation
-      console.log("Sending to external service:", declaration);
+      console.log("Sending to Monday.com:", declaration);
       
-      // In a real implementation, this would call the actual service
-      // const response = await fetch("https://api.monday.com/webhook", {...})
+      // Get Monday.com API key from localStorage or prompt user
+      const mondayApiKey = localStorage.getItem('mondayApiKey');
+      if (!mondayApiKey) {
+        toast.error("Clé API Monday.com manquante", {
+          description: "Veuillez configurer votre clé API dans les paramètres d'administration."
+        });
+        return false;
+      }
       
-      toast("Declaration sent to task tracking system");
-      return true;
+      // Get board ID from localStorage or use default
+      const mondayBoardId = localStorage.getItem('mondayBoardId') || '';
+      if (!mondayBoardId) {
+        toast.error("ID du tableau Monday.com manquant", {
+          description: "Veuillez configurer l'ID du tableau dans les paramètres d'administration."
+        });
+        return false;
+      }
+      
+      // Prepare the data for Monday.com
+      const itemName = `${declaration.property} - ${issueTypeToMondayMap[declaration.issueType] || declaration.issueType}`;
+      
+      // Convert our data structure to Monday.com's expected format
+      const columnValues = {
+        person: { email: declaration.email, name: declaration.name },
+        phone: declaration.phone,
+        text: declaration.description,
+        status: { label: "Nouveau" },
+        urgency: { label: urgencyToMondayMap[declaration.urgency] || declaration.urgency },
+        property: { label: declaration.property }
+      };
+      
+      // Build the GraphQL mutation to create a new item in Monday.com
+      const query = `
+        mutation {
+          create_item (
+            board_id: ${mondayBoardId}, 
+            item_name: "${itemName}", 
+            column_values: ${JSON.stringify(JSON.stringify(columnValues))}
+          ) {
+            id
+          }
+        }
+      `;
+      
+      // Send the request to Monday.com's API
+      const response = await fetch("https://api.monday.com/v2", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": mondayApiKey
+        },
+        body: JSON.stringify({ query })
+      });
+      
+      const result = await response.json();
+      
+      if (result.errors) {
+        console.error("Monday.com API error:", result.errors);
+        toast.error("Erreur lors de l'envoi à Monday.com", {
+          description: result.errors[0]?.message || "Vérifiez vos paramètres d'API et réessayez."
+        });
+        return false;
+      }
+      
+      if (result.data?.create_item?.id) {
+        toast.success("Envoyé à Monday.com", {
+          description: `Déclaration créée avec succès dans Monday.com (ID: ${result.data.create_item.id})`
+        });
+        
+        // Update the declaration with external ID
+        declarations = declarations.map(d => 
+          d.id === declaration.id ? { ...d, mondayId: result.data.create_item.id } : d
+        );
+        saveDeclarations(declarations);
+        
+        return true;
+      } else {
+        toast.error("Erreur lors de l'envoi à Monday.com", {
+          description: "La réponse de l'API n'a pas renvoyé l'ID attendu."
+        });
+        return false;
+      }
     } catch (error) {
-      console.error("Error sending to external service:", error);
-      toast.error("Failed to send to task tracking system");
+      console.error("Error sending to Monday.com:", error);
+      toast.error("Échec de l'envoi à Monday.com", {
+        description: "Une erreur s'est produite lors de la communication avec l'API."
+      });
       return false;
     }
+  },
+  
+  // Set Monday.com API configuration
+  setMondayConfig: (apiKey: string, boardId: string) => {
+    localStorage.setItem('mondayApiKey', apiKey);
+    localStorage.setItem('mondayBoardId', boardId);
+    
+    // Validate the API key and board ID
+    return declarationService.validateMondayConfig(apiKey, boardId);
+  },
+  
+  // Validate Monday.com configuration
+  validateMondayConfig: async (apiKey: string, boardId: string) => {
+    try {
+      // Simple query to check if the API key and board ID are valid
+      const query = `
+        query {
+          boards(ids: ${boardId}) {
+            name
+          }
+        }
+      `;
+      
+      const response = await fetch("https://api.monday.com/v2", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": apiKey
+        },
+        body: JSON.stringify({ query })
+      });
+      
+      const result = await response.json();
+      
+      if (result.errors) {
+        console.error("Monday.com config validation error:", result.errors);
+        return { valid: false, message: result.errors[0]?.message || "Invalid API key or board ID." };
+      }
+      
+      if (result.data?.boards?.length > 0) {
+        const boardName = result.data.boards[0].name;
+        return { valid: true, message: `Connecté au tableau "${boardName}"` };
+      } else {
+        return { valid: false, message: "Le tableau spécifié n'a pas été trouvé." };
+      }
+    } catch (error) {
+      console.error("Error validating Monday.com config:", error);
+      return { valid: false, message: "Erreur de connexion à l'API Monday.com." };
+    }
+  },
+  
+  // Get Monday.com configuration
+  getMondayConfig: () => {
+    return {
+      apiKey: localStorage.getItem('mondayApiKey') || '',
+      boardId: localStorage.getItem('mondayBoardId') || ''
+    };
   }
 };
 

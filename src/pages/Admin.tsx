@@ -20,6 +20,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Dialog,
@@ -30,7 +31,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Eye, LogOut } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Eye, LogOut, Settings, Loader2 } from "lucide-react";
 import declarationService, { Declaration } from "@/services/declarationService";
 
 const ADMIN_USERNAME = "admin";
@@ -77,6 +79,12 @@ const Admin = () => {
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [selectedDeclaration, setSelectedDeclaration] = useState<Declaration | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
+  const [mondayApiKey, setMondayApiKey] = useState<string>("");
+  const [mondayBoardId, setMondayBoardId] = useState<string>("");
+  const [mondayConfigStatus, setMondayConfigStatus] = useState<{valid: boolean, message: string} | null>(null);
+  const [isTesting, setIsTesting] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>("declarations");
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -89,12 +97,29 @@ const Admin = () => {
   useEffect(() => {
     if (isAuthenticated) {
       loadDeclarations();
+      loadMondayConfig();
     }
   }, [isAuthenticated]);
 
   const loadDeclarations = () => {
     const allDeclarations = declarationService.getAll();
     setDeclarations(allDeclarations);
+  };
+  
+  const loadMondayConfig = () => {
+    const config = declarationService.getMondayConfig();
+    setMondayApiKey(config.apiKey);
+    setMondayBoardId(config.boardId);
+    
+    if (config.apiKey && config.boardId) {
+      validateMondayConfig(config.apiKey, config.boardId);
+    }
+  };
+  
+  const validateMondayConfig = async (apiKey: string, boardId: string) => {
+    const result = await declarationService.validateMondayConfig(apiKey, boardId);
+    setMondayConfigStatus(result);
+    return result;
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -163,6 +188,32 @@ const Admin = () => {
       });
     }
   };
+  
+  const handleSaveMondayConfig = async () => {
+    setIsTesting(true);
+    
+    try {
+      const result = await declarationService.setMondayConfig(mondayApiKey, mondayBoardId);
+      
+      setMondayConfigStatus(result);
+      
+      if (result.valid) {
+        toast.success("Configuration Monday.com sauvegardée", {
+          description: result.message
+        });
+      } else {
+        toast.error("Erreur de configuration", {
+          description: result.message
+        });
+      }
+    } catch (error) {
+      toast.error("Erreur lors de la sauvegarde", {
+        description: "Une erreur s'est produite lors de la sauvegarde de la configuration."
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -221,78 +272,169 @@ const Admin = () => {
                 </Button>
               </div>
               
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle>Déclarations des Locataires</CardTitle>
-                  <CardDescription>
-                    Liste de toutes les déclarations soumises par les locataires.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableCaption>Liste des déclarations récentes</TableCaption>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Locataire</TableHead>
-                        <TableHead>Propriété</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Urgence</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {declarations.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center py-4">
-                            Aucune déclaration trouvée
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        declarations.map((declaration) => (
-                          <TableRow key={declaration.id}>
-                            <TableCell className="font-medium">
-                              {formatDate(declaration.submittedAt)}
-                            </TableCell>
-                            <TableCell>{declaration.name}</TableCell>
-                            <TableCell>{declaration.property}</TableCell>
-                            <TableCell>{translateIssueType(declaration.issueType)}</TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={
-                                  declaration.urgency === "emergency" || declaration.urgency === "high"
-                                    ? "border-red-500 text-red-500"
-                                    : declaration.urgency === "medium"
-                                    ? "border-yellow-500 text-yellow-500"
-                                    : "border-green-500 text-green-500"
-                                }
-                              >
-                                {translateUrgency(declaration.urgency)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getStatusBadgeColor(declaration.status)}>
-                                {translateStatus(declaration.status)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => viewDeclarationDetails(declaration)}
-                              >
-                                <Eye className="h-4 w-4 mr-1" /> Voir
-                              </Button>
-                            </TableCell>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="declarations">Déclarations</TabsTrigger>
+                  <TabsTrigger value="settings">Paramètres</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="declarations">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Déclarations des Locataires</CardTitle>
+                      <CardDescription>
+                        Liste de toutes les déclarations soumises par les locataires.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableCaption>Liste des déclarations récentes</TableCaption>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Locataire</TableHead>
+                            <TableHead>Propriété</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Urgence</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
-                        ))
+                        </TableHeader>
+                        <TableBody>
+                          {declarations.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={7} className="text-center py-4">
+                                Aucune déclaration trouvée
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            declarations.map((declaration) => (
+                              <TableRow key={declaration.id}>
+                                <TableCell className="font-medium">
+                                  {formatDate(declaration.submittedAt)}
+                                </TableCell>
+                                <TableCell>{declaration.name}</TableCell>
+                                <TableCell>{declaration.property}</TableCell>
+                                <TableCell>{translateIssueType(declaration.issueType)}</TableCell>
+                                <TableCell>
+                                  <Badge
+                                    variant="outline"
+                                    className={
+                                      declaration.urgency === "emergency" || declaration.urgency === "high"
+                                        ? "border-red-500 text-red-500"
+                                        : declaration.urgency === "medium"
+                                        ? "border-yellow-500 text-yellow-500"
+                                        : "border-green-500 text-green-500"
+                                    }
+                                  >
+                                    {translateUrgency(declaration.urgency)}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={getStatusBadgeColor(declaration.status)}>
+                                    {translateStatus(declaration.status)}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => viewDeclarationDetails(declaration)}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" /> Voir
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="settings">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Configuration de Monday.com</CardTitle>
+                      <CardDescription>
+                        Configurez l'intégration avec Monday.com pour synchroniser les déclarations.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-2">
+                        <label htmlFor="monday-api-key" className="font-medium">
+                          Clé API Monday.com
+                        </label>
+                        <Input
+                          id="monday-api-key"
+                          type="password"
+                          value={mondayApiKey}
+                          onChange={(e) => setMondayApiKey(e.target.value)}
+                          placeholder="Votre clé API Monday.com"
+                        />
+                        <p className="text-sm text-gray-500">
+                          Pour obtenir votre clé API, allez dans votre compte Monday.com ➝ Profile ➝ Developer ➝ API v2 Token
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="monday-board-id" className="font-medium">
+                          ID du Tableau Monday.com
+                        </label>
+                        <Input
+                          id="monday-board-id"
+                          value={mondayBoardId}
+                          onChange={(e) => setMondayBoardId(e.target.value)}
+                          placeholder="ID du tableau (ex: 123456789)"
+                        />
+                        <p className="text-sm text-gray-500">
+                          L'ID du tableau se trouve dans l'URL de votre tableau: https://your-domain.monday.com/boards/[ID DU TABLEAU]
+                        </p>
+                      </div>
+                      
+                      {mondayConfigStatus && (
+                        <div className={`p-4 border rounded-md ${mondayConfigStatus.valid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                          <p className={`text-sm ${mondayConfigStatus.valid ? 'text-green-800' : 'text-red-800'}`}>
+                            {mondayConfigStatus.message}
+                          </p>
+                        </div>
                       )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                    <CardFooter className="flex justify-end space-x-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setMondayApiKey("");
+                          setMondayBoardId("");
+                          setMondayConfigStatus(null);
+                          localStorage.removeItem('mondayApiKey');
+                          localStorage.removeItem('mondayBoardId');
+                          toast("Configuration réinitialisée");
+                        }}
+                      >
+                        Réinitialiser
+                      </Button>
+                      <Button 
+                        onClick={handleSaveMondayConfig}
+                        disabled={!mondayApiKey || !mondayBoardId || isTesting}
+                      >
+                        {isTesting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Test en cours...
+                          </>
+                        ) : (
+                          <>
+                            <Settings className="mr-2 h-4 w-4" />
+                            Tester et Sauvegarder
+                          </>
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </div>
           )}
         </div>
