@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -13,41 +14,58 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import declarationService, { Declaration } from "@/services/declarationService";
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "O nome deve ter pelo menos 2 caracteres.",
+  nif: z.string().min(1, {
+    message: "NIF é obrigatório.",
+  }),
+  firstName: z.string().min(1, {
+    message: "Nome é obrigatório.",
+  }),
+  lastName: z.string().min(1, {
+    message: "Sobrenome é obrigatório.",
+  }),
+  telefone: z.string().min(9, {
+    message: "Insira um número de telefone válido.",
   }),
   email: z.string().email({
     message: "Insira um endereço de email válido.",
   }),
-  phone: z.string().min(9, {
-    message: "Insira um número de telefone válido.",
+  confirmEmail: z.string().email({
+    message: "Insira um endereço de email válido.",
   }),
-  property: z.string().min(1, {
-    message: "Selecione uma propriedade.",
+  addressLine1: z.string().min(1, {
+    message: "Endereço é obrigatório.",
   }),
-  issueType: z.string().min(1, {
+  addressLine2: z.string().optional(),
+  city: z.string().min(1, {
+    message: "Cidade é obrigatória.",
+  }),
+  state: z.string().min(1, {
+    message: "Estado/Província/Região é obrigatório.",
+  }),
+  postalCode: z.string().min(1, {
+    message: "Código postal é obrigatório.",
+  }),
+  problemType: z.enum(["canalização", "eletricidade", "predial", "outro"], {
     message: "Selecione um tipo de problema.",
   }),
   description: z.string().min(10, {
     message: "A descrição deve ter pelo menos 10 caracteres.",
   }),
-  urgency: z.string().min(1, {
-    message: "Selecione o nível de urgência.",
-  }),
+}).refine((data) => data.email === data.confirmEmail, {
+  message: "Os emails não correspondem",
+  path: ["confirmEmail"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -59,13 +77,19 @@ const AreaCliente = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      nif: "",
+      firstName: "",
+      lastName: "",
+      telefone: "",
       email: "",
-      phone: "",
-      property: "",
-      issueType: "",
+      confirmEmail: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      problemType: "canalização",
       description: "",
-      urgency: "medium",
     },
   });
 
@@ -76,13 +100,13 @@ const AreaCliente = () => {
       console.log("Form data:", values);
       
       const newDeclaration = declarationService.add({
-        name: values.name,
+        name: `${values.firstName} ${values.lastName}`,
         email: values.email,
-        phone: values.phone,
-        property: values.property,
-        issueType: values.issueType,
+        phone: values.telefone,
+        property: `${values.addressLine1}, ${values.city}`,
+        issueType: values.problemType,
         description: values.description,
-        urgency: values.urgency,
+        urgency: "medium", // Default urgency as it's not in the new form
       });
       
       await declarationService.sendToExternalService(newDeclaration);
@@ -148,45 +172,29 @@ const AreaCliente = () => {
               
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome Completo</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Seu nome completo" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="seu.email@exemplo.com" {...field} type="email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="nif"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>NIF *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Número de Identificação Fiscal" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
-                      name="phone"
+                      name="firstName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Telefone</FormLabel>
+                          <FormLabel>Nome *</FormLabel>
                           <FormControl>
-                            <Input placeholder="+351 912 345 678" {...field} />
+                            <Input placeholder="First" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -195,77 +203,13 @@ const AreaCliente = () => {
                     
                     <FormField
                       control={form.control}
-                      name="property"
+                      name="lastName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Propriedade</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione sua propriedade" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Avenida de Lisboa, 1">Avenida de Lisboa, 1</SelectItem>
-                              <SelectItem value="Rua do Comércio, 23">Rua do Comércio, 23</SelectItem>
-                              <SelectItem value="Praça do Rossio, 45">Praça do Rossio, 45</SelectItem>
-                              <SelectItem value="Rua Augusta, 78">Rua Augusta, 78</SelectItem>
-                              <SelectItem value="Avenida da Liberdade, 102">Avenida da Liberdade, 102</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="issueType"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tipo de Problema</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o tipo de problema" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="plumbing">Encanamento</SelectItem>
-                              <SelectItem value="electrical">Elétrico</SelectItem>
-                              <SelectItem value="appliance">Eletrodomésticos</SelectItem>
-                              <SelectItem value="heating">Aquecimento/Refrigeração</SelectItem>
-                              <SelectItem value="structural">Estrutural</SelectItem>
-                              <SelectItem value="pest">Pragas</SelectItem>
-                              <SelectItem value="other">Outro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="urgency"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nível de Urgência</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecione o nível de urgência" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="low">Baixa - Pode esperar</SelectItem>
-                              <SelectItem value="medium">Média - Precisa de atenção nos próximos dias</SelectItem>
-                              <SelectItem value="high">Alta - Precisa de atenção nas próximas 24h</SelectItem>
-                              <SelectItem value="emergency">Emergência - Precisa de atenção imediata</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>&nbsp;</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Last" {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -274,10 +218,169 @@ const AreaCliente = () => {
                   
                   <FormField
                     control={form.control}
+                    name="telefone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefone *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+351 912 345 678" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email" type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="confirmEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>&nbsp;</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Confirm Email" type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="addressLine1"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Endereço *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Address Line 1" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="addressLine2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input placeholder="Address Line 2" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input placeholder="City" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input placeholder="State / Province / Region" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="w-full md:w-1/2">
+                    <FormField
+                      control={form.control}
+                      name="postalCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input placeholder="Postal Code" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="problemType"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>De que ordem é o problema? *</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="canalização" id="canalização" />
+                              <FormLabel htmlFor="canalização" className="font-normal cursor-pointer">
+                                Canalização / Fuga de água?
+                              </FormLabel>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="eletricidade" id="eletricidade" />
+                              <FormLabel htmlFor="eletricidade" className="font-normal cursor-pointer">
+                                Eletricidade?
+                              </FormLabel>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="predial" id="predial" />
+                              <FormLabel htmlFor="predial" className="font-normal cursor-pointer">
+                                Problema no prédio?
+                              </FormLabel>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="outro" id="outro" />
+                              <FormLabel htmlFor="outro" className="font-normal cursor-pointer">
+                                Outro tipo de problema?
+                              </FormLabel>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Descrição do Problema</FormLabel>
+                        <FormLabel>Explique-nos o seu problema *</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Descreva o problema em detalhes. Quanto mais informações fornecer, melhor poderemos ajudar."
