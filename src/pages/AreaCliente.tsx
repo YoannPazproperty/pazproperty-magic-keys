@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -25,8 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
+import declarationService from "@/services/declarationService";
 
-// Définir le schéma de validation pour le formulaire
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "O nome deve ter pelo menos 2 caracteres.",
@@ -52,12 +51,9 @@ const formSchema = z.object({
 });
 
 const AreaCliente = () => {
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState(process.env.MONDAY_WEBHOOK_URL || "");
 
-  // Initialiser le formulaire avec useForm
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -75,36 +71,22 @@ const AreaCliente = () => {
     setIsSubmitting(true);
     
     try {
-      console.log("Dados do formulário:", values);
+      console.log("Form data:", values);
       
-      // Simuler un appel à Monday.com ou autre outil de suivi de tâches
-      // Dans une implémentation réelle, vous utiliseriez une URL de webhook réelle
-      const response = await fetch(webhookUrl || "https://api.monday.com/webhook-example", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        mode: "no-cors", // Ajouté pour gérer les problèmes CORS en développement
-        body: JSON.stringify({
-          ...values,
-          submittedAt: new Date().toISOString(),
-        }),
-      });
+      const newDeclaration = declarationService.add(values);
       
-      // Comme nous utilisons no-cors, simulons une réponse réussie
+      await declarationService.sendToExternalService(newDeclaration);
+      
       setIsSuccess(true);
       form.reset();
       
-      toast({
-        title: "Declaração enviada com sucesso!",
-        description: "Entraremos em contato em breve sobre o seu problema.",
+      toast("Declaração enviada com sucesso!", {
+        description: "Entraremos em contato em breve sobre o seu problema."
       });
     } catch (error) {
-      console.error("Erro ao enviar o formulário:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro ao enviar",
-        description: "Ocorreu um erro ao enviar sua declaração. Por favor, tente novamente.",
+      console.error("Error submitting form:", error);
+      toast.error("Erro ao enviar", {
+        description: "Ocorreu um erro ao enviar sua declaração. Por favor, tente novamente."
       });
     } finally {
       setIsSubmitting(false);

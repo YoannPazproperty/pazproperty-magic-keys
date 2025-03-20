@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -32,78 +31,11 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Eye, LogOut } from "lucide-react";
+import declarationService, { Declaration } from "@/services/declarationService";
 
-// Les identifiants admin sont définis ici pour simplifier
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "pazproperty2024";
 
-// Interface pour les déclarations
-interface Declaration {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  property: string;
-  issueType: string;
-  description: string;
-  urgency: string;
-  status: "pending" | "in_progress" | "resolved";
-  submittedAt: string;
-}
-
-// Exemple de données pour la démo
-const mockDeclarations: Declaration[] = [
-  {
-    id: "1",
-    name: "João Silva",
-    email: "joao.silva@email.com",
-    phone: "+351 912 345 678",
-    property: "Avenida de Lisboa, 1",
-    issueType: "plumbing",
-    description: "Il y a une fuite d'eau dans la salle de bain principale.",
-    urgency: "high",
-    status: "in_progress",
-    submittedAt: "2024-03-18T14:30:00Z",
-  },
-  {
-    id: "2",
-    name: "Maria Santos",
-    email: "maria.santos@email.com",
-    phone: "+351 923 456 789",
-    property: "Rua do Comércio, 23",
-    issueType: "electrical",
-    description: "La prise électrique dans la cuisine ne fonctionne pas.",
-    urgency: "medium",
-    status: "pending",
-    submittedAt: "2024-03-17T10:15:00Z",
-  },
-  {
-    id: "3",
-    name: "António Ferreira",
-    email: "antonio.ferreira@email.com",
-    phone: "+351 934 567 890",
-    property: "Praça do Rossio, 45",
-    issueType: "heating",
-    description: "Le chauffage central ne chauffe pas correctement.",
-    urgency: "medium",
-    status: "pending",
-    submittedAt: "2024-03-16T08:45:00Z",
-  },
-  {
-    id: "4",
-    name: "Sofia Lopes",
-    email: "sofia.lopes@email.com",
-    phone: "+351 945 678 901",
-    property: "Rua Augusta, 78",
-    issueType: "pest",
-    description: "J'ai vu des cafards dans la cuisine à plusieurs reprises.",
-    urgency: "low",
-    status: "resolved",
-    submittedAt: "2024-03-15T16:20:00Z",
-  },
-];
-
-// Fonction utilitaire pour traduire les types de problèmes
 const translateIssueType = (type: string): string => {
   const translations: Record<string, string> = {
     plumbing: "Encanamento",
@@ -117,7 +49,6 @@ const translateIssueType = (type: string): string => {
   return translations[type] || type;
 };
 
-// Fonction utilitaire pour traduire les niveaux d'urgence
 const translateUrgency = (urgency: string): string => {
   const translations: Record<string, string> = {
     low: "Baixa",
@@ -128,7 +59,6 @@ const translateUrgency = (urgency: string): string => {
   return translations[urgency] || urgency;
 };
 
-// Fonction utilitaire pour formater la date
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat("pt-PT", {
@@ -144,13 +74,11 @@ const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [declarations, setDeclarations] = useState<Declaration[]>(mockDeclarations);
+  const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [selectedDeclaration, setSelectedDeclaration] = useState<Declaration | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Vérifier si l'utilisateur est déjà authentifié
   useEffect(() => {
     const authStatus = localStorage.getItem("adminAuthenticated");
     if (authStatus === "true") {
@@ -158,42 +86,46 @@ const Admin = () => {
     }
   }, []);
 
-  // Gérer la connexion
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadDeclarations();
+    }
+  }, [isAuthenticated]);
+
+  const loadDeclarations = () => {
+    const allDeclarations = declarationService.getAll();
+    setDeclarations(allDeclarations);
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
       localStorage.setItem("adminAuthenticated", "true");
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue dans l'interface d'administration.",
+      toast("Connexion réussie", {
+        description: "Bienvenue dans l'interface d'administration."
       });
+      loadDeclarations();
     } else {
-      toast({
-        variant: "destructive",
-        title: "Échec de la connexion",
-        description: "Nom d'utilisateur ou mot de passe incorrect.",
+      toast.error("Échec de la connexion", {
+        description: "Nom d'utilisateur ou mot de passe incorrect."
       });
     }
   };
 
-  // Gérer la déconnexion
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem("adminAuthenticated");
-    toast({
-      title: "Déconnexion réussie",
-      description: "Vous avez été déconnecté avec succès.",
+    toast("Déconnexion réussie", {
+      description: "Vous avez été déconnecté avec succès."
     });
   };
 
-  // Afficher les détails d'une déclaration
   const viewDeclarationDetails = (declaration: Declaration) => {
     setSelectedDeclaration(declaration);
     setIsDetailOpen(true);
   };
 
-  // Obtenir la couleur du badge en fonction du statut
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "pending":
@@ -207,7 +139,6 @@ const Admin = () => {
     }
   };
 
-  // Traduire le statut
   const translateStatus = (status: string): string => {
     const translations: Record<string, string> = {
       pending: "Em espera",
@@ -217,21 +148,20 @@ const Admin = () => {
     return translations[status] || status;
   };
 
-  // Mise à jour du statut d'une déclaration
   const updateDeclarationStatus = (id: string, newStatus: Declaration["status"]) => {
-    const updatedDeclarations = declarations.map(declaration => 
-      declaration.id === id ? { ...declaration, status: newStatus } : declaration
-    );
-    setDeclarations(updatedDeclarations);
+    const updatedDeclaration = declarationService.updateStatus(id, newStatus);
     
-    if (selectedDeclaration && selectedDeclaration.id === id) {
-      setSelectedDeclaration({ ...selectedDeclaration, status: newStatus });
+    if (updatedDeclaration) {
+      loadDeclarations();
+      
+      if (selectedDeclaration && selectedDeclaration.id === id) {
+        setSelectedDeclaration({ ...selectedDeclaration, status: newStatus });
+      }
+      
+      toast("Statut mis à jour", {
+        description: `La déclaration a été mise à jour avec le statut "${translateStatus(newStatus)}".`
+      });
     }
-    
-    toast({
-      title: "Statut mis à jour",
-      description: `La déclaration a été mise à jour avec le statut "${translateStatus(newStatus)}".`,
-    });
   };
 
   return (
@@ -313,44 +243,52 @@ const Admin = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {declarations.map((declaration) => (
-                        <TableRow key={declaration.id}>
-                          <TableCell className="font-medium">
-                            {formatDate(declaration.submittedAt)}
-                          </TableCell>
-                          <TableCell>{declaration.name}</TableCell>
-                          <TableCell>{declaration.property}</TableCell>
-                          <TableCell>{translateIssueType(declaration.issueType)}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={
-                                declaration.urgency === "emergency" || declaration.urgency === "high"
-                                  ? "border-red-500 text-red-500"
-                                  : declaration.urgency === "medium"
-                                  ? "border-yellow-500 text-yellow-500"
-                                  : "border-green-500 text-green-500"
-                              }
-                            >
-                              {translateUrgency(declaration.urgency)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusBadgeColor(declaration.status)}>
-                              {translateStatus(declaration.status)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => viewDeclarationDetails(declaration)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" /> Voir
-                            </Button>
+                      {declarations.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-4">
+                            Aucune déclaration trouvée
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : (
+                        declarations.map((declaration) => (
+                          <TableRow key={declaration.id}>
+                            <TableCell className="font-medium">
+                              {formatDate(declaration.submittedAt)}
+                            </TableCell>
+                            <TableCell>{declaration.name}</TableCell>
+                            <TableCell>{declaration.property}</TableCell>
+                            <TableCell>{translateIssueType(declaration.issueType)}</TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  declaration.urgency === "emergency" || declaration.urgency === "high"
+                                    ? "border-red-500 text-red-500"
+                                    : declaration.urgency === "medium"
+                                    ? "border-yellow-500 text-yellow-500"
+                                    : "border-green-500 text-green-500"
+                                }
+                              >
+                                {translateUrgency(declaration.urgency)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={getStatusBadgeColor(declaration.status)}>
+                                {translateStatus(declaration.status)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => viewDeclarationDetails(declaration)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" /> Voir
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>
