@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import declarationService from "@/services/declarationService";
+import declarationService, { Declaration } from "@/services/declarationService";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -50,11 +50,13 @@ const formSchema = z.object({
   }),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 const AreaCliente = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -67,13 +69,21 @@ const AreaCliente = () => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     
     try {
       console.log("Form data:", values);
       
-      const newDeclaration = declarationService.add(values);
+      const newDeclaration = declarationService.add({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        property: values.property,
+        issueType: values.issueType,
+        description: values.description,
+        urgency: values.urgency,
+      });
       
       await declarationService.sendToExternalService(newDeclaration);
       
@@ -196,11 +206,11 @@ const AreaCliente = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="avenida-lisboa-1">Avenida de Lisboa, 1</SelectItem>
-                              <SelectItem value="rua-comercio-23">Rua do Comércio, 23</SelectItem>
-                              <SelectItem value="praca-rossio-45">Praça do Rossio, 45</SelectItem>
-                              <SelectItem value="rua-augusta-78">Rua Augusta, 78</SelectItem>
-                              <SelectItem value="avenida-liberdade-102">Avenida da Liberdade, 102</SelectItem>
+                              <SelectItem value="Avenida de Lisboa, 1">Avenida de Lisboa, 1</SelectItem>
+                              <SelectItem value="Rua do Comércio, 23">Rua do Comércio, 23</SelectItem>
+                              <SelectItem value="Praça do Rossio, 45">Praça do Rossio, 45</SelectItem>
+                              <SelectItem value="Rua Augusta, 78">Rua Augusta, 78</SelectItem>
+                              <SelectItem value="Avenida da Liberdade, 102">Avenida da Liberdade, 102</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
