@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -99,17 +98,25 @@ const AreaCliente = () => {
     try {
       console.log("Form data:", values);
       
+      const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}, ${values.city}, ${values.state}, ${values.postalCode}`;
+      
       const newDeclaration = declarationService.add({
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
         phone: values.telefone,
-        property: `${values.addressLine1}, ${values.city}`,
-        issueType: values.problemType,
+        property: fullAddress,
+        issueType: mapIssueTypeToMondayFormat(values.problemType),
         description: values.description,
-        urgency: "medium", // Default urgency as it's not in the new form
+        urgency: "medium", // Default urgency as it's not in the form
       });
       
-      await declarationService.sendToExternalService(newDeclaration);
+      const mondayResult = await declarationService.sendToExternalService(newDeclaration);
+      
+      if (mondayResult) {
+        toast.success("Declaração enviada para Monday.com", {
+          description: "Sua declaração foi registrada com sucesso no nosso sistema."
+        });
+      }
       
       setIsSuccess(true);
       form.reset();
@@ -125,6 +132,17 @@ const AreaCliente = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const mapIssueTypeToMondayFormat = (problemType: string): string => {
+    const mapping: Record<string, string> = {
+      "canalização": "plumbing",
+      "eletricidade": "electrical",
+      "predial": "structural",
+      "outro": "other"
+    };
+    
+    return mapping[problemType] || problemType;
   };
 
   return (
@@ -435,3 +453,4 @@ const AreaCliente = () => {
 };
 
 export default AreaCliente;
+
