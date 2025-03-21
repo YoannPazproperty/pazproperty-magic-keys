@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Declaration interface
@@ -13,7 +12,8 @@ export interface Declaration {
   urgency: string;
   status: "pending" | "in_progress" | "resolved";
   submittedAt: string;
-  nif?: string; // Ajout du NIF comme champ optionnel
+  nif?: string;
+  mondayId?: string;
 }
 
 // Example/mock declarations to start with
@@ -152,32 +152,30 @@ const declarationService = {
         return false;
       }
       
-      // Prepare the data for Monday.com - Utiliser un format de nom plus utile
+      // Prepare the data for Monday.com - Use more useful name format
       const itemName = `Nouvelle déclaration - ${declaration.name}`;
       
-      // Extract name parts if possible
-      let firstName = declaration.name;
-      let lastName = "";
+      // Get postal code and city from address if available
+      const postalCodeMatch = declaration.property.match(/\d{4,}(?:-\d+)?/);
+      const postalCode = postalCodeMatch ? postalCodeMatch[0] : "";
       
-      const nameParts = declaration.name.split(' ');
-      if (nameParts.length > 1) {
-        firstName = nameParts[0];
-        lastName = nameParts.slice(1).join(' ');
-      }
+      // Get city from address - using the last part after comma
+      const addressParts = declaration.property.split(',');
+      const city = addressParts.length > 0 ? addressParts[addressParts.length - 2]?.trim() || "" : "";
       
-      // Convert our data structure to Monday.com's expected format
-      // Correspond aux colonnes visibles dans le tableau Monday.com
+      // Based on the Monday.com columns from the console log, we need to use the column IDs
       const columnValues = {
-        "text": declaration.name, // Nome do Inquilino
-        "email": { "email": declaration.email, "text": declaration.email }, // E-mail Inquilino
-        "phone": { "phone": declaration.phone, "countryShortName": "PT" }, // Telefone
-        "text1": declaration.property, // Endereço do Inquilino
-        "status5": { "label": issueTypeToMondayMap[declaration.issueType] || declaration.issueType }, // Tipo de problema
-        "long_text": { "text": declaration.description }, // Explicação do problema
-        "text6": declaration.nif || "", // NIF
-        "text8": declaration.property.match(/\d{4,}(?:-\d+)?/)?.[0] || "", // Codigo Postal
-        "text4": declaration.property.split(',').pop()?.trim() || "", // Cidade
-        "status4": { "label": "Novo" } // Status
+        // Using exact column IDs from the console log
+        "text_mknxg830": declaration.name, // Nome do Inquilino
+        "email_mknxfg3r": { "email": declaration.email, "text": declaration.email }, // E-mail Inquilino
+        "phone_mknyw109": { "phone": declaration.phone, "countryShortName": "PT" }, // Telefone
+        "text_mknx4pjn": declaration.property, // Endereço do Inquilino
+        "text_mknxny1h": issueTypeToMondayMap[declaration.issueType] || declaration.issueType, // Tipo de problema
+        "text_mknxj2e7": declaration.description, // Explicação do problema
+        "numeric_mknx2s4b": declaration.nif || "", // NIF as a number
+        "text_mknxq2zr": postalCode, // Codigo Postal
+        "text_mknxe74j": city, // Cidade
+        "status": { "label": "Nouveau" } // Status - Using "Nouveau" as default
       };
       
       console.log("Monday.com column values:", JSON.stringify(columnValues));
