@@ -101,6 +101,16 @@ const AreaCliente = () => {
       
       const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}, ${values.city}, ${values.state}, ${values.postalCode}`;
       
+      // Make sure Monday.com is configured
+      const config = declarationService.getMondayConfig();
+      if (!config.apiKey || !config.boardId) {
+        toast.error("Configuration Monday.com manquante", {
+          description: "Veuillez configurer l'API Monday.com dans les paramètres d'administration."
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       const newDeclaration = declarationService.add({
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
@@ -112,11 +122,16 @@ const AreaCliente = () => {
         nif: values.nif, // Ajouter le NIF à la déclaration
       });
       
+      console.log("Sending declaration to Monday:", newDeclaration);
       const mondayResult = await declarationService.sendToExternalService(newDeclaration);
       
       if (mondayResult) {
         toast.success("Declaração enviada para Monday.com", {
           description: "Sua declaração foi registrada com sucesso no nosso sistema."
+        });
+      } else {
+        toast.error("Erro na integração com Monday.com", {
+          description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com."
         });
       }
       

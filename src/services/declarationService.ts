@@ -168,16 +168,16 @@ const declarationService = {
       // Convert our data structure to Monday.com's expected format
       // Correspond aux colonnes visibles dans le tableau Monday.com
       const columnValues = {
-        "Nome do Inquilino": declaration.name,
-        "E-mail Inquilino": declaration.email,
-        "Telefone": declaration.phone,
-        "Endereço do Inquilino": declaration.property,
-        "Tipo de problema": issueTypeToMondayMap[declaration.issueType] || declaration.issueType,
-        "Explicação do problema": declaration.description,
-        "NIF": declaration.nif || "",
-        "Codigo Postal": declaration.property.match(/\d{4,}(?:-\d+)?/)?.[0] || "",
-        "Cidade": declaration.property.split(',').pop()?.trim() || "",
-        "Status": { label: "Nouveau" }
+        "text": declaration.name, // Nome do Inquilino
+        "email": { "email": declaration.email, "text": declaration.email }, // E-mail Inquilino
+        "phone": { "phone": declaration.phone, "countryShortName": "PT" }, // Telefone
+        "text1": declaration.property, // Endereço do Inquilino
+        "status5": { "label": issueTypeToMondayMap[declaration.issueType] || declaration.issueType }, // Tipo de problema
+        "long_text": { "text": declaration.description }, // Explicação do problema
+        "text6": declaration.nif || "", // NIF
+        "text8": declaration.property.match(/\d{4,}(?:-\d+)?/)?.[0] || "", // Codigo Postal
+        "text4": declaration.property.split(',').pop()?.trim() || "", // Cidade
+        "status4": { "label": "Novo" } // Status
       };
       
       console.log("Monday.com column values:", JSON.stringify(columnValues));
@@ -195,6 +195,8 @@ const declarationService = {
         }
       `;
       
+      console.log("Monday.com GraphQL query:", query);
+      
       // Send the request to Monday.com's API
       const response = await fetch("https://api.monday.com/v2", {
         method: "POST",
@@ -205,7 +207,19 @@ const declarationService = {
         body: JSON.stringify({ query })
       });
       
-      const result = await response.json();
+      const responseData = await response.text();
+      console.log("Monday.com API raw response:", responseData);
+      
+      let result;
+      try {
+        result = JSON.parse(responseData);
+      } catch (e) {
+        console.error("Failed to parse Monday.com response:", e);
+        toast.error("Erreur de format de réponse Monday.com", {
+          description: "La réponse de l'API n'est pas au format JSON attendu."
+        });
+        return false;
+      }
       
       if (result.errors) {
         console.error("Monday.com API error:", result.errors);
@@ -228,6 +242,7 @@ const declarationService = {
         
         return true;
       } else {
+        console.error("Unexpected Monday.com response format:", result);
         toast.error("Erreur lors de l'envoi à Monday.com", {
           description: "La réponse de l'API n'a pas renvoyé l'ID attendu."
         });
@@ -259,6 +274,11 @@ const declarationService = {
         query {
           boards(ids: ${boardId}) {
             name
+            columns {
+              id
+              title
+              type
+            }
           }
         }
       `;
@@ -272,18 +292,27 @@ const declarationService = {
         body: JSON.stringify({ query })
       });
       
-      const result = await response.json();
+      const responseData = await response.text();
+      console.log("Monday.com validation response:", responseData);
       
-      if (result.errors) {
-        console.error("Monday.com config validation error:", result.errors);
-        return { valid: false, message: result.errors[0]?.message || "Invalid API key or board ID." };
-      }
-      
-      if (result.data?.boards?.length > 0) {
-        const boardName = result.data.boards[0].name;
-        return { valid: true, message: `Connecté au tableau "${boardName}"` };
-      } else {
-        return { valid: false, message: "Le tableau spécifié n'a pas été trouvé." };
+      try {
+        const result = JSON.parse(responseData);
+        
+        if (result.errors) {
+          console.error("Monday.com config validation error:", result.errors);
+          return { valid: false, message: result.errors[0]?.message || "Invalid API key or board ID." };
+        }
+        
+        if (result.data?.boards?.length > 0) {
+          const boardName = result.data.boards[0].name;
+          console.log("Monday.com columns:", result.data.boards[0].columns);
+          return { valid: true, message: `Connecté au tableau "${boardName}"` };
+        } else {
+          return { valid: false, message: "Le tableau spécifié n'a pas été trouvé." };
+        }
+      } catch (e) {
+        console.error("Failed to parse Monday.com validation response:", e);
+        return { valid: false, message: "Réponse de validation non valide." };
       }
     } catch (error) {
       console.error("Error validating Monday.com config:", error);
