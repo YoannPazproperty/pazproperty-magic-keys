@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -108,6 +109,7 @@ const AreaCliente = () => {
         issueType: mapIssueTypeToMondayFormat(values.problemType),
         description: values.description,
         urgency: "medium", // Default urgency as it's not in the form
+        nif: values.nif, // Ajouter le NIF à la déclaration
       });
       
       const mondayResult = await declarationService.sendToExternalService(newDeclaration);
@@ -453,4 +455,3 @@ const AreaCliente = () => {
 };
 
 export default AreaCliente;
-

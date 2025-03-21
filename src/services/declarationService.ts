@@ -13,6 +13,7 @@ export interface Declaration {
   urgency: string;
   status: "pending" | "in_progress" | "resolved";
   submittedAt: string;
+  nif?: string; // Ajout du NIF comme champ optionnel
 }
 
 // Example/mock declarations to start with
@@ -151,18 +152,35 @@ const declarationService = {
         return false;
       }
       
-      // Prepare the data for Monday.com
-      const itemName = `${declaration.property} - ${issueTypeToMondayMap[declaration.issueType] || declaration.issueType}`;
+      // Prepare the data for Monday.com - Utiliser un format de nom plus utile
+      const itemName = `Nouvelle déclaration - ${declaration.name}`;
+      
+      // Extract name parts if possible
+      let firstName = declaration.name;
+      let lastName = "";
+      
+      const nameParts = declaration.name.split(' ');
+      if (nameParts.length > 1) {
+        firstName = nameParts[0];
+        lastName = nameParts.slice(1).join(' ');
+      }
       
       // Convert our data structure to Monday.com's expected format
+      // Correspond aux colonnes visibles dans le tableau Monday.com
       const columnValues = {
-        person: { email: declaration.email, name: declaration.name },
-        phone: declaration.phone,
-        text: declaration.description,
-        status: { label: "Nouveau" },
-        urgency: { label: urgencyToMondayMap[declaration.urgency] || declaration.urgency },
-        property: { label: declaration.property }
+        "Nome do Inquilino": declaration.name,
+        "E-mail Inquilino": declaration.email,
+        "Telefone": declaration.phone,
+        "Endereço do Inquilino": declaration.property,
+        "Tipo de problema": issueTypeToMondayMap[declaration.issueType] || declaration.issueType,
+        "Explicação do problema": declaration.description,
+        "NIF": declaration.nif || "",
+        "Codigo Postal": declaration.property.match(/\d{4,}(?:-\d+)?/)?.[0] || "",
+        "Cidade": declaration.property.split(',').pop()?.trim() || "",
+        "Status": { label: "Nouveau" }
       };
+      
+      console.log("Monday.com column values:", JSON.stringify(columnValues));
       
       // Build the GraphQL mutation to create a new item in Monday.com
       const query = `
