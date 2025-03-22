@@ -35,7 +35,7 @@ const Navbar = () => {
           <Button asChild className="bg-brand-blue hover:bg-primary/90">
             <Link to="/area-cliente">Área de Cliente</Link>
           </Button>
-          <Button asChild variant="outline" size="icon" title="Espace Technique" className="ml-2">
+          <Button asChild variant="outline" size="icon" title="Espace Technique Monday.com" className="ml-2">
             <Link to="/extranet-technique"><Wrench className="h-5 w-5" /></Link>
           </Button>
           <Button asChild variant="ghost" size="icon" title="Administration">

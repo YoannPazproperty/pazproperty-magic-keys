@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import FileUpload from "@/components/FileUpload"; // Correction de l'import
+import FileUpload from "@/components/FileUpload";
 import { toast } from "sonner";
+import { sendTechnicianReportToMonday } from "@/services/declarationService";
 
 // Définition du schéma de validation avec une condition correcte pour Zod
 const formSchema = z.object({
@@ -35,23 +36,36 @@ type RapportFormValues = z.infer<typeof formSchema>;
 
 interface TechnicienRapportFormProps {
   interventionId: number;
+  intervention: {
+    id: number;
+    date: string;
+    client: string;
+    adresse: string;
+    telephone: string;
+    email: string;
+    probleme: string;
+    description: string;
+    statut: string;
+  };
   onSubmitSuccess: () => void;
   onCancel: () => void;
 }
 
 const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
   interventionId,
+  intervention,
   onSubmitSuccess,
   onCancel
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [factureFile, setFactureFile] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Initialiser le formulaire avec react-hook-form
   const form = useForm<RapportFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      categorieProbleme: "",
+      categorieProbleme: intervention.probleme || "",
       description: "",
       interventionNecessaire: false,
       montantDevis: "",
@@ -60,17 +74,46 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
   });
 
   // Gérer la soumission du formulaire
-  const onSubmit = (data: RapportFormValues) => {
-    // Ici nous simulons l'envoi du rapport et des fichiers au serveur
-    console.log("Données du formulaire:", data);
-    console.log("Photos/Vidéos:", files);
-    console.log("Facture:", factureFile);
+  const onSubmit = async (data: RapportFormValues) => {
+    setIsSubmitting(true);
     
-    // Afficher un message de succès
-    toast.success("Rapport soumis avec succès");
-    
-    // Appeler la fonction de callback
-    onSubmitSuccess();
+    try {
+      // Préparer les données pour Monday.com
+      const reportData = {
+        interventionId,
+        clientName: intervention.client,
+        clientEmail: intervention.email,
+        clientPhone: intervention.telephone,
+        address: intervention.adresse,
+        problemCategory: data.categorieProbleme,
+        diagnoseDescription: data.description,
+        needsIntervention: data.interventionNecessaire,
+        estimateAmount: data.montantDevis || "0",
+        workDescription: data.travauxRealises || "",
+        date: new Date().toISOString(),
+      };
+
+      // Envoyer les données à Monday.com
+      const result = await sendTechnicianReportToMonday(reportData);
+      
+      if (result.success) {
+        toast.success("Rapport envoyé à Monday.com", {
+          description: `ID de l'élément créé: ${result.mondayItemId}`
+        });
+        onSubmitSuccess();
+      } else {
+        toast.error("Erreur lors de l'envoi à Monday.com", {
+          description: result.message
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'envoi du rapport:", error);
+      toast.error("Erreur lors de l'envoi du rapport", {
+        description: "Une erreur inattendue s'est produite."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -223,11 +266,11 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
           
           {/* Boutons d'action */}
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               Annuler
             </Button>
-            <Button type="submit">
-              Soumettre le rapport
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Envoi en cours..." : "Soumettre le rapport"}
             </Button>
           </div>
         </form>

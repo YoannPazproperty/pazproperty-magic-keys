@@ -17,6 +17,21 @@ export interface Declaration {
   mediaFiles?: string[]; // URLs to uploaded media files (photos/videos)
 }
 
+// Technician report interface
+export interface TechnicianReport {
+  interventionId: number;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  address: string;
+  problemCategory: string;
+  diagnoseDescription: string;
+  needsIntervention: boolean;
+  estimateAmount: string;
+  workDescription: string;
+  date: string;
+}
+
 // Example/mock declarations to start with
 const initialDeclarations: Declaration[] = [
   {
@@ -84,11 +99,11 @@ let declarations = loadDeclarations();
 
 // Translation maps for Monday.com
 const issueTypeToMondayMap: Record<string, string> = {
-  plumbing: "Plomberie",
-  electrical: "Électrique",
-  appliance: "Électroménager",
-  heating: "Chauffage/Climatisation",
-  structural: "Structurel",
+  plomberie: "Plomberie",
+  electricite: "Électrique",
+  serrurerie: "Serrurerie",
+  menuiserie: "Menuiserie",
+  chauffage: "Chauffage/Climatisation",
   pest: "Nuisibles",
   other: "Autre"
 };
@@ -99,6 +114,9 @@ const urgencyToMondayMap: Record<string, string> = {
   high: "Élevée",
   emergency: "Urgence"
 };
+
+// Monday.com board configurations
+const TECHNICIAN_BOARD_ID = "1863361499"; // The board ID specified by the user
 
 // Declaration service
 const declarationService = {
@@ -307,6 +325,186 @@ const declarationService = {
     }
   },
   
+  // Send technician report to Monday.com (board ID 1863361499)
+  sendTechnicianReportToMonday: async (report: TechnicianReport) => {
+    try {
+      console.log("Sending technician report to Monday.com:", report);
+      
+      // Get Monday.com API key from localStorage
+      const mondayApiKey = localStorage.getItem('mondayApiKey');
+      if (!mondayApiKey) {
+        return { 
+          success: false, 
+          message: "Clé API Monday.com manquante. Veuillez configurer votre clé API dans les paramètres d'administration." 
+        };
+      }
+      
+      // Using the specified board ID
+      const mondayBoardId = TECHNICIAN_BOARD_ID;
+      
+      // Format the item name for Monday.com
+      const itemName = `Rapport technique - ${report.clientName} - ${new Date().toLocaleDateString()}`;
+      
+      // Prepare column values based on the Technician Report board structure
+      const columnValues = {
+        // These column IDs should match your Monday.com board columns
+        "personne": { "text": report.clientName },
+        "text": report.address,
+        "text1": report.diagnoseDescription,
+        "numbers": parseFloat(report.estimateAmount) || 0,
+        "status": { "label": report.needsIntervention ? "Intervention requise" : "Résolu" },
+        "text6": report.workDescription,
+        "email": { "email": report.clientEmail, "text": report.clientEmail },
+        "phone": { "phone": report.clientPhone, "countryShortName": "FR" },
+        "text0": report.problemCategory,
+        // Add the date in the format Monday.com expects
+        "date4": { 
+          "date": new Date().toISOString().split('T')[0],
+          "time": new Date().toISOString().split('T')[1].substring(0, 5)
+        }
+      };
+      
+      console.log("Monday.com column values for technician report:", JSON.stringify(columnValues));
+      
+      // Build the GraphQL mutation for creating an item in Monday.com
+      const query = `
+        mutation {
+          create_item (
+            board_id: ${mondayBoardId}, 
+            item_name: "${itemName}", 
+            column_values: ${JSON.stringify(JSON.stringify(columnValues))}
+          ) {
+            id
+          }
+        }
+      `;
+      
+      console.log("Monday.com GraphQL query for technician report:", query);
+      
+      // Send the request to Monday.com API
+      const response = await fetch("https://api.monday.com/v2", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": mondayApiKey
+        },
+        body: JSON.stringify({ query })
+      });
+      
+      const responseData = await response.text();
+      console.log("Monday.com API raw response for technician report:", responseData);
+      
+      let result;
+      try {
+        result = JSON.parse(responseData);
+      } catch (e) {
+        console.error("Failed to parse Monday.com response:", e);
+        return {
+          success: false,
+          message: "La réponse de l'API n'est pas au format JSON attendu."
+        };
+      }
+      
+      if (result.errors) {
+        console.error("Monday.com API error for technician report:", result.errors);
+        return {
+          success: false,
+          message: result.errors[0]?.message || "Erreur lors de l'envoi à Monday.com. Vérifiez vos paramètres d'API."
+        };
+      }
+      
+      if (result.data?.create_item?.id) {
+        return {
+          success: true,
+          message: "Rapport envoyé avec succès à Monday.com",
+          mondayItemId: result.data.create_item.id
+        };
+      } else {
+        console.error("Unexpected Monday.com response format for technician report:", result);
+        return {
+          success: false,
+          message: "La réponse de l'API n'a pas renvoyé l'ID attendu."
+        };
+      }
+    } catch (error) {
+      console.error("Error sending technician report to Monday.com:", error);
+      return {
+        success: false,
+        message: "Une erreur s'est produite lors de la communication avec l'API Monday.com."
+      };
+    }
+  },
+  
+  // Check Monday.com board 5 (1863361499) connection status
+  getMonday5BoardStatus: async () => {
+    try {
+      // Get Monday.com API key from localStorage
+      const mondayApiKey = localStorage.getItem('mondayApiKey');
+      if (!mondayApiKey) {
+        return { 
+          connected: false, 
+          message: "Clé API Monday.com manquante. Veuillez configurer votre clé API dans les paramètres d'administration." 
+        };
+      }
+      
+      const mondayBoardId = TECHNICIAN_BOARD_ID;
+      
+      // Simple query to check if we can access the board
+      const query = `
+        query {
+          boards(ids: ${mondayBoardId}) {
+            name
+            columns {
+              id
+              title
+              type
+            }
+          }
+        }
+      `;
+      
+      const response = await fetch("https://api.monday.com/v2", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": mondayApiKey
+        },
+        body: JSON.stringify({ query })
+      });
+      
+      const result = await response.json();
+      console.log("Monday.com board 5 validation response:", result);
+      
+      if (result.errors) {
+        console.error("Monday.com board 5 validation error:", result.errors);
+        return { 
+          connected: false, 
+          message: result.errors[0]?.message || "Erreur de connexion au tableau Monday.com." 
+        };
+      }
+      
+      if (result.data?.boards?.length > 0) {
+        const boardName = result.data.boards[0].name;
+        console.log("Monday.com board 5 columns:", result.data.boards[0].columns);
+        return { 
+          connected: true, 
+          message: `Connecté au tableau "${boardName}" (ID: ${mondayBoardId})` 
+        };
+      } else {
+        return { 
+          connected: false, 
+          message: `Le tableau Monday.com avec l'ID ${mondayBoardId} n'a pas été trouvé.` 
+        };
+      }
+    } catch (error) {
+      console.error("Error validating Monday.com board 5:", error);
+      return { 
+        connected: false, 
+        message: "Erreur de connexion à l'API Monday.com." 
+      };
+    }
+  },
+  
   // Set Monday.com API configuration
   setMondayConfig: (apiKey: string, boardId: string) => {
     localStorage.setItem('mondayApiKey', apiKey);
@@ -380,3 +578,4 @@ const declarationService = {
 };
 
 export default declarationService;
+

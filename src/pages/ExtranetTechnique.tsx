@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,12 +10,17 @@ import { Clock, CheckCircle2, AlertTriangle, FileCheck, LogIn } from 'lucide-rea
 import { toast } from "sonner";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { getMonday5BoardStatus } from '@/services/declarationService';
 
 const ExtranetTechnique = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [selectedIntervention, setSelectedIntervention] = useState<number | null>(null);
+  const [mondayStatus, setMondayStatus] = useState<{ connected: boolean; message: string }>({ 
+    connected: false, 
+    message: "Vérification de la connexion à Monday.com..." 
+  });
   
   // Données fictives pour démonstration
   const interventions = [
@@ -72,12 +77,38 @@ const ExtranetTechnique = () => {
   };
   
   // Vérifier si l'utilisateur est déjà connecté (stocké dans localStorage)
-  React.useEffect(() => {
+  useEffect(() => {
     const authStatus = localStorage.getItem("technicienAuthenticated");
     if (authStatus === "true") {
       setIsAuthenticated(true);
     }
+    
+    // Vérifier la connexion à Monday.com
+    checkMondayConnection();
   }, []);
+  
+  // Vérifier la connexion à Monday.com
+  const checkMondayConnection = async () => {
+    try {
+      const boardId = "1863361499"; // Le board ID spécifié par l'utilisateur
+      localStorage.setItem('mondayBoardId', boardId);
+      
+      const result = await getMonday5BoardStatus();
+      setMondayStatus(result);
+      
+      if (!result.connected) {
+        toast.error("Problème de connexion à Monday.com", {
+          description: result.message
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de la vérification de Monday.com:", error);
+      setMondayStatus({ 
+        connected: false, 
+        message: "Erreur de connexion à Monday.com." 
+      });
+    }
+  };
   
   const renderStatutBadge = (statut: string) => {
     switch(statut) {
@@ -166,9 +197,20 @@ const ExtranetTechnique = () => {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Extranet Prestataire Technique</h1>
-                <Button variant="outline" onClick={handleLogout}>
-                  Déconnexion
-                </Button>
+                <div className="flex items-center gap-4">
+                  {mondayStatus.connected ? (
+                    <span className="text-xs text-green-500 bg-green-50 px-2 py-1 rounded-full">
+                      Monday.com connecté
+                    </span>
+                  ) : (
+                    <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">
+                      Monday.com non connecté
+                    </span>
+                  )}
+                  <Button variant="outline" onClick={handleLogout}>
+                    Déconnexion
+                  </Button>
+                </div>
               </div>
               
               <Tabs defaultValue="interventions" className="w-full">
@@ -348,7 +390,8 @@ const InterventionDetails: React.FC<InterventionDetailsProps> = ({ intervention,
       {showRapportForm && (
         <div className="p-6 border-t">
           <TechnicienRapportForm 
-            interventionId={intervention.id} 
+            interventionId={intervention.id}
+            intervention={intervention}
             onSubmitSuccess={() => {
               setShowRapportForm(false);
               onClose();
