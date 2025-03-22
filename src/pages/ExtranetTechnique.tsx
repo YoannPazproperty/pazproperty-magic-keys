@@ -4,10 +4,17 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"; 
 import TechnicienRapportForm from '@/components/TechnicienRapportForm';
-import { Clock, CheckCircle2, AlertTriangle, FileCheck } from 'lucide-react';
+import { Clock, CheckCircle2, AlertTriangle, FileCheck, LogIn } from 'lucide-react';
+import { toast } from "sonner";
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const ExtranetTechnique = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [selectedIntervention, setSelectedIntervention] = useState<number | null>(null);
   
   // Données fictives pour démonstration
@@ -47,6 +54,31 @@ const ExtranetTechnique = () => {
     }
   ];
   
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Pour la démonstration, nous acceptons n'importe quel email/mot de passe
+    setIsAuthenticated(true);
+    localStorage.setItem("technicienAuthenticated", "true");
+    toast.success("Connexion réussie", {
+      description: "Bienvenue dans votre espace prestataire technique."
+    });
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("technicienAuthenticated");
+    setSelectedIntervention(null);
+    toast.success("Déconnexion réussie");
+  };
+  
+  // Vérifier si l'utilisateur est déjà connecté (stocké dans localStorage)
+  React.useEffect(() => {
+    const authStatus = localStorage.getItem("technicienAuthenticated");
+    if (authStatus === "true") {
+      setIsAuthenticated(true);
+    }
+  }, []);
+  
   const renderStatutBadge = (statut: string) => {
     switch(statut) {
       case 'en_attente':
@@ -76,108 +108,174 @@ const ExtranetTechnique = () => {
   };
   
   return (
-    <div className="container mx-auto p-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Extranet Prestataire Technique</h1>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
       
-      <Tabs defaultValue="interventions" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="interventions">Mes Interventions</TabsTrigger>
-          <TabsTrigger value="historique">Historique</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="interventions" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Interventions à réaliser</CardTitle>
-              <CardDescription>
-                Liste des interventions en attente ou en cours
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Problème</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {interventions.filter(i => i.statut !== 'termine').map(intervention => (
-                    <TableRow key={intervention.id}>
-                      <TableCell>{intervention.date}</TableCell>
-                      <TableCell>{intervention.client}</TableCell>
-                      <TableCell>{intervention.probleme}</TableCell>
-                      <TableCell>{renderStatutBadge(intervention.statut)}</TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setSelectedIntervention(intervention.id)}
-                        >
-                          Détails
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-          
-          {selectedIntervention && (
-            <InterventionDetails 
-              intervention={interventions.find(i => i.id === selectedIntervention)!} 
-              onClose={() => setSelectedIntervention(null)}
-            />
+      <main className="flex-1 pt-32 pb-20">
+        <div className="container mx-auto px-4 py-8">
+          {!isAuthenticated ? (
+            <div className="max-w-md mx-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Espace Prestataire Technique</CardTitle>
+                  <CardDescription>
+                    Connectez-vous pour accéder à vos interventions et soumettre vos rapports.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <label htmlFor="email" className="text-sm font-medium">
+                        Email
+                      </label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="votre@email.com"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="password" className="text-sm font-medium">
+                        Mot de passe
+                      </label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full">
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Se connecter
+                    </Button>
+                  </form>
+                </CardContent>
+                <CardFooter className="flex justify-center border-t pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Si vous n'avez pas d'identifiants, veuillez contacter l'administrateur.
+                  </p>
+                </CardFooter>
+              </Card>
+            </div>
+          ) : (
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold">Extranet Prestataire Technique</h1>
+                <Button variant="outline" onClick={handleLogout}>
+                  Déconnexion
+                </Button>
+              </div>
+              
+              <Tabs defaultValue="interventions" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="interventions">Mes Interventions</TabsTrigger>
+                  <TabsTrigger value="historique">Historique</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="interventions" className="space-y-4 mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Interventions à réaliser</CardTitle>
+                      <CardDescription>
+                        Liste des interventions en attente ou en cours
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Client</TableHead>
+                            <TableHead>Problème</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {interventions.filter(i => i.statut !== 'termine').map(intervention => (
+                            <TableRow key={intervention.id}>
+                              <TableCell>{intervention.date}</TableCell>
+                              <TableCell>{intervention.client}</TableCell>
+                              <TableCell>{intervention.probleme}</TableCell>
+                              <TableCell>{renderStatutBadge(intervention.statut)}</TableCell>
+                              <TableCell>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setSelectedIntervention(intervention.id)}
+                                >
+                                  Détails
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                  
+                  {selectedIntervention && (
+                    <InterventionDetails 
+                      intervention={interventions.find(i => i.id === selectedIntervention)!} 
+                      onClose={() => setSelectedIntervention(null)}
+                    />
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="historique" className="space-y-4 mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Historique des interventions</CardTitle>
+                      <CardDescription>
+                        Liste des interventions terminées
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Client</TableHead>
+                            <TableHead>Problème</TableHead>
+                            <TableHead>Statut</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {interventions.filter(i => i.statut === 'termine').map(intervention => (
+                            <TableRow key={intervention.id}>
+                              <TableCell>{intervention.date}</TableCell>
+                              <TableCell>{intervention.client}</TableCell>
+                              <TableCell>{intervention.probleme}</TableCell>
+                              <TableCell>{renderStatutBadge(intervention.statut)}</TableCell>
+                              <TableCell>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setSelectedIntervention(intervention.id)}
+                                >
+                                  Détails
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
           )}
-        </TabsContent>
-        
-        <TabsContent value="historique" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Historique des interventions</CardTitle>
-              <CardDescription>
-                Liste des interventions terminées
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Problème</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {interventions.filter(i => i.statut === 'termine').map(intervention => (
-                    <TableRow key={intervention.id}>
-                      <TableCell>{intervention.date}</TableCell>
-                      <TableCell>{intervention.client}</TableCell>
-                      <TableCell>{intervention.probleme}</TableCell>
-                      <TableCell>{renderStatutBadge(intervention.statut)}</TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setSelectedIntervention(intervention.id)}
-                        >
-                          Détails
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </main>
+      
+      <Footer />
     </div>
   );
 };
