@@ -10,20 +10,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileUpload } from "@/components/FileUpload";
+import FileUpload from "@/components/FileUpload"; // Correction de l'import
 import { toast } from "sonner";
 
-// Définition du schéma de validation
+// Définition du schéma de validation avec une condition correcte pour Zod
 const formSchema = z.object({
   categorieProbleme: z.string().min(1, "Veuillez sélectionner une catégorie"),
   description: z.string().min(10, "Veuillez fournir une description détaillée"),
   interventionNecessaire: z.boolean(),
   montantDevis: z.string().optional(),
-  travauxRealises: z.string().when("interventionNecessaire", {
-    is: true,
-    then: z.string().min(10, "Veuillez décrire les travaux à réaliser"),
-    otherwise: z.string().optional(),
-  }),
+  travauxRealises: z.string().optional(),
+}).refine(data => {
+  // Si une intervention est nécessaire, les travaux doivent être décrits
+  if (data.interventionNecessaire && (!data.travauxRealises || data.travauxRealises.length < 10)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Veuillez décrire les travaux à réaliser (minimum 10 caractères)",
+  path: ["travauxRealises"]
 });
 
 type RapportFormValues = z.infer<typeof formSchema>;
