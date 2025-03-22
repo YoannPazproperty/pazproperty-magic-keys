@@ -14,6 +14,7 @@ export interface Declaration {
   submittedAt: string;
   nif?: string;
   mondayId?: string;
+  mediaFiles?: string[]; // URLs to uploaded media files (photos/videos)
 }
 
 // Example/mock declarations to start with
@@ -120,6 +121,49 @@ const declarationService = {
     return declaration;
   },
   
+  // Add a new declaration with media files
+  addWithMedia: (newDeclaration: Omit<Declaration, "id" | "status" | "submittedAt">, mediaFiles: File[]) => {
+    // First create a basic declaration
+    const declaration: Declaration = {
+      ...newDeclaration,
+      id: Math.random().toString(36).substring(2, 9),
+      status: "pending",
+      submittedAt: new Date().toISOString(),
+      mediaFiles: [], // Initialize empty array for media URLs
+    };
+    
+    // Convert files to data URLs for storage
+    const processFiles = async () => {
+      const mediaUrls: string[] = [];
+      
+      for (const file of mediaFiles) {
+        try {
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+          });
+          
+          mediaUrls.push(dataUrl);
+        } catch (error) {
+          console.error("Error processing file:", error);
+          toast.error("Erreur lors du traitement du fichier", {
+            description: `Impossible de traiter le fichier: ${file.name}`
+          });
+        }
+      }
+      
+      // Update declaration with media URLs
+      declaration.mediaFiles = mediaUrls;
+      declarations = [declaration, ...declarations];
+      saveDeclarations(declarations);
+      
+      return declaration;
+    };
+    
+    return processFiles();
+  },
+  
   // Update declaration status
   updateStatus: (id: string, status: Declaration["status"]) => {
     declarations = declarations.map(declaration => 
@@ -177,6 +221,14 @@ const declarationService = {
         "text_mknxe74j": city, // Cidade
         "status": { "label": "Nouveau" } // Status - Using "Nouveau" as default
       };
+      
+      // Add file URLs if present - this assumes we've added a file column to Monday.com
+      if (declaration.mediaFiles && declaration.mediaFiles.length > 0) {
+        // Note: This is a placeholder. For actual file uploads to Monday.com,
+        // we would need to convert dataURLs back to files and use Monday's API
+        // for file uploads, then link those files to the item.
+        console.log("Media files to send:", declaration.mediaFiles.length);
+      }
       
       console.log("Monday.com column values:", JSON.stringify(columnValues));
       

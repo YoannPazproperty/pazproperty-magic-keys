@@ -6,6 +6,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import FileUpload from "@/components/FileUpload";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -73,6 +74,7 @@ type FormValues = z.infer<typeof formSchema>;
 const AreaCliente = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -98,6 +100,7 @@ const AreaCliente = () => {
     
     try {
       console.log("Form data:", values);
+      console.log("Media files:", mediaFiles);
       
       const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}, ${values.city}, ${values.state}, ${values.postalCode}`;
       
@@ -111,7 +114,8 @@ const AreaCliente = () => {
         return;
       }
       
-      const newDeclaration = declarationService.add({
+      // Use new method for adding declaration with media
+      const declarationData = {
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
         phone: values.telefone,
@@ -119,8 +123,10 @@ const AreaCliente = () => {
         issueType: mapIssueTypeToMondayFormat(values.problemType),
         description: values.description,
         urgency: "medium", // Default urgency as it's not in the form
-        nif: values.nif, // Ajouter le NIF à la déclaration
-      });
+        nif: values.nif,
+      };
+      
+      const newDeclaration = await declarationService.addWithMedia(declarationData, mediaFiles);
       
       console.log("Sending declaration to Monday:", newDeclaration);
       const mondayResult = await declarationService.sendToExternalService(newDeclaration);
@@ -137,6 +143,7 @@ const AreaCliente = () => {
       
       setIsSuccess(true);
       form.reset();
+      setMediaFiles([]);
       
       toast("Declaração enviada com sucesso!", {
         description: "Entraremos em contato em breve sobre o seu problema."
@@ -149,6 +156,10 @@ const AreaCliente = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleFileChange = (files: File[]) => {
+    setMediaFiles(files);
   };
 
   const mapIssueTypeToMondayFormat = (problemType: string): string => {
@@ -427,6 +438,14 @@ const AreaCliente = () => {
                       </FormItem>
                     )}
                   />
+                  
+                  <div className="space-y-2">
+                    <FormLabel>Fotos ou Vídeos do Problema</FormLabel>
+                    <FormDescription>
+                      Adicione até 4 arquivos (fotos ou vídeos) que mostrem o problema. Isso ajudará nossa equipe a entender melhor a situação.
+                    </FormDescription>
+                    <FileUpload onChange={handleFileChange} maxFiles={4} accept="image/*,video/*" />
+                  </div>
                   
                   <div className="flex justify-end">
                     <Button 
