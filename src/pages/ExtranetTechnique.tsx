@@ -11,11 +11,13 @@ import { toast } from "sonner";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getMonday5BoardStatus } from '@/services/declarationService';
+import technicienService from '@/services/technicienService';
 
 const ExtranetTechnique = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [technicienName, setTechnicienName] = useState<string>("");
   const [selectedIntervention, setSelectedIntervention] = useState<number | null>(null);
   const [mondayStatus, setMondayStatus] = useState<{ connected: boolean; message: string }>({ 
     connected: false, 
@@ -61,17 +63,32 @@ const ExtranetTechnique = () => {
   
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Pour la démonstration, nous acceptons n'importe quel email/mot de passe
-    setIsAuthenticated(true);
-    localStorage.setItem("technicienAuthenticated", "true");
-    toast.success("Connexion réussie", {
-      description: "Bienvenue dans votre espace prestataire technique."
-    });
+    // Vérifier les identifiants avec le service technicien
+    const technician = technicienService.verifyCredentials(email, password);
+    
+    if (technician) {
+      setIsAuthenticated(true);
+      setTechnicienName(technician.name);
+      localStorage.setItem("technicienAuthenticated", "true");
+      localStorage.setItem("technicienEmail", email);
+      localStorage.setItem("technicienName", technician.name);
+      
+      toast.success("Connexion réussie", {
+        description: `Bienvenue dans votre espace prestataire technique, ${technician.name}.`
+      });
+    } else {
+      toast.error("Échec de la connexion", {
+        description: "Email ou mot de passe incorrect, ou votre compte est désactivé."
+      });
+    }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setTechnicienName("");
     localStorage.removeItem("technicienAuthenticated");
+    localStorage.removeItem("technicienEmail");
+    localStorage.removeItem("technicienName");
     setSelectedIntervention(null);
     toast.success("Déconnexion réussie");
   };
@@ -79,8 +96,23 @@ const ExtranetTechnique = () => {
   // Vérifier si l'utilisateur est déjà connecté (stocké dans localStorage)
   useEffect(() => {
     const authStatus = localStorage.getItem("technicienAuthenticated");
-    if (authStatus === "true") {
-      setIsAuthenticated(true);
+    const storedEmail = localStorage.getItem("technicienEmail");
+    const storedName = localStorage.getItem("technicienName");
+    
+    if (authStatus === "true" && storedEmail) {
+      // Vérifier si le compte est toujours actif
+      const technician = technicienService.getByEmail(storedEmail);
+      if (technician && technician.isActive) {
+        setIsAuthenticated(true);
+        setTechnicienName(storedName || technician.name);
+        setEmail(storedEmail);
+      } else {
+        // Le compte a été désactivé, forcer la déconnexion
+        handleLogout();
+        toast.error("Votre compte a été désactivé", {
+          description: "Veuillez contacter l'administrateur pour plus d'informations."
+        });
+      }
     }
     
     // Vérifier la connexion à Monday.com
@@ -196,7 +228,10 @@ const ExtranetTechnique = () => {
           ) : (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Extranet Prestataire Technique</h1>
+                <div>
+                  <h1 className="text-3xl font-bold">Extranet Prestataire Technique</h1>
+                  <p className="text-muted-foreground mt-1">Bienvenue, {technicienName}</p>
+                </div>
                 <div className="flex items-center gap-4">
                   {mondayStatus.connected ? (
                     <span className="text-xs text-green-500 bg-green-50 px-2 py-1 rounded-full">

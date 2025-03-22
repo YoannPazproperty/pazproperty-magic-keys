@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -33,7 +32,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, LogOut, Settings, Loader2, Bell } from "lucide-react";
+import { Eye, LogOut, Settings, Loader2, Bell, Users } from "lucide-react";
+import TechnicienManager from "@/components/TechnicienManager";
 import declarationService, { 
   Declaration, 
   setupNotificationWebhook, 
@@ -371,8 +371,9 @@ const Admin = () => {
               </div>
               
               <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsList className="grid w-full grid-cols-4 mb-6">
                   <TabsTrigger value="declarations">Déclarations</TabsTrigger>
+                  <TabsTrigger value="technicians">Prestataires</TabsTrigger>
                   <TabsTrigger value="settings">Paramètres API</TabsTrigger>
                   <TabsTrigger value="notifications">Notifications</TabsTrigger>
                 </TabsList>
@@ -450,6 +451,10 @@ const Admin = () => {
                       </Table>
                     </CardContent>
                   </Card>
+                </TabsContent>
+                
+                <TabsContent value="technicians">
+                  <TechnicienManager />
                 </TabsContent>
                 
                 <TabsContent value="settings">
