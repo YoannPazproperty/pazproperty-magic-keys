@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Declaration interface
@@ -134,7 +133,7 @@ const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreference = {
 };
 
 // Load notification preferences from localStorage or use defaults
-const loadNotificationPreferences = (): NotificationPreference => {
+export const getNotificationPreferences = (): NotificationPreference => {
   const stored = localStorage.getItem('notificationPreferences');
   return stored ? JSON.parse(stored) : DEFAULT_NOTIFICATION_PREFERENCES;
 };
@@ -143,6 +142,207 @@ const loadNotificationPreferences = (): NotificationPreference => {
 export const saveNotificationPreferences = (preferences: NotificationPreference) => {
   localStorage.setItem('notificationPreferences', JSON.stringify(preferences));
   return preferences;
+};
+
+// Setup webhook for Monday.com notifications
+export const setupNotificationWebhook = async (webhookUrl: string, events: string[] = ["status_change"]) => {
+  try {
+    console.log("Setting up Monday.com notification webhook:", webhookUrl);
+    
+    // Get Monday.com API key from localStorage
+    const mondayApiKey = localStorage.getItem('mondayApiKey');
+    if (!mondayApiKey) {
+      return { 
+        success: false, 
+        message: "Clé API Monday.com manquante." 
+      };
+    }
+    
+    // Get board ID from localStorage or use default
+    const mondayBoardId = localStorage.getItem('mondayBoardId') || '';
+    if (!mondayBoardId) {
+      return { 
+        success: false, 
+        message: "ID du tableau Monday.com manquant." 
+      };
+    }
+    
+    // Create webhook in Monday.com using GraphQL mutation
+    const query = `
+      mutation {
+        create_webhook(board_id: ${mondayBoardId}, url: "${webhookUrl}", event: "change_column_value", config: "${JSON.stringify({ columnId: "status" })}") {
+          id
+          board_id
+        }
+      }
+    `;
+    
+    console.log("Monday.com webhook creation query:", query);
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": mondayApiKey
+      },
+      body: JSON.stringify({ query })
+    });
+    
+    const result = await response.json();
+    console.log("Monday.com webhook creation response:", result);
+    
+    if (result.errors) {
+      console.error("Monday.com webhook creation error:", result.errors);
+      return { 
+        success: false, 
+        message: result.errors[0]?.message || "Erreur lors de la création du webhook."
+      };
+    }
+    
+    if (result.data?.create_webhook?.id) {
+      return {
+        success: true,
+        message: "Webhook de notification configuré avec succès.",
+        webhookId: result.data.create_webhook.id
+      };
+    } else {
+      return {
+        success: false,
+        message: "La réponse de l'API n'a pas renvoyé l'ID attendu."
+      };
+    }
+  } catch (error) {
+    console.error("Error setting up Monday.com notification webhook:", error);
+    return {
+      success: false,
+      message: "Une erreur s'est produite lors de la configuration du webhook."
+    };
+  }
+};
+
+// Get all webhook integrations for a board
+export const getWebhookIntegrations = async () => {
+  try {
+    // Get Monday.com API key from localStorage
+    const mondayApiKey = localStorage.getItem('mondayApiKey');
+    if (!mondayApiKey) {
+      return { 
+        success: false, 
+        message: "Clé API Monday.com manquante." 
+      };
+    }
+    
+    // Get board ID from localStorage or use default
+    const mondayBoardId = localStorage.getItem('mondayBoardId') || '';
+    if (!mondayBoardId) {
+      return { 
+        success: false, 
+        message: "ID du tableau Monday.com manquant." 
+      };
+    }
+    
+    // Query for webhooks
+    const query = `
+      query {
+        webhooks {
+          id
+          board_id
+          url
+          event
+        }
+      }
+    `;
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": mondayApiKey
+      },
+      body: JSON.stringify({ query })
+    });
+    
+    const result = await response.json();
+    console.log("Monday.com webhooks response:", result);
+    
+    if (result.errors) {
+      console.error("Monday.com webhooks query error:", result.errors);
+      return { 
+        success: false, 
+        message: result.errors[0]?.message || "Erreur lors de la récupération des webhooks."
+      };
+    }
+    
+    // Filter webhooks for the specified board
+    const boardWebhooks = result.data?.webhooks?.filter((webhook: any) => 
+      webhook.board_id === parseInt(mondayBoardId)
+    ) || [];
+    
+    return {
+      success: true,
+      webhooks: boardWebhooks
+    };
+  } catch (error) {
+    console.error("Error getting Monday.com webhooks:", error);
+    return {
+      success: false,
+      message: "Une erreur s'est produite lors de la récupération des webhooks."
+    };
+  }
+};
+
+// Delete a webhook integration
+export const deleteWebhook = async (webhookId: string) => {
+  try {
+    // Get Monday.com API key from localStorage
+    const mondayApiKey = localStorage.getItem('mondayApiKey');
+    if (!mondayApiKey) {
+      return { 
+        success: false, 
+        message: "Clé API Monday.com manquante." 
+      };
+    }
+    
+    // Delete webhook using GraphQL mutation
+    const query = `
+      mutation {
+        delete_webhook(id: ${webhookId}) {
+          id
+        }
+      }
+    `;
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": mondayApiKey
+      },
+      body: JSON.stringify({ query })
+    });
+    
+    const result = await response.json();
+    console.log("Monday.com webhook deletion response:", result);
+    
+    if (result.errors) {
+      console.error("Monday.com webhook deletion error:", result.errors);
+      return { 
+        success: false, 
+        message: result.errors[0]?.message || "Erreur lors de la suppression du webhook."
+      };
+    }
+    
+    return {
+      success: true,
+      message: "Webhook supprimé avec succès."
+    };
+  } catch (error) {
+    console.error("Error deleting Monday.com webhook:", error);
+    return {
+      success: false,
+      message: "Une erreur s'est produite lors de la suppression du webhook."
+    };
+  }
 };
 
 // Declaration service
@@ -305,215 +505,19 @@ const declarationService = {
   },
   
   // Set up notification preferences for Monday.com notifications
-  setupNotificationWebhook: async (webhookUrl: string, events: string[] = ["status_change"]) => {
-    try {
-      console.log("Setting up Monday.com notification webhook:", webhookUrl);
-      
-      // Get Monday.com API key from localStorage
-      const mondayApiKey = localStorage.getItem('mondayApiKey');
-      if (!mondayApiKey) {
-        return { 
-          success: false, 
-          message: "Clé API Monday.com manquante." 
-        };
-      }
-      
-      // Get board ID from localStorage or use default
-      const mondayBoardId = localStorage.getItem('mondayBoardId') || '';
-      if (!mondayBoardId) {
-        return { 
-          success: false, 
-          message: "ID du tableau Monday.com manquant." 
-        };
-      }
-      
-      // Create webhook in Monday.com using GraphQL mutation
-      const query = `
-        mutation {
-          create_webhook(board_id: ${mondayBoardId}, url: "${webhookUrl}", event: "change_column_value", config: "${JSON.stringify({ columnId: "status" })}") {
-            id
-            board_id
-          }
-        }
-      `;
-      
-      console.log("Monday.com webhook creation query:", query);
-      
-      const response = await fetch("https://api.monday.com/v2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": mondayApiKey
-        },
-        body: JSON.stringify({ query })
-      });
-      
-      const result = await response.json();
-      console.log("Monday.com webhook creation response:", result);
-      
-      if (result.errors) {
-        console.error("Monday.com webhook creation error:", result.errors);
-        return { 
-          success: false, 
-          message: result.errors[0]?.message || "Erreur lors de la création du webhook."
-        };
-      }
-      
-      if (result.data?.create_webhook?.id) {
-        return {
-          success: true,
-          message: "Webhook de notification configuré avec succès.",
-          webhookId: result.data.create_webhook.id
-        };
-      } else {
-        return {
-          success: false,
-          message: "La réponse de l'API n'a pas renvoyé l'ID attendu."
-        };
-      }
-    } catch (error) {
-      console.error("Error setting up Monday.com notification webhook:", error);
-      return {
-        success: false,
-        message: "Une erreur s'est produite lors de la configuration du webhook."
-      };
-    }
-  },
+  setupNotificationWebhook: setupNotificationWebhook,
   
   // Get all webhook integrations for a board
-  getWebhookIntegrations: async () => {
-    try {
-      // Get Monday.com API key from localStorage
-      const mondayApiKey = localStorage.getItem('mondayApiKey');
-      if (!mondayApiKey) {
-        return { 
-          success: false, 
-          message: "Clé API Monday.com manquante." 
-        };
-      }
-      
-      // Get board ID from localStorage or use default
-      const mondayBoardId = localStorage.getItem('mondayBoardId') || '';
-      if (!mondayBoardId) {
-        return { 
-          success: false, 
-          message: "ID du tableau Monday.com manquant." 
-        };
-      }
-      
-      // Query for webhooks
-      const query = `
-        query {
-          webhooks {
-            id
-            board_id
-            url
-            event
-          }
-        }
-      `;
-      
-      const response = await fetch("https://api.monday.com/v2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": mondayApiKey
-        },
-        body: JSON.stringify({ query })
-      });
-      
-      const result = await response.json();
-      console.log("Monday.com webhooks response:", result);
-      
-      if (result.errors) {
-        console.error("Monday.com webhooks query error:", result.errors);
-        return { 
-          success: false, 
-          message: result.errors[0]?.message || "Erreur lors de la récupération des webhooks."
-        };
-      }
-      
-      // Filter webhooks for the specified board
-      const boardWebhooks = result.data?.webhooks?.filter((webhook: any) => 
-        webhook.board_id === parseInt(mondayBoardId)
-      ) || [];
-      
-      return {
-        success: true,
-        webhooks: boardWebhooks
-      };
-    } catch (error) {
-      console.error("Error getting Monday.com webhooks:", error);
-      return {
-        success: false,
-        message: "Une erreur s'est produite lors de la récupération des webhooks."
-      };
-    }
-  },
+  getWebhookIntegrations: getWebhookIntegrations,
   
   // Delete a webhook integration
-  deleteWebhook: async (webhookId: string) => {
-    try {
-      // Get Monday.com API key from localStorage
-      const mondayApiKey = localStorage.getItem('mondayApiKey');
-      if (!mondayApiKey) {
-        return { 
-          success: false, 
-          message: "Clé API Monday.com manquante." 
-        };
-      }
-      
-      // Delete webhook using GraphQL mutation
-      const query = `
-        mutation {
-          delete_webhook(id: ${webhookId}) {
-            id
-          }
-        }
-      `;
-      
-      const response = await fetch("https://api.monday.com/v2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": mondayApiKey
-        },
-        body: JSON.stringify({ query })
-      });
-      
-      const result = await response.json();
-      console.log("Monday.com webhook deletion response:", result);
-      
-      if (result.errors) {
-        console.error("Monday.com webhook deletion error:", result.errors);
-        return { 
-          success: false, 
-          message: result.errors[0]?.message || "Erreur lors de la suppression du webhook."
-        };
-      }
-      
-      return {
-        success: true,
-        message: "Webhook supprimé avec succès."
-      };
-    } catch (error) {
-      console.error("Error deleting Monday.com webhook:", error);
-      return {
-        success: false,
-        message: "Une erreur s'est produite lors de la suppression du webhook."
-      };
-    }
-  },
+  deleteWebhook: deleteWebhook,
   
   // Save notification preferences
-  saveNotificationPreferences: (preferences: NotificationPreference) => {
-    return saveNotificationPreferences(preferences);
-  },
+  saveNotificationPreferences: saveNotificationPreferences,
   
   // Get notification preferences
-  getNotificationPreferences: () => {
-    return loadNotificationPreferences();
-  },
+  getNotificationPreferences: getNotificationPreferences,
   
   // Send declaration to Monday.com
   sendToExternalService: async (declaration: Declaration) => {
@@ -901,183 +905,9 @@ const declarationService = {
   }
 };
 
-// Exportation explicite des fonctions utilisées par d'autres composants
-export const sendTechnicianReportToMonday = async (report: TechnicianReport) => {
-  try {
-    console.log("Sending technician report to Monday.com:", report);
-    
-    // Get Monday.com API key from localStorage
-    const mondayApiKey = localStorage.getItem('mondayApiKey');
-    if (!mondayApiKey) {
-      return { 
-        success: false, 
-        message: "Clé API Monday.com manquante. Veuillez configurer votre clé API dans les paramètres d'administration." 
-      };
-    }
-    
-    // Using the specified board ID
-    const mondayBoardId = TECHNICIAN_BOARD_ID;
-    
-    // Format the item name for Monday.com
-    const itemName = `Rapport technique - ${report.clientName} - ${new Date().toLocaleDateString()}`;
-    
-    // Prepare column values based on the Technician Report board structure
-    const columnValues = {
-      // These column IDs should match your Monday.com board columns
-      "personne": { "text": report.clientName },
-      "text": report.address,
-      "text1": report.diagnoseDescription,
-      "numbers": parseFloat(report.estimateAmount) || 0,
-      "status": { "label": report.needsIntervention ? "Intervention requise" : "Résolu" },
-      "text6": report.workDescription,
-      "email": { "email": report.clientEmail, "text": report.clientEmail },
-      "phone": { "phone": report.clientPhone, "countryShortName": "FR" },
-      "text0": report.problemCategory,
-      // Add the date in the format Monday.com expects
-      "date4": { 
-        "date": new Date().toISOString().split('T')[0],
-        "time": new Date().toISOString().split('T')[1].substring(0, 5)
-      }
-    };
-    
-    console.log("Monday.com column values for technician report:", JSON.stringify(columnValues));
-    
-    // Build the GraphQL mutation for creating an item in Monday.com
-    const query = `
-      mutation {
-        create_item (
-          board_id: ${mondayBoardId}, 
-          item_name: "${itemName}", 
-          column_values: ${JSON.stringify(JSON.stringify(columnValues))}
-        ) {
-          id
-        }
-      }
-    `;
-    
-    console.log("Monday.com GraphQL query for technician report:", query);
-    
-    // Send the request to Monday.com API
-    const response = await fetch("https://api.monday.com/v2", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": mondayApiKey
-      },
-      body: JSON.stringify({ query })
-    });
-    
-    const responseData = await response.text();
-    console.log("Monday.com API raw response for technician report:", responseData);
-    
-    let result;
-    try {
-      result = JSON.parse(responseData);
-    } catch (e) {
-      console.error("Failed to parse Monday.com response:", e);
-      return {
-        success: false,
-        message: "La réponse de l'API n'est pas au format JSON attendu."
-      };
-    }
-    
-    if (result.errors) {
-      console.error("Monday.com API error for technician report:", result.errors);
-      return {
-        success: false,
-        message: result.errors[0]?.message || "Erreur lors de l'envoi à Monday.com. Vérifiez vos paramètres d'API."
-      };
-    }
-    
-    if (result.data?.create_item?.id) {
-      return {
-        success: true,
-        message: "Rapport envoyé avec succès à Monday.com",
-        mondayItemId: result.data.create_item.id
-      };
-    } else {
-      console.error("Unexpected Monday.com response format for technician report:", result);
-      return {
-        success: false,
-        message: "La réponse de l'API n'a pas renvoyé l'ID attendu."
-      };
-    }
-  } catch (error) {
-    console.error("Error sending technician report to Monday.com:", error);
-    return {
-      success: false,
-      message: "Une erreur s'est produite lors de la communication avec l'API Monday.com."
-    };
-  }
-};
-
-export const getMonday5BoardStatus = async () => {
-  try {
-    // Get Monday.com API key from localStorage
-    const mondayApiKey = localStorage.getItem('mondayApiKey');
-    if (!mondayApiKey) {
-      return { 
-        connected: false, 
-        message: "Clé API Monday.com manquante. Veuillez configurer votre clé API dans les paramètres d'administration." 
-      };
-    }
-    
-    const mondayBoardId = TECHNICIAN_BOARD_ID;
-    
-    // Simple query to check if we can access the board
-    const query = `
-      query {
-        boards(ids: ${mondayBoardId}) {
-          name
-          columns {
-            id
-            title
-            type
-          }
-        }
-      }
-    `;
-    
-    const response = await fetch("https://api.monday.com/v2", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": mondayApiKey
-      },
-      body: JSON.stringify({ query })
-    });
-    
-    const result = await response.json();
-    console.log("Monday.com board 5 validation response:", result);
-    
-    if (result.errors) {
-      console.error("Monday.com board 5 validation error:", result.errors);
-      return { 
-        connected: false, 
-        message: result.errors[0]?.message || "Erreur de connexion au tableau Monday.com." 
-      };
-    }
-    
-    if (result.data?.boards?.length > 0) {
-      const boardName = result.data.boards[0].name;
-      console.log("Monday.com board 5 columns:", result.data.boards[0].columns);
-      return { 
-        connected: true, 
-        message: `Connecté au tableau "${boardName}" (ID: ${mondayBoardId})` 
-      };
-    } else {
-      return { 
-        connected: false, 
-        message: `Le tableau Monday.com avec l'ID ${mondayBoardId} n'a pas été trouvé.` 
-      };
-    }
-  } catch (error) {
-    console.error("Error validating Monday.com board 5:", error);
-    return { 
-      connected: false, 
-      message: "Erreur de connexion à l'API Monday.com." 
-    };
-  }
-};
+// Export the functions for use in other components
+export const sendTechnicianReportToMonday = declarationService.sendTechnicianReportToMonday;
+export const getMonday5BoardStatus = declarationService.getMonday5BoardStatus;
 
 export default declarationService;
+
