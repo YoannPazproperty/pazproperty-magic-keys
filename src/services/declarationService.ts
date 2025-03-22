@@ -41,6 +41,12 @@ export interface NotificationPreference {
   recipientPhone?: string;
 }
 
+// Email template interface
+export interface EmailTemplate {
+  subject: string;
+  body: string;
+}
+
 // Example/mock declarations to start with
 const initialDeclarations: Declaration[] = [
   {
@@ -124,12 +130,76 @@ const urgencyToMondayMap: Record<string, string> = {
   emergency: "Urgence"
 };
 
+// Email templates for automated notifications
+const EMAIL_TEMPLATES = {
+  tenant: {
+    declarationReceived: {
+      subject: "Votre déclaration a été reçue - PAZ Property",
+      body: `Bonjour {name},
+        
+Nous avons bien reçu votre déclaration concernant un problème de {issueType} à votre adresse {property}.
+
+Référence de votre déclaration: {id}
+Date de soumission: {date}
+
+Notre équipe technique a été informée et vous contactera dans les plus brefs délais pour planifier une intervention si nécessaire.
+
+Pour toute urgence, veuillez nous contacter au +351 912 345 678.
+
+Cordialement,
+L'équipe PAZ Property`
+    },
+    statusUpdate: {
+      subject: "Mise à jour de votre déclaration - PAZ Property",
+      body: `Bonjour {name},
+        
+Nous vous informons que le statut de votre déclaration (Réf: {id}) a été mis à jour.
+
+Nouveau statut: {status}
+
+{additionalInfo}
+
+Pour toute question, n'hésitez pas à nous contacter.
+
+Cordialement,
+L'équipe PAZ Property`
+    }
+  },
+  technician: {
+    newDeclaration: {
+      subject: "Nouvelle intervention à planifier - PAZ Property",
+      body: `Bonjour,
+        
+Une nouvelle déclaration nécessitant une intervention a été enregistrée.
+
+Client: {name}
+Adresse: {property}
+Type de problème: {issueType}
+Description: {description}
+Urgence: {urgency}
+Référence: {id}
+
+Veuillez planifier cette intervention dès que possible et mettre à jour le statut sur votre interface technicien.
+
+Cordialement,
+L'équipe PAZ Property`
+    }
+  }
+};
+
 // Monday.com board configurations
 const TECHNICIAN_BOARD_ID = "1863361499"; // The board ID specified by the user
 const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreference = {
   email: true,
   sms: false,
   push: false
+};
+
+// Email configuration
+const EMAIL_CONFIG = {
+  technicianEmails: ["technicien@pazproperty.pt"], // Default technician email
+  adminEmails: ["admin@pazproperty.pt"], // Default admin email
+  fromEmail: "notifications@pazproperty.pt" // Sender email
 };
 
 // Load notification preferences from localStorage or use defaults
@@ -345,6 +415,285 @@ export const deleteWebhook = async (webhookId: string) => {
   }
 };
 
+// Send Email Notification (simulated in this example)
+const sendEmailNotification = async (
+  recipientEmail: string,
+  templateType: keyof typeof EMAIL_TEMPLATES.tenant | keyof typeof EMAIL_TEMPLATES.technician,
+  templateCategory: 'tenant' | 'technician',
+  data: Record<string, string>
+): Promise<boolean> => {
+  try {
+    // Get the email template
+    const template = EMAIL_TEMPLATES[templateCategory][templateType as any];
+    
+    // Replace placeholders in subject and body with actual data
+    let subject = template.subject;
+    let body = template.body;
+    
+    // Replace all placeholders in the template
+    Object.entries(data).forEach(([key, value]) => {
+      const placeholder = `{${key}}`;
+      subject = subject.replace(placeholder, value);
+      body = body.replace(new RegExp(placeholder, 'g'), value);
+    });
+    
+    console.log(`🔔 Sending ${templateCategory} email notification to ${recipientEmail}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Body: ${body}`);
+    
+    // In a real implementation, this would make an API call to an email service
+    // For this example, we're simulating success
+    
+    // Simulate API call with a timeout
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    toast.success(`Email notification sent to ${recipientEmail}`, {
+      description: `Template: ${templateType}`
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error sending email notification:", error);
+    toast.error("Failed to send email notification", {
+      description: `Recipient: ${recipientEmail}`
+    });
+    return false;
+  }
+};
+
+// Send SMS Notification (simulated in this example)
+const sendSmsNotification = async (
+  phoneNumber: string,
+  message: string
+): Promise<boolean> => {
+  try {
+    console.log(`🔔 Sending SMS notification to ${phoneNumber}`);
+    console.log(`Message: ${message}`);
+    
+    // In a real implementation, this would make an API call to an SMS service
+    // For this example, we're simulating success
+    
+    // Simulate API call with a timeout
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    toast.success(`SMS notification sent to ${phoneNumber}`, {
+      description: `Message length: ${message.length} characters`
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error sending SMS notification:", error);
+    toast.error("Failed to send SMS notification", {
+      description: `Recipient: ${phoneNumber}`
+    });
+    return false;
+  }
+};
+
+// Format status for display
+const formatStatus = (status: Declaration["status"]): string => {
+  switch (status) {
+    case "pending":
+      return "En attente";
+    case "in_progress":
+      return "En cours d'intervention";
+    case "resolved":
+      return "Résolu";
+    default:
+      return status;
+  }
+};
+
+// Send notifications to tenant and technician based on preferences
+const sendNotifications = async (declaration: Declaration, type: 'new' | 'update'): Promise<void> => {
+  try {
+    // Get notification preferences
+    const preferences = getNotificationPreferences();
+    
+    // Prepare common data for templates
+    const commonData = {
+      name: declaration.name,
+      id: declaration.id,
+      property: declaration.property,
+      issueType: declaration.issueType,
+      description: declaration.description,
+      urgency: declaration.urgency,
+      date: new Date(declaration.submittedAt).toLocaleDateString('fr-FR'),
+      status: formatStatus(declaration.status)
+    };
+    
+    // Send notifications based on the type
+    if (type === 'new') {
+      // Notify tenant about new declaration
+      if (preferences.email && declaration.email) {
+        await sendEmailNotification(
+          declaration.email,
+          'declarationReceived',
+          'tenant',
+          commonData
+        );
+      }
+      
+      if (preferences.sms && declaration.phone) {
+        const smsMessage = `PAZ Property: Votre déclaration (Réf: ${declaration.id}) a été reçue. Nous vous contacterons prochainement.`;
+        await sendSmsNotification(declaration.phone, smsMessage);
+      }
+      
+      // Notify technicians about new declaration
+      for (const techEmail of EMAIL_CONFIG.technicianEmails) {
+        await sendEmailNotification(
+          techEmail,
+          'newDeclaration',
+          'technician',
+          commonData
+        );
+      }
+    } else if (type === 'update') {
+      // Notify tenant about status update
+      if (preferences.email && declaration.email) {
+        // Add additional info based on status
+        let additionalInfo = "";
+        if (declaration.status === "in_progress") {
+          additionalInfo = "Un technicien a été assigné à votre demande et interviendra prochainement.";
+        } else if (declaration.status === "resolved") {
+          additionalInfo = "Votre problème a été résolu. Si vous constatez que le problème persiste, n'hésitez pas à nous contacter.";
+        }
+        
+        await sendEmailNotification(
+          declaration.email,
+          'statusUpdate',
+          'tenant',
+          { ...commonData, additionalInfo }
+        );
+      }
+      
+      if (preferences.sms && declaration.phone) {
+        const smsMessage = `PAZ Property: Le statut de votre déclaration (Réf: ${declaration.id}) est maintenant: ${formatStatus(declaration.status)}.`;
+        await sendSmsNotification(declaration.phone, smsMessage);
+      }
+    }
+  } catch (error) {
+    console.error("Error sending notifications:", error);
+    toast.error("Erreur lors de l'envoi des notifications", {
+      description: "Une erreur est survenue lors de la tentative d'envoi des notifications."
+    });
+  }
+};
+
+// Sync data from Monday.com
+const syncFromMonday = async (): Promise<boolean> => {
+  try {
+    console.log("Starting sync from Monday.com...");
+    
+    // Get Monday.com API key from localStorage
+    const mondayApiKey = localStorage.getItem('mondayApiKey');
+    if (!mondayApiKey) {
+      console.error("Missing Monday.com API key");
+      return false;
+    }
+    
+    // Get board ID from localStorage or use default
+    const mondayBoardId = localStorage.getItem('mondayBoardId') || '';
+    if (!mondayBoardId) {
+      console.error("Missing Monday.com board ID");
+      return false;
+    }
+    
+    // Query for items in Monday.com board
+    const query = `
+      query {
+        boards(ids: ${mondayBoardId}) {
+          items {
+            id
+            name
+            column_values {
+              id
+              text
+              value
+            }
+          }
+        }
+      }
+    `;
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": mondayApiKey
+      },
+      body: JSON.stringify({ query })
+    });
+    
+    const result = await response.json();
+    console.log("Monday.com sync response:", result);
+    
+    if (result.errors) {
+      console.error("Monday.com sync error:", result.errors);
+      toast.error("Erreur de synchronisation Monday.com", {
+        description: result.errors[0]?.message || "Vérifiez vos paramètres d'API et réessayez."
+      });
+      return false;
+    }
+    
+    // Process items from Monday.com
+    const items = result.data?.boards[0]?.items || [];
+    if (items.length === 0) {
+      console.log("No items found in Monday.com board");
+      return true;
+    }
+    
+    // Map Monday.com items to declarations and update local storage
+    const existingDeclarations = loadDeclarations();
+    let updatedCount = 0;
+    
+    for (const item of items) {
+      // Find the declaration with this Monday.com ID
+      const existingIndex = existingDeclarations.findIndex(d => d.mondayId === item.id);
+      
+      // If this is a known declaration, update its status
+      if (existingIndex >= 0) {
+        // Get the status column value
+        const statusColumn = item.column_values.find((col: any) => col.id === "status");
+        if (statusColumn && statusColumn.text) {
+          // Map Monday.com status back to our application status
+          let appStatus: Declaration["status"] = "pending";
+          
+          if (statusColumn.text === "En cours") {
+            appStatus = "in_progress";
+          } else if (statusColumn.text === "Résolu") {
+            appStatus = "resolved";
+          }
+          
+          // Check if status has changed
+          if (existingDeclarations[existingIndex].status !== appStatus) {
+            existingDeclarations[existingIndex].status = appStatus;
+            updatedCount++;
+          }
+        }
+      }
+    }
+    
+    // Save updated declarations if any changes were made
+    if (updatedCount > 0) {
+      saveDeclarations(existingDeclarations);
+      toast.success(`Synchronisation terminée`, {
+        description: `${updatedCount} déclaration(s) mise(s) à jour depuis Monday.com`
+      });
+    } else {
+      console.log("No declarations needed updating");
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error syncing from Monday.com:", error);
+    toast.error("Erreur de synchronisation", {
+      description: "Une erreur s'est produite lors de la synchronisation avec Monday.com."
+    });
+    return false;
+  }
+};
+
 // Declaration service
 const declarationService = {
   // Get all declarations
@@ -363,6 +712,10 @@ const declarationService = {
     
     declarations = [declaration, ...declarations];
     saveDeclarations(declarations);
+    
+    // Send notifications for new declaration
+    sendNotifications(declaration, 'new');
+    
     return declaration;
   },
   
@@ -403,6 +756,9 @@ const declarationService = {
       declarations = [declaration, ...declarations];
       saveDeclarations(declarations);
       
+      // Send notifications for new declaration
+      sendNotifications(declaration, 'new');
+      
       return declaration;
     };
     
@@ -419,9 +775,14 @@ const declarationService = {
     // Get the updated declaration
     const updatedDeclaration = declarations.find(d => d.id === id);
     
-    // If the declaration has a Monday.com ID, update the status there too
-    if (updatedDeclaration?.mondayId) {
-      declarationService.updateMondayStatus(updatedDeclaration.mondayId, status);
+    if (updatedDeclaration) {
+      // Send notifications for status update
+      sendNotifications(updatedDeclaration, 'update');
+      
+      // If the declaration has a Monday.com ID, update the status there too
+      if (updatedDeclaration.mondayId) {
+        declarationService.updateMondayStatus(updatedDeclaration.mondayId, status);
+      }
     }
     
     return updatedDeclaration;
@@ -518,6 +879,9 @@ const declarationService = {
   
   // Get notification preferences
   getNotificationPreferences: getNotificationPreferences,
+  
+  // Sync declarations from Monday.com
+  syncFromMonday: syncFromMonday,
   
   // Send declaration to Monday.com
   sendToExternalService: async (declaration: Declaration) => {
@@ -902,12 +1266,25 @@ const declarationService = {
       apiKey: localStorage.getItem('mondayApiKey') || '',
       boardId: localStorage.getItem('mondayBoardId') || ''
     };
+  },
+  
+  // Update email configuration
+  setEmailConfig: (config: Partial<typeof EMAIL_CONFIG>) => {
+    const currentConfig = JSON.parse(localStorage.getItem('emailConfig') || JSON.stringify(EMAIL_CONFIG));
+    const newConfig = { ...currentConfig, ...config };
+    localStorage.setItem('emailConfig', JSON.stringify(newConfig));
+    return newConfig;
+  },
+  
+  // Get email configuration
+  getEmailConfig: () => {
+    return JSON.parse(localStorage.getItem('emailConfig') || JSON.stringify(EMAIL_CONFIG));
   }
 };
 
 // Export the functions for use in other components
 export const sendTechnicianReportToMonday = declarationService.sendTechnicianReportToMonday;
 export const getMonday5BoardStatus = declarationService.getMonday5BoardStatus;
+export const syncFromMonday = declarationService.syncFromMonday;
 
 export default declarationService;
-
