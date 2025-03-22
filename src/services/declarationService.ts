@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 // Declaration interface
@@ -581,7 +582,7 @@ const sendNotifications = async (declaration: Declaration, type: 'new' | 'update
 };
 
 // Sync data from Monday.com
-const syncFromMonday = async (): Promise<boolean> => {
+const syncFromMondayImpl = async (): Promise<boolean> => {
   try {
     console.log("Starting sync from Monday.com...");
     
@@ -866,22 +867,22 @@ const declarationService = {
   },
   
   // Set up notification preferences for Monday.com notifications
-  setupNotificationWebhook: setupNotificationWebhook,
+  setupNotificationWebhook,
   
   // Get all webhook integrations for a board
-  getWebhookIntegrations: getWebhookIntegrations,
+  getWebhookIntegrations,
   
   // Delete a webhook integration
-  deleteWebhook: deleteWebhook,
+  deleteWebhook,
   
   // Save notification preferences
-  saveNotificationPreferences: saveNotificationPreferences,
+  saveNotificationPreferences,
   
   // Get notification preferences
-  getNotificationPreferences: getNotificationPreferences,
+  getNotificationPreferences,
   
   // Sync declarations from Monday.com
-  syncFromMonday: syncFromMonday,
+  syncFromMonday: syncFromMondayImpl,
   
   // Send declaration to Monday.com
   sendToExternalService: async (declaration: Declaration) => {
