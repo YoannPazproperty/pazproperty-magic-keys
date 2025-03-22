@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -14,7 +13,6 @@ import FileUpload from "@/components/FileUpload";
 import { toast } from "sonner";
 import { sendTechnicianReportToMonday } from "@/services/declarationService";
 
-// Définition du schéma de validation avec une condition correcte pour Zod
 const formSchema = z.object({
   categorieProbleme: z.string().min(1, "Veuillez sélectionner une catégorie"),
   description: z.string().min(10, "Veuillez fournir une description détaillée"),
@@ -22,7 +20,6 @@ const formSchema = z.object({
   montantDevis: z.string().optional(),
   travauxRealises: z.string().optional(),
 }).refine(data => {
-  // Si une intervention est nécessaire, les travaux doivent être décrits
   if (data.interventionNecessaire && (!data.travauxRealises || data.travauxRealises.length < 10)) {
     return false;
   }
@@ -61,7 +58,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
   const [factureFile, setFactureFile] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Initialiser le formulaire avec react-hook-form
   const form = useForm<RapportFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -73,12 +69,10 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
     },
   });
 
-  // Gérer la soumission du formulaire
   const onSubmit = async (data: RapportFormValues) => {
     setIsSubmitting(true);
     
     try {
-      // Préparer les données pour Monday.com
       const reportData = {
         interventionId,
         clientName: intervention.client,
@@ -93,7 +87,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
         date: new Date().toISOString(),
       };
 
-      // Envoyer les données à Monday.com
       const result = await sendTechnicianReportToMonday(reportData);
       
       if (result.success) {
@@ -122,7 +115,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Catégorie du problème */}
           <FormField
             control={form.control}
             name="categorieProbleme"
@@ -148,7 +140,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
             )}
           />
           
-          {/* Description du diagnostic */}
           <FormField
             control={form.control}
             name="description"
@@ -171,7 +162,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
             )}
           />
           
-          {/* Photos/Vidéos */}
           <div className="space-y-2">
             <Label>Photos/Vidéos du problème</Label>
             <FileUpload
@@ -184,7 +174,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
             </p>
           </div>
           
-          {/* Intervention nécessaire */}
           <FormField
             control={form.control}
             name="interventionNecessaire"
@@ -210,7 +199,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
           
           {form.watch("interventionNecessaire") && (
             <Card className="p-4 space-y-4">
-              {/* Montant du devis */}
               <FormField
                 control={form.control}
                 name="montantDevis"
@@ -229,7 +217,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
                 )}
               />
               
-              {/* Description des travaux */}
               <FormField
                 control={form.control}
                 name="travauxRealises"
@@ -249,7 +236,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
                 )}
               />
               
-              {/* Facture pro forma */}
               <div className="space-y-2">
                 <Label>Facture pro forma</Label>
                 <FileUpload
@@ -264,7 +250,6 @@ const TechnicienRapportForm: React.FC<TechnicienRapportFormProps> = ({
             </Card>
           )}
           
-          {/* Boutons d'action */}
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               Annuler
