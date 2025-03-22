@@ -30,8 +30,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
     }
     
     // Generate previews
-    const newPreviews: string[] = [];
-    
     newFiles.forEach(file => {
       const fileReader = new FileReader();
       fileReader.onload = () => {
@@ -79,7 +77,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
               <span className="font-semibold">Cliquez pour télécharger</span> ou glissez et déposez
             </p>
             <p className="text-xs text-gray-500">
-              Photos et vidéos (MAX. {maxFiles} fichiers)
+              {accept.includes('image') && accept.includes('video') 
+                ? 'Photos et vidéos' 
+                : accept.includes('image') 
+                  ? 'Photos' 
+                  : accept.includes('video') 
+                    ? 'Vidéos' 
+                    : 'Fichiers'} (MAX. {maxFiles} fichiers)
             </p>
           </div>
           <input 
@@ -103,6 +107,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
                     src={previews[index]} 
                     alt={`Preview ${index}`} 
                     className="object-cover w-full h-24 mb-2 rounded"
+                  />
+                ) : previews[index] && file.type.startsWith('video/') ? (
+                  <video
+                    src={previews[index]}
+                    className="object-cover w-full h-24 mb-2 rounded"
+                    controls
                   />
                 ) : (
                   <div className="flex items-center justify-center w-full h-24 mb-2 bg-gray-200 rounded">

@@ -11,6 +11,7 @@ import Contacto from "./pages/Contacto";
 import Propriedades from "./pages/Propriedades";
 import AreaCliente from "./pages/AreaCliente";
 import Admin from "./pages/Admin";
+import ExtranetTechnique from "./pages/ExtranetTechnique";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/propriedades" element={<Propriedades />} />
           <Route path="/area-cliente" element={<AreaCliente />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/extranet-technique" element={<ExtranetTechnique />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
