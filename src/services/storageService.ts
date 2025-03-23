@@ -99,3 +99,18 @@ export const clearMondayConfig = () => {
   localStorage.removeItem('mondayApiKey');
   localStorage.removeItem('mondayBoardId');
 };
+
+// Validate Monday.com configuration
+export const validateMondayConfig = (apiKey: string, boardId: string) => {
+  // Simple validation - both fields must be present
+  if (!apiKey || !boardId) {
+    return {
+      valid: false,
+      message: "L'API key et l'ID du board sont requis"
+    };
+  }
+  return {
+    valid: true,
+    message: "Configuration valide"
+  };
+};
