@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 // Declaration interface
@@ -694,6 +695,66 @@ const syncFromMondayImpl = async (): Promise<boolean> => {
   }
 };
 
+// Method to set Monday.com API configuration
+export const setMondayConfig = async (apiKey: string, boardId: string) => {
+  try {
+    console.log("Setting Monday.com configuration...");
+    
+    // Validate API key and board ID by making a test query
+    const testQuery = `
+      query {
+        boards(ids: ${boardId}) {
+          name
+        }
+      }
+    `;
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": apiKey
+      },
+      body: JSON.stringify({ query: testQuery })
+    });
+    
+    const result = await response.json();
+    
+    if (result.errors) {
+      console.error("Monday.com configuration test error:", result.errors);
+      return {
+        valid: false,
+        message: result.errors[0]?.message || "Configuração inválida. Verifique a chave API e o ID do quadro."
+      };
+    }
+    
+    // Check if we got a valid board response
+    if (!result.data?.boards?.[0]) {
+      return {
+        valid: false,
+        message: "Quadro não encontrado. Verifique o ID do quadro."
+      };
+    }
+    
+    // Save the validated configuration
+    localStorage.setItem('mondayApiKey', apiKey);
+    localStorage.setItem('mondayBoardId', boardId);
+    
+    console.log("Monday.com configuration saved successfully");
+    
+    return {
+      valid: true,
+      message: `Configuração validada com sucesso. Quadro: ${result.data.boards[0].name}`
+    };
+  } catch (error) {
+    console.error("Error setting Monday.com configuration:", error);
+    return {
+      valid: false,
+      message: "Ocorreu um erro ao testar a configuração."
+    };
+  }
+};
+
 // Declaration service
 const declarationService = {
   // Get all declarations
@@ -884,6 +945,9 @@ const declarationService = {
   // Get notification preferences
   getNotificationPreferences,
   
+  // Set Monday.com configuration
+  setMondayConfig,
+  
   // Sync declarations from Monday.com
   syncFromMonday: syncFromMondayImpl,
   
@@ -987,3 +1051,35 @@ const declarationService = {
         });
         return false;
       }
+      
+      // If we got here, the request succeeded. Extract the Monday.com item ID
+      // and update our local declaration with it for future reference
+      if (result.data?.create_item?.id) {
+        const mondayItemId = result.data.create_item.id;
+        
+        // Update the declaration with the Monday.com item ID
+        declarations = declarations.map(d => 
+          d.id === declaration.id ? { ...d, mondayId: mondayItemId } : d
+        );
+        saveDeclarations(declarations);
+        
+        toast.success("Déclaration envoyée à Monday.com", {
+          description: `Référence Monday.com: ${mondayItemId}`
+        });
+        
+        return true;
+      } else {
+        console.warn("Monday.com API response does not contain expected item ID");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error sending to Monday.com:", error);
+      toast.error("Erreur lors de l'envoi à Monday.com", {
+        description: "Une erreur s'est produite lors de la tentative d'envoi de la déclaration."
+      });
+      return false;
+    }
+  }
+};
+
+export default declarationService;
