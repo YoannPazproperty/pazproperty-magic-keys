@@ -112,22 +112,22 @@ const saveDeclarations = (declarations: Declaration[]) => {
 // Initialize declarations
 let declarations = loadDeclarations();
 
-// Translation maps for Monday.com
+// Translation maps for Monday.com - Updated to Portuguese
 const issueTypeToMondayMap: Record<string, string> = {
-  plomberie: "Plomberie",
-  electricite: "Électrique",
-  serrurerie: "Serrurerie",
-  menuiserie: "Menuiserie",
-  chauffage: "Chauffage/Climatisation",
-  pest: "Nuisibles",
-  other: "Autre"
+  plomberie: "Canalização",
+  electricite: "Elétrico",
+  serrurerie: "Serralharia",
+  menuiserie: "Carpintaria",
+  chauffage: "Aquecimento/Climatização",
+  pest: "Pragas",
+  other: "Outro"
 };
 
 const urgencyToMondayMap: Record<string, string> = {
-  low: "Basse",
-  medium: "Moyenne",
-  high: "Élevée",
-  emergency: "Urgence"
+  low: "Baixa",
+  medium: "Média",
+  high: "Alta",
+  emergency: "Emergência"
 };
 
 // Email templates for automated notifications
@@ -490,15 +490,15 @@ const sendSmsNotification = async (
   }
 };
 
-// Format status for display
+// Format status for display - Updated to Portuguese
 const formatStatus = (status: Declaration["status"]): string => {
   switch (status) {
     case "pending":
-      return "En attente";
+      return "Em espera";
     case "in_progress":
-      return "En cours d'intervention";
+      return "Em intervenção";
     case "resolved":
-      return "Résolu";
+      return "Resolvido";
     default:
       return status;
   }
@@ -792,7 +792,7 @@ const declarationService = {
     return updatedDeclaration;
   },
   
-  // Update status in Monday.com
+  // Update status in Monday.com - Updated to Portuguese status values
   updateMondayStatus: async (mondayItemId: string, status: Declaration["status"]) => {
     try {
       console.log(`Updating Monday.com item ${mondayItemId} status to ${status}`);
@@ -811,18 +811,18 @@ const declarationService = {
         return false;
       }
       
-      // Map application status to Monday.com status
-      let mondayStatus = "Nouveau";
+      // Map application status to Monday.com status - Updated to Portuguese
+      let mondayStatus = "Novo";
       switch (status) {
         case "in_progress":
-          mondayStatus = "En cours";
+          mondayStatus = "Em progresso";
           break;
         case "resolved":
-          mondayStatus = "Résolu";
+          mondayStatus = "Resolvido";
           break;
         case "pending":
         default:
-          mondayStatus = "Nouveau";
+          mondayStatus = "Novo";
       }
       
       // Update status in Monday.com using GraphQL mutation
@@ -887,7 +887,7 @@ const declarationService = {
   // Sync declarations from Monday.com
   syncFromMonday: syncFromMondayImpl,
   
-  // Send declaration to Monday.com
+  // Send declaration to Monday.com - Updated with Portuguese column names
   sendToExternalService: async (declaration: Declaration) => {
     try {
       console.log("Sending to Monday.com:", declaration);
@@ -906,8 +906,8 @@ const declarationService = {
         return false;
       }
       
-      // Prepare the data for Monday.com - Use more useful name format
-      const itemName = `Nouvelle déclaration - ${declaration.name}`;
+      // Prepare the data for Monday.com - Use more useful name format - Updated to Portuguese
+      const itemName = `Nova declaração - ${declaration.name}`;
       
       // Get postal code and city from address if available
       const postalCodeMatch = declaration.property.match(/\d{4,}(?:-\d+)?/);
@@ -917,19 +917,18 @@ const declarationService = {
       const addressParts = declaration.property.split(',');
       const city = addressParts.length > 0 ? addressParts[addressParts.length - 2]?.trim() || "" : "";
       
-      // Based on the Monday.com columns from the console log, we need to use the column IDs
+      // Using exact column IDs with Portuguese labels
       const columnValues = {
-        // Using exact column IDs from the console log
         "text_mknxg830": declaration.name, // Nome do Inquilino
         "email_mknxfg3r": { "email": declaration.email, "text": declaration.email }, // E-mail Inquilino
         "phone_mknyw109": { "phone": declaration.phone, "countryShortName": "PT" }, // Telefone
-        "text_mknx4pjn": declaration.property, // Endereço do Inquilino
+        "text_mknx4pjn": declaration.property, // Morada do Inquilino
         "text_mknxny1h": issueTypeToMondayMap[declaration.issueType] || declaration.issueType, // Tipo de problema
-        "text_mknxj2e7": declaration.description, // Explicação do problema
-        "numeric_mknx2s4b": declaration.nif || "", // NIF as a number
-        "text_mknxq2zr": postalCode, // Codigo Postal
+        "text_mknxj2e7": declaration.description, // Descrição do problema
+        "numeric_mknx2s4b": declaration.nif || "", // NIF
+        "text_mknxq2zr": postalCode, // Código Postal
         "text_mknxe74j": city, // Cidade
-        "status": { "label": "Nouveau" } // Status - Using "Nouveau" as default
+        "status": { "label": "Novo" } // Estado - Using "Novo" as default
       };
       
       // Add file URLs if present - this assumes we've added a file column to Monday.com
@@ -988,304 +987,3 @@ const declarationService = {
         });
         return false;
       }
-      
-      if (result.data?.create_item?.id) {
-        toast.success("Envoyé à Monday.com", {
-          description: `Déclaration créée avec succès dans Monday.com (ID: ${result.data.create_item.id})`
-        });
-        
-        // Update the declaration with external ID
-        declarations = declarations.map(d => 
-          d.id === declaration.id ? { ...d, mondayId: result.data.create_item.id } : d
-        );
-        saveDeclarations(declarations);
-        
-        return true;
-      } else {
-        console.error("Unexpected Monday.com response format:", result);
-        toast.error("Erreur lors de l'envoi à Monday.com", {
-          description: "La réponse de l'API n'a pas renvoyé l'ID attendu."
-        });
-        return false;
-      }
-    } catch (error) {
-      console.error("Error sending to Monday.com:", error);
-      toast.error("Échec de l'envoi à Monday.com", {
-        description: "Une erreur s'est produite lors de la communication avec l'API."
-      });
-      return false;
-    }
-  },
-  
-  // Send technician report to Monday.com (board ID 1863361499)
-  sendTechnicianReportToMonday: async (report: TechnicianReport) => {
-    try {
-      console.log("Sending technician report to Monday.com:", report);
-      
-      // Get Monday.com API key from localStorage
-      const mondayApiKey = localStorage.getItem('mondayApiKey');
-      if (!mondayApiKey) {
-        return { 
-          success: false, 
-          message: "Clé API Monday.com manquante. Veuillez configurer votre clé API dans les paramètres d'administration." 
-        };
-      }
-      
-      // Using the specified board ID
-      const mondayBoardId = TECHNICIAN_BOARD_ID;
-      
-      // Format the item name for Monday.com
-      const itemName = `Rapport technique - ${report.clientName} - ${new Date().toLocaleDateString()}`;
-      
-      // Prepare column values based on the Technician Report board structure
-      const columnValues = {
-        // These column IDs should match your Monday.com board columns
-        "personne": { "text": report.clientName },
-        "text": report.address,
-        "text1": report.diagnoseDescription,
-        "numbers": parseFloat(report.estimateAmount) || 0,
-        "status": { "label": report.needsIntervention ? "Intervention requise" : "Résolu" },
-        "text6": report.workDescription,
-        "email": { "email": report.clientEmail, "text": report.clientEmail },
-        "phone": { "phone": report.clientPhone, "countryShortName": "FR" },
-        "text0": report.problemCategory,
-        // Add the date in the format Monday.com expects
-        "date4": { 
-          "date": new Date().toISOString().split('T')[0],
-          "time": new Date().toISOString().split('T')[1].substring(0, 5)
-        }
-      };
-      
-      console.log("Monday.com column values for technician report:", JSON.stringify(columnValues));
-      
-      // Build the GraphQL mutation for creating an item in Monday.com
-      const query = `
-        mutation {
-          create_item (
-            board_id: ${mondayBoardId}, 
-            item_name: "${itemName}", 
-            column_values: ${JSON.stringify(JSON.stringify(columnValues))}
-          ) {
-            id
-          }
-        }
-      `;
-      
-      console.log("Monday.com GraphQL query for technician report:", query);
-      
-      // Send the request to Monday.com API
-      const response = await fetch("https://api.monday.com/v2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": mondayApiKey
-        },
-        body: JSON.stringify({ query })
-      });
-      
-      const responseData = await response.text();
-      console.log("Monday.com API raw response for technician report:", responseData);
-      
-      let result;
-      try {
-        result = JSON.parse(responseData);
-      } catch (e) {
-        console.error("Failed to parse Monday.com response:", e);
-        return {
-          success: false,
-          message: "La réponse de l'API n'est pas au format JSON attendu."
-        };
-      }
-      
-      if (result.errors) {
-        console.error("Monday.com API error for technician report:", result.errors);
-        return {
-          success: false,
-          message: result.errors[0]?.message || "Erreur lors de l'envoi à Monday.com. Vérifiez vos paramètres d'API."
-        };
-      }
-      
-      if (result.data?.create_item?.id) {
-        return {
-          success: true,
-          message: "Rapport envoyé avec succès à Monday.com",
-          mondayItemId: result.data.create_item.id
-        };
-      } else {
-        console.error("Unexpected Monday.com response format for technician report:", result);
-        return {
-          success: false,
-          message: "La réponse de l'API n'a pas renvoyé l'ID attendu."
-        };
-      }
-    } catch (error) {
-      console.error("Error sending technician report to Monday.com:", error);
-      return {
-        success: false,
-        message: "Une erreur s'est produite lors de la communication avec l'API Monday.com."
-      };
-    }
-  },
-  
-  // Check Monday.com board 5 (1863361499) connection status
-  getMonday5BoardStatus: async () => {
-    try {
-      // Get Monday.com API key from localStorage
-      const mondayApiKey = localStorage.getItem('mondayApiKey');
-      if (!mondayApiKey) {
-        return { 
-          connected: false, 
-          message: "Clé API Monday.com manquante. Veuillez configurer votre clé API dans les paramètres d'administration." 
-        };
-      }
-      
-      const mondayBoardId = TECHNICIAN_BOARD_ID;
-      
-      // Simple query to check if we can access the board
-      const query = `
-        query {
-          boards(ids: ${mondayBoardId}) {
-            name
-            columns {
-              id
-              title
-              type
-            }
-          }
-        }
-      `;
-      
-      const response = await fetch("https://api.monday.com/v2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": mondayApiKey
-        },
-        body: JSON.stringify({ query })
-      });
-      
-      const result = await response.json();
-      console.log("Monday.com board 5 validation response:", result);
-      
-      if (result.errors) {
-        console.error("Monday.com board 5 validation error:", result.errors);
-        return { 
-          connected: false, 
-          message: result.errors[0]?.message || "Erreur de connexion au tableau Monday.com." 
-        };
-      }
-      
-      if (result.data?.boards?.length > 0) {
-        const boardName = result.data.boards[0].name;
-        console.log("Monday.com board 5 columns:", result.data.boards[0].columns);
-        return { 
-          connected: true, 
-          message: `Connecté au tableau "${boardName}" (ID: ${mondayBoardId})` 
-        };
-      } else {
-        return { 
-          connected: false, 
-          message: `Le tableau Monday.com avec l'ID ${mondayBoardId} n'a pas été trouvé.` 
-        };
-      }
-    } catch (error) {
-      console.error("Error validating Monday.com board 5:", error);
-      return { 
-        connected: false, 
-        message: "Erreur de connexion à l'API Monday.com." 
-      };
-    }
-  },
-  
-  // Set Monday.com API configuration
-  setMondayConfig: (apiKey: string, boardId: string) => {
-    localStorage.setItem('mondayApiKey', apiKey);
-    localStorage.setItem('mondayBoardId', boardId);
-    
-    // Validate the API key and board ID
-    return declarationService.validateMondayConfig(apiKey, boardId);
-  },
-  
-  // Validate Monday.com configuration
-  validateMondayConfig: async (apiKey: string, boardId: string) => {
-    try {
-      // Simple query to check if the API key and board ID are valid
-      const query = `
-        query {
-          boards(ids: ${boardId}) {
-            name
-            columns {
-              id
-              title
-              type
-            }
-          }
-        }
-      `;
-      
-      const response = await fetch("https://api.monday.com/v2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": apiKey
-        },
-        body: JSON.stringify({ query })
-      });
-      
-      const responseData = await response.text();
-      console.log("Monday.com validation response:", responseData);
-      
-      try {
-        const result = JSON.parse(responseData);
-        
-        if (result.errors) {
-          console.error("Monday.com config validation error:", result.errors);
-          return { valid: false, message: result.errors[0]?.message || "Invalid API key or board ID." };
-        }
-        
-        if (result.data?.boards?.length > 0) {
-          const boardName = result.data.boards[0].name;
-          console.log("Monday.com columns:", result.data.boards[0].columns);
-          return { valid: true, message: `Connecté au tableau "${boardName}"` };
-        } else {
-          return { valid: false, message: "Le tableau spécifié n'a pas été trouvé." };
-        }
-      } catch (e) {
-        console.error("Failed to parse Monday.com validation response:", e);
-        return { valid: false, message: "Réponse de validation non valide." };
-      }
-    } catch (error) {
-      console.error("Error validating Monday.com config:", error);
-      return { valid: false, message: "Erreur de connexion à l'API Monday.com." };
-    }
-  },
-  
-  // Get Monday.com configuration
-  getMondayConfig: () => {
-    return {
-      apiKey: localStorage.getItem('mondayApiKey') || '',
-      boardId: localStorage.getItem('mondayBoardId') || ''
-    };
-  },
-  
-  // Update email configuration
-  setEmailConfig: (config: Partial<typeof EMAIL_CONFIG>) => {
-    const currentConfig = JSON.parse(localStorage.getItem('emailConfig') || JSON.stringify(EMAIL_CONFIG));
-    const newConfig = { ...currentConfig, ...config };
-    localStorage.setItem('emailConfig', JSON.stringify(newConfig));
-    return newConfig;
-  },
-  
-  // Get email configuration
-  getEmailConfig: () => {
-    return JSON.parse(localStorage.getItem('emailConfig') || JSON.stringify(EMAIL_CONFIG));
-  }
-};
-
-// Export the functions for use in other components
-export const sendTechnicianReportToMonday = declarationService.sendTechnicianReportToMonday;
-export const getMonday5BoardStatus = declarationService.getMonday5BoardStatus;
-export const syncFromMonday = declarationService.syncFromMonday;
-
-export default declarationService;
-

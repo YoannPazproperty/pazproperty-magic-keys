@@ -38,19 +38,19 @@ export const ApiSettings = ({
       const result = await declarationService.setMondayConfig(apiKey, boardId);
       
       if (result.valid) {
-        toast.success("Configuration Monday.com sauvegardée", {
+        toast.success("Configuração Monday.com guardada", {
           description: result.message
         });
       } else {
-        toast.error("Erreur de configuration", {
+        toast.error("Erro de configuração", {
           description: result.message
         });
       }
       
       onConfigUpdate(apiKey, boardId);
     } catch (error) {
-      toast.error("Erreur lors de la sauvegarde", {
-        description: "Une erreur s'est produite lors de la sauvegarde de la configuration."
+      toast.error("Erro ao guardar", {
+        description: "Ocorreu um erro ao guardar a configuração."
       });
     } finally {
       setIsTesting(false);
@@ -63,46 +63,46 @@ export const ApiSettings = ({
     localStorage.removeItem('mondayApiKey');
     localStorage.removeItem('mondayBoardId');
     onConfigUpdate("", "");
-    toast("Configuration réinitialisée");
+    toast("Configuração reiniciada");
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Configuration de Monday.com</CardTitle>
+        <CardTitle>Configuração de Monday.com</CardTitle>
         <CardDescription>
-          Configurez l'intégration avec Monday.com pour synchroniser les déclarations.
+          Configure a integração com Monday.com para sincronizar as declarações.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="monday-api-key" className="font-medium">
-            Clé API Monday.com
+            Chave API Monday.com
           </label>
           <Input
             id="monday-api-key"
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="Votre clé API Monday.com"
+            placeholder="A sua chave API Monday.com"
           />
           <p className="text-sm text-gray-500">
-            Pour obtenir votre clé API, allez dans votre compte Monday.com ➝ Profile ➝ Developer ➝ API v2 Token
+            Para obter a sua chave API, vá à sua conta Monday.com ➝ Perfil ➝ Developer ➝ API v2 Token
           </p>
         </div>
         
         <div className="space-y-2">
           <label htmlFor="monday-board-id" className="font-medium">
-            ID du Tableau Monday.com
+            ID do Quadro Monday.com
           </label>
           <Input
             id="monday-board-id"
             value={boardId}
             onChange={(e) => setBoardId(e.target.value)}
-            placeholder="ID du tableau (ex: 123456789)"
+            placeholder="ID do quadro (ex: 123456789)"
           />
           <p className="text-sm text-gray-500">
-            L'ID du tableau se trouve dans l'URL de votre tableau: https://your-domain.monday.com/boards/[ID DU TABLEAU]
+            O ID do quadro encontra-se no URL do seu quadro: https://your-domain.monday.com/boards/[ID DO QUADRO]
           </p>
         </div>
         
@@ -119,7 +119,7 @@ export const ApiSettings = ({
           variant="outline" 
           onClick={handleReset}
         >
-          Réinitialiser
+          Reiniciar
         </Button>
         <Button 
           onClick={handleSaveMondayConfig}
@@ -128,12 +128,12 @@ export const ApiSettings = ({
           {isTesting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Test en cours...
+              Teste em curso...
             </>
           ) : (
             <>
               <Settings className="mr-2 h-4 w-4" />
-              Tester et Sauvegarder
+              Testar e Guardar
             </>
           )}
         </Button>

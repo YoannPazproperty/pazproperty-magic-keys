@@ -30,16 +30,16 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
     <div className="max-w-md mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Administration Pazproperty</CardTitle>
+          <CardTitle>Administração Pazproperty</CardTitle>
           <CardDescription>
-            Connectez-vous pour accéder à l'interface d'administration.
+            Inicie sessão para aceder à interface de administração.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="username" className="text-sm font-medium">
-                Nom d'utilisateur
+                Nome de utilizador
               </label>
               <Input
                 id="username"
@@ -50,7 +50,7 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
             </div>
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
-                Mot de passe
+                Palavra-passe
               </label>
               <Input
                 id="password"
@@ -61,7 +61,7 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
               />
             </div>
             <Button type="submit" className="w-full">
-              Se connecter
+              Iniciar sessão
             </Button>
           </form>
         </CardContent>
@@ -70,8 +70,8 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
             <div className="flex">
               <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
               <div className="text-sm">
-                <p className="font-medium">Important:</p>
-                <p>Après connexion, configurez l'API Monday.com dans l'onglet "Paramètres API" pour activer la synchronisation des déclarations.</p>
+                <p className="font-medium">Importante:</p>
+                <p>Após iniciar sessão, configure a API Monday.com no separador "Configurações API" para ativar a sincronização das declarações.</p>
               </div>
             </div>
           </div>
