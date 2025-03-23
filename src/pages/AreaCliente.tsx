@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/radio-group";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import declarationService, { Declaration } from "@/services/declarationService";
+import { getMondayConfig } from "@/services/storageService";
 
 const formSchema = z.object({
   nif: z.string().min(1, {
@@ -117,7 +118,7 @@ const AreaCliente = () => {
       const newDeclaration = await declarationService.addWithMedia(declarationData, mediaFiles);
       console.log("Declaration saved locally:", newDeclaration);
       
-      const config = declarationService.getMondayConfig();
+      const config = getMondayConfig();
       
       if (config.apiKey && config.boardId) {
         try {

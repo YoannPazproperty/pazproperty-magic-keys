@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +12,7 @@ import { LoginForm } from "@/components/admin/LoginForm";
 import { DeclarationList } from "@/components/admin/DeclarationList";
 import { ApiSettings } from "@/components/admin/ApiSettings";
 import { NotificationSettings } from "@/components/admin/NotificationSettings";
+import { getMondayConfig, validateMondayConfig } from "@/services/storageService";
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "pazproperty2024";
@@ -47,21 +47,17 @@ const Admin = () => {
   };
   
   const loadMondayConfig = () => {
-    const config = declarationService.getMondayConfig();
+    const config = getMondayConfig();
     setMondayApiKey(config.apiKey);
     setMondayBoardId(config.boardId);
     
     if (config.apiKey && config.boardId) {
-      validateMondayConfig(config.apiKey, config.boardId);
+      validateMondayConfig(config.apiKey, config.boardId).then(result => {
+        setMondayConfigStatus(result);
+      });
     }
   };
   
-  const validateMondayConfig = async (apiKey: string, boardId: string) => {
-    const result = await declarationService.validateMondayConfig(apiKey, boardId);
-    setMondayConfigStatus(result);
-    return result;
-  };
-
   const handleLogin = (username: string, password: string) => {
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       setIsAuthenticated(true);
@@ -97,7 +93,9 @@ const Admin = () => {
     setMondayApiKey(apiKey);
     setMondayBoardId(boardId);
     if (apiKey && boardId) {
-      validateMondayConfig(apiKey, boardId);
+      validateMondayConfig(apiKey, boardId).then(result => {
+        setMondayConfigStatus(result);
+      });
     } else {
       setMondayConfigStatus(null);
     }
