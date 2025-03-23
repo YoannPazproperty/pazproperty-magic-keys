@@ -9,7 +9,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
 
 interface LoginFormProps {
   onLogin: (username: string, password: string) => void;
@@ -63,6 +65,17 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
             </Button>
           </form>
         </CardContent>
+        <CardFooter>
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-3 w-full">
+            <div className="flex">
+              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium">Important:</p>
+                <p>Après connexion, configurez l'API Monday.com dans l'onglet "Paramètres API" pour activer la synchronisation des déclarations.</p>
+              </div>
+            </div>
+          </div>
+        </CardFooter>
       </Card>
     </div>
   );

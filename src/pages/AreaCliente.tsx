@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -104,17 +103,6 @@ const AreaCliente = () => {
       
       const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}, ${values.city}, ${values.state}, ${values.postalCode}`;
       
-      // Make sure Monday.com is configured
-      const config = declarationService.getMondayConfig();
-      if (!config.apiKey || !config.boardId) {
-        toast.error("Configuration Monday.com manquante", {
-          description: "Veuillez configurer l'API Monday.com dans les paramètres d'administration."
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Use new method for adding declaration with media
       const declarationData = {
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
@@ -127,17 +115,34 @@ const AreaCliente = () => {
       };
       
       const newDeclaration = await declarationService.addWithMedia(declarationData, mediaFiles);
+      console.log("Declaration saved locally:", newDeclaration);
       
-      console.log("Sending declaration to Monday:", newDeclaration);
-      const mondayResult = await declarationService.sendToExternalService(newDeclaration);
+      const config = declarationService.getMondayConfig();
       
-      if (mondayResult) {
-        toast.success("Declaração enviada para Monday.com", {
-          description: "Sua declaração foi registrada com sucesso no nosso sistema."
-        });
+      if (config.apiKey && config.boardId) {
+        try {
+          console.log("Sending declaration to Monday:", newDeclaration);
+          const mondayResult = await declarationService.sendToExternalService(newDeclaration);
+          
+          if (mondayResult) {
+            toast.success("Declaração enviada para Monday.com", {
+              description: "Sua declaração foi registrada com sucesso no nosso sistema."
+            });
+          } else {
+            toast.error("Erro na integração com Monday.com", {
+              description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com."
+            });
+          }
+        } catch (error) {
+          console.error("Error sending to Monday.com:", error);
+          toast.error("Erro ao enviar para Monday.com", {
+            description: "Sua declaração foi salva localmente, mas houve um erro ao enviá-la para Monday.com."
+          });
+        }
       } else {
-        toast.error("Erro na integração com Monday.com", {
-          description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com."
+        console.log("Monday.com not configured, saving locally only");
+        toast.info("Monday.com não configurado", {
+          description: "Sua declaração foi salva localmente. A equipe será notificada de outra forma."
         });
       }
       
@@ -145,7 +150,7 @@ const AreaCliente = () => {
       form.reset();
       setMediaFiles([]);
       
-      toast("Declaração enviada com sucesso!", {
+      toast.success("Declaração enviada com sucesso!", {
         description: "Entraremos em contato em breve sobre o seu problema."
       });
     } catch (error) {
@@ -209,7 +214,7 @@ const AreaCliente = () => {
                   <div>
                     <h3 className="font-semibold text-blue-700">Importante</h3>
                     <p className="text-blue-700 text-sm">
-                      Para emergências que exigem atenção imediata (como vazamentos graves ou falta de energia), 
+                      Para emergências que exigem aten��ão imediata (como vazamentos graves ou falta de energia), 
                       por favor ligue para +351 912 345 678 além de preencher este formulário.
                     </p>
                   </div>

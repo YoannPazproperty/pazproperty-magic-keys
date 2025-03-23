@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Declaration interface
@@ -757,8 +756,12 @@ const declarationService = {
       declarations = [declaration, ...declarations];
       saveDeclarations(declarations);
       
-      // Send notifications for new declaration
-      sendNotifications(declaration, 'new');
+      // Send notifications for new declaration if configured
+      try {
+        sendNotifications(declaration, 'new');
+      } catch (error) {
+        console.error("Error sending notifications:", error);
+      }
       
       return declaration;
     };
@@ -889,21 +892,17 @@ const declarationService = {
     try {
       console.log("Sending to Monday.com:", declaration);
       
-      // Get Monday.com API key from localStorage or prompt user
+      // Get Monday.com API key from localStorage
       const mondayApiKey = localStorage.getItem('mondayApiKey');
       if (!mondayApiKey) {
-        toast.error("Clé API Monday.com manquante", {
-          description: "Veuillez configurer votre clé API dans les paramètres d'administration."
-        });
+        console.warn("No Monday.com API key found in localStorage");
         return false;
       }
       
-      // Get board ID from localStorage or use default
+      // Get board ID from localStorage
       const mondayBoardId = localStorage.getItem('mondayBoardId') || '';
       if (!mondayBoardId) {
-        toast.error("ID du tableau Monday.com manquant", {
-          description: "Veuillez configurer l'ID du tableau dans les paramètres d'administration."
-        });
+        console.warn("No Monday.com board ID found in localStorage");
         return false;
       }
       
@@ -1289,3 +1288,4 @@ export const getMonday5BoardStatus = declarationService.getMonday5BoardStatus;
 export const syncFromMonday = declarationService.syncFromMonday;
 
 export default declarationService;
+
