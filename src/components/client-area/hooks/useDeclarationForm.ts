@@ -27,6 +27,9 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       
       const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}`;
       
+      // Map the Portuguese/French problem type names to the exact values used in Monday.com
+      const issueType = mapIssueTypeToMondayFormat(values.problemType);
+      
       const declarationData = {
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
@@ -34,9 +37,9 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         property: fullAddress,
         city: values.city,
         postalCode: values.postalCode,
-        issueType: mapIssueTypeToMondayFormat(values.problemType),
+        issueType: issueType,
         description: values.description,
-        urgency: "medium", // Default urgency as it's not in the form
+        urgency: "Média", // Using exact value that matches Monday.com dropdown
         nif: values.nif,
       };
       

@@ -7,34 +7,49 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   try {
     console.log("Sending declaration to Monday.com:", declaration);
     
-    // Format the data for Monday.com
-    const columnValues: Record<string, any> = {
-      "Nome do Inquilino": declaration.name,
-      "Email": declaration.email,
-      "Telefone": declaration.phone,
-      "Endereço": declaration.property,
-      "Cidade": declaration.city || "",
-      "Codigo Postal": declaration.postalCode || "",
-      "Tipo de problema": declaration.issueType,
-      "Descrição": declaration.description,
-      "Urgência": declaration.urgency,
-      "Status": declaration.status,
-      "ID Declaração": declaration.id,
-      "Data de submissão": declaration.submittedAt
-    };
+    // Format the data for Monday.com - using correct field mappings based on your Monday board
+    const formattedValues: Record<string, any> = {};
     
-    // Add NIF if available
-    if (declaration.nif) {
-      columnValues["NIF"] = declaration.nif;
+    // Text columns
+    formattedValues["Nome do Inquilino"] = { text: declaration.name };
+    formattedValues["Email"] = { text: declaration.email };
+    formattedValues["Telefone"] = { text: declaration.phone };
+    formattedValues["Endereço"] = { text: declaration.property };
+    formattedValues["Descrição"] = { text: declaration.description };
+    formattedValues["ID Declaração"] = { text: declaration.id };
+    
+    // Optional text fields
+    if (declaration.city) formattedValues["Cidade"] = { text: declaration.city };
+    if (declaration.postalCode) formattedValues["Codigo Postal"] = { text: declaration.postalCode };
+    if (declaration.nif) formattedValues["NIF"] = { text: declaration.nif };
+    
+    // Status column - map to exact status values in Monday board
+    const statusMap: Record<string, string> = {
+      "pending": "Nouveau",
+      "in_progress": "En cours",
+      "resolved": "Fait"
+    };
+    formattedValues["Status"] = { label: statusMap[declaration.status] || "Nouveau" };
+    
+    // Dropdown columns need exact label matches
+    formattedValues["Tipo de problema"] = { label: declaration.issueType };
+    formattedValues["Urgência"] = { label: declaration.urgency === "medium" ? "Média" : declaration.urgency };
+    
+    // Date column
+    if (declaration.submittedAt) {
+      const date = new Date(declaration.submittedAt);
+      if (!isNaN(date.getTime())) {
+        formattedValues["Data de submissão"] = { date: date.toISOString().split('T')[0] };
+      }
     }
     
     // Log the column values before sending
-    console.log("Column values being sent to Monday.com:", columnValues);
+    console.log("Monday.com formatted column values:", formattedValues);
     
-    // Send to Monday.com
+    // Send to Monday.com with properly formatted values
     const itemId = await createMondayItem(
       `Ocorrência: ${declaration.name} - ${declaration.issueType}`, 
-      columnValues
+      formattedValues
     );
     
     console.log("Monday.com item created with ID:", itemId);
@@ -52,27 +67,32 @@ export const sendTechnicianReportToMonday = async (
   try {
     console.log("Sending technician report to Monday.com:", report);
     
-    // Format the data for Monday.com technician board
-    const columnValues = {
-      "Cliente": report.clientName,
-      "Email": report.clientEmail,
-      "Telefone": report.clientPhone,
-      "Endereço": report.address,
-      "Categoria do problema": report.problemCategory,
-      "Diagnóstico": report.diagnoseDescription,
-      "Necessita de intervenção": report.needsIntervention ? "Sim" : "Não",
-      "Valor estimado": report.estimateAmount,
-      "Trabalhos a realizar": report.workDescription,
-      "ID Intervenção": report.interventionId.toString()
-    };
+    // Format the data for Monday.com technician board with proper structure
+    const formattedValues: Record<string, any> = {};
+    
+    // Text columns
+    formattedValues["Cliente"] = { text: report.clientName };
+    formattedValues["Email"] = { text: report.clientEmail };
+    formattedValues["Telefone"] = { text: report.clientPhone };
+    formattedValues["Endereço"] = { text: report.address };
+    formattedValues["Diagnóstico"] = { text: report.diagnoseDescription };
+    formattedValues["Trabalhos a realizar"] = { text: report.workDescription || "" };
+    formattedValues["ID Intervenção"] = { text: report.interventionId.toString() };
+    
+    // Number column
+    formattedValues["Valor estimado"] = { text: report.estimateAmount || "0" };
+    
+    // Status/dropdown columns
+    formattedValues["Categoria do problema"] = { label: report.problemCategory };
+    formattedValues["Necessita de intervenção"] = { label: report.needsIntervention ? "Sim" : "Não" };
     
     // Log the column values before sending
-    console.log("Column values being sent to Monday.com for technician report:", columnValues);
+    console.log("Column values being sent to Monday.com for technician report:", formattedValues);
     
     // Create item in the technician board
     const itemId = await createTechnicianReport(
       `Relatório: ${report.clientName} - ${report.problemCategory}`,
-      columnValues
+      formattedValues
     );
     
     if (itemId) {
