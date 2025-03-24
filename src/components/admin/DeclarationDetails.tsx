@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Declaration } from "@/services/types";
-import { translateIssueType, translateUrgency } from "./DeclarationList";
+import { translateIssueType, translateUrgency } from "@/utils/translationUtils";
 import { Info } from "lucide-react";
 
 interface DeclarationDetailsProps {
