@@ -14,8 +14,7 @@ import { LoginForm } from "@/components/admin/LoginForm";
 import { DeclarationList } from "@/components/admin/DeclarationList";
 import { ApiSettings } from "@/components/admin/ApiSettings";
 import { NotificationSettings } from "@/components/admin/NotificationSettings";
-import { getMondayConfig } from "@/services/storageService";
-import { validateMondayConfig } from "@/services/mondayService";
+import { getMondayConfig, validateMondayConfig } from "@/services/storageService";
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "pazproperty2024";
@@ -56,9 +55,9 @@ const Admin = () => {
     setMondayBoardId(config.boardId);
     setMondayTechBoardId(config.techBoardId);
     
-    if (config.apiKey && config.boardId) {
+    if (config.apiKey && config.boardId && config.techBoardId) {
       try {
-        const result = await validateMondayConfig(config.apiKey, config.boardId, config.techBoardId);
+        const result = validateMondayConfig(config.apiKey, config.boardId, config.techBoardId);
         setMondayConfigStatus(result);
       } catch (error) {
         console.error("Error validating Monday config:", error);
@@ -102,16 +101,8 @@ const Admin = () => {
     setMondayBoardId(boardId);
     setMondayTechBoardId(techBoardId);
     
-    if (apiKey && boardId && techBoardId) {
-      try {
-        const result = await validateMondayConfig(apiKey, boardId, techBoardId);
-        setMondayConfigStatus(result);
-      } catch (error) {
-        console.error("Error validating Monday config:", error);
-      }
-    } else {
-      setMondayConfigStatus(null);
-    }
+    const result = validateMondayConfig(apiKey, boardId, techBoardId);
+    setMondayConfigStatus(result);
   };
 
   return (

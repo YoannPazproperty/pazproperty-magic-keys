@@ -47,7 +47,7 @@ export const ApiSettings = ({
       const result = await setMondayConfig(apiKey, boardId, techBoardId);
       
       if (result.valid) {
-        toast.success("Configuration Monday.com guardada", {
+        toast.success("Configuration Monday.com sauvegardée", {
           description: result.message
         });
       } else {
@@ -58,8 +58,8 @@ export const ApiSettings = ({
       
       onConfigUpdate(apiKey, boardId, techBoardId);
     } catch (error) {
-      toast.error("Erreur au guardada", {
-        description: "Ocorreu um erro ao guardar a configuração."
+      toast.error("Erreur lors de la sauvegarde", {
+        description: "Une erreur s'est produite lors de la sauvegarde de la configuration."
       });
     } finally {
       setIsTesting(false);
@@ -74,61 +74,61 @@ export const ApiSettings = ({
     localStorage.removeItem('mondayBoardId');
     localStorage.removeItem('mondayTechBoardId');
     onConfigUpdate("", "", "");
-    toast("Configuration reiniciada");
+    toast("Configuration réinitialisée");
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Configuração de Monday.com</CardTitle>
+        <CardTitle>Configuration de Monday.com</CardTitle>
         <CardDescription>
-          Configure a integração com Monday.com para sincronizar as declarações.
+          Configurez l'intégration avec Monday.com pour synchroniser les déclarations.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="monday-api-key" className="font-medium">
-            Chave API Monday.com
+            Clé API Monday.com
           </label>
           <Input
             id="monday-api-key"
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="A sua chave API Monday.com"
+            placeholder="Votre clé API Monday.com"
           />
           <p className="text-sm text-gray-500">
-            Para obter a sua chave API, vá à sua conta Monday.com ➝ Perfil ➝ Developer ➝ API v2 Token
+            Pour obtenir votre clé API, allez à votre compte Monday.com → Profil → Developer → API v2 Token
           </p>
         </div>
         
         <div className="space-y-2">
           <label htmlFor="monday-board-id" className="font-medium">
-            ID do Quadro de Declarações
+            ID du Tableau de Déclarations
           </label>
           <Input
             id="monday-board-id"
             value={boardId}
             onChange={(e) => setBoardId(e.target.value)}
-            placeholder="ID do quadro de declarações (ex: 1861342035)"
+            placeholder="ID du tableau de déclarations (ex: 1861342035)"
           />
           <p className="text-sm text-gray-500">
-            O quadro onde serão enviadas as declarações dos clientes
+            Le tableau où seront envoyées les déclarations des clients
           </p>
         </div>
         
         <div className="space-y-2">
           <label htmlFor="monday-tech-board-id" className="font-medium">
-            ID do Quadro de Prestataires
+            ID du Tableau de Prestataires
           </label>
           <Input
             id="monday-tech-board-id"
             value={techBoardId}
             onChange={(e) => setTechBoardId(e.target.value)}
-            placeholder="ID do quadro de prestataires (ex: 1863361499)"
+            placeholder="ID du tableau de prestataires (ex: 1863361499)"
           />
           <p className="text-sm text-gray-500">
-            O quadro onde serão enviados os relatórios dos prestataires técnicos
+            Le tableau où seront envoyés les rapports des prestataires techniques
           </p>
         </div>
         
@@ -172,7 +172,7 @@ export const ApiSettings = ({
           variant="outline" 
           onClick={handleReset}
         >
-          Reiniciar
+          Réinitialiser
         </Button>
         <Button 
           onClick={handleSaveMondayConfig}
@@ -181,12 +181,12 @@ export const ApiSettings = ({
           {isTesting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Teste em curso...
+              Test en cours...
             </>
           ) : (
             <>
               <Settings className="mr-2 h-4 w-4" />
-              Testar e Guardar
+              Tester et Sauvegarder
             </>
           )}
         </Button>

@@ -60,6 +60,10 @@ const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreference = {
   push: false
 };
 
+// Default Monday.com board IDs
+const DEFAULT_MONDAY_BOARD_ID = "1861342035"; // Declaration board ID
+const DEFAULT_MONDAY_TECH_BOARD_ID = "1863361499"; // Technician reports board ID
+
 // Store declarations in localStorage to persist between page loads
 export const loadDeclarations = (): Declaration[] => {
   const stored = localStorage.getItem('declarations');
@@ -86,19 +90,17 @@ export const saveNotificationPreferences = (preferences: NotificationPreference)
 export const getMondayConfig = () => {
   return {
     apiKey: localStorage.getItem('mondayApiKey') || '',
-    boardId: localStorage.getItem('mondayBoardId') || '',
-    techBoardId: localStorage.getItem('mondayTechBoardId') || ''
+    boardId: localStorage.getItem('mondayBoardId') || DEFAULT_MONDAY_BOARD_ID,
+    techBoardId: localStorage.getItem('mondayTechBoardId') || DEFAULT_MONDAY_TECH_BOARD_ID
   };
 };
 
 export const saveMondayConfig = (apiKey: string, boardId: string, techBoardId: string = '') => {
   localStorage.setItem('mondayApiKey', apiKey);
-  localStorage.setItem('mondayBoardId', boardId);
+  localStorage.setItem('mondayBoardId', boardId || DEFAULT_MONDAY_BOARD_ID);
   
   // Ensure techBoardId is also saved if provided
-  if (techBoardId) {
-    localStorage.setItem('mondayTechBoardId', techBoardId);
-  }
+  localStorage.setItem('mondayTechBoardId', techBoardId || DEFAULT_MONDAY_TECH_BOARD_ID);
 };
 
 export const clearMondayConfig = () => {
@@ -113,9 +115,17 @@ export const validateMondayConfig = (apiKey: string, boardId: string, techBoardI
   if (!apiKey || !boardId) {
     return {
       valid: false,
-      message: "L'API key et l'ID du board sont requis"
+      message: "La clé API et l'ID du tableau de déclarations sont requis"
     };
   }
+  
+  if (!techBoardId) {
+    return {
+      valid: false,
+      message: "L'ID du tableau de prestataires est requis"
+    };
+  }
+  
   return {
     valid: true,
     message: "Configuration valide"
