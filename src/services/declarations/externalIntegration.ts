@@ -1,3 +1,4 @@
+
 import { Declaration, TechnicianReport, TechnicianReportResult } from "../types";
 import { createMondayItem, createTechnicianReport } from "../monday";
 
@@ -6,41 +7,41 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   try {
     console.log("Sending declaration to Monday.com:", declaration);
     
-    // Format the data for Monday.com using the exact column IDs from our mapping table
-    const formattedValues: Record<string, any> = {};
+    // Format the data for Monday.com using the exact column IDs from the mapping table
+    // Important: Format each column according to its type in Monday.com
+    const formattedValues: Record<string, any> = {
+      // Text columns - simple string values
+      "text0": declaration.name, // Nome do Inquilino
+      "text8": declaration.property, // Endereço 
+      "text7": declaration.city || "", // Cidade
+      "text00": declaration.postalCode || "", // Código Postal
+      "text92": declaration.issueType, // Tipo de problema
+      "text6": declaration.description, // Descrição
+      "text4": declaration.id, // ID Declaração
+      
+      // Email column - requires specific format
+      "email": { "email": declaration.email, "text": declaration.email },
+      
+      // Phone column - requires specific format
+      "phone1": { "phone": declaration.phone, "countryShortName": "PT" },
+      
+      // Numeric column
+      "numbers": declaration.nif ? Number(declaration.nif) : null,
+      
+      // Status column - requires label format
+      "status": { "label": "Nouveau" },
+      
+      // Dropdown column - requires label format
+      "dropdown9": { "label": declaration.urgency },
+      
+      // Date column - requires date format YYYY-MM-DD
+      "date4": declaration.submittedAt ? 
+        { "date": new Date(declaration.submittedAt).toISOString().split('T')[0] } : 
+        null
+    };
     
-    // Name and contact details
-    formattedValues["text_mknxg830"] = declaration.name; // Nome do Inquilino 
-    formattedValues["email_mknxfg3r"] = declaration.email; // E-mail
-    formattedValues["phone_mknyw109"] = declaration.phone; // Telefone
-    if (declaration.nif) formattedValues["numeric_mknx2s4b"] = declaration.nif; // NIF
-    
-    // Address information
-    formattedValues["text_mknx4pjn"] = declaration.property; // Endereço
-    if (declaration.city) formattedValues["text_mknxe74j"] = declaration.city; // Cidade
-    if (declaration.postalCode) formattedValues["text_mknxq2zr"] = declaration.postalCode; // Código Postal
-    
-    // Problem information
-    formattedValues["text_mknxny1h"] = declaration.issueType; // Tipo de problema
-    formattedValues["text_mknxj2e7"] = declaration.description; // Descrição
-    
-    // Status and urgency
-    formattedValues["status"] = { label: "Nouveau" }; // Status
-    formattedValues["dropdown_mkpbfgd4"] = { label: declaration.urgency }; // Urgência
-    
-    // ID and date
-    formattedValues["text_mkpbmd7q"] = declaration.id; // ID Declaração
-    
-    // Date column - format as YYYY-MM-DD
-    if (declaration.submittedAt) {
-      const date = new Date(declaration.submittedAt);
-      if (!isNaN(date.getTime())) {
-        formattedValues["date4"] = { date: date.toISOString().split('T')[0] };
-      }
-    }
-    
-    // Log the column values before sending
-    console.log("Monday.com formatted column values with correct IDs:", formattedValues);
+    // Log the formatted values
+    console.log("Monday.com formatted column values:", formattedValues);
     
     // Send to Monday.com with properly formatted values
     const itemId = await createMondayItem(
@@ -63,27 +64,31 @@ export const sendTechnicianReportToMonday = async (
   try {
     console.log("Sending technician report to Monday.com:", report);
     
-    // Format the data for Monday.com technician board with proper structure
-    const formattedValues: Record<string, any> = {};
-    
-    // Text columns
-    formattedValues["Cliente"] = { text: report.clientName };
-    formattedValues["Email"] = { text: report.clientEmail };
-    formattedValues["Telefone"] = { text: report.clientPhone };
-    formattedValues["Endereço"] = { text: report.address };
-    formattedValues["Diagnóstico"] = { text: report.diagnoseDescription };
-    formattedValues["Trabalhos a realizar"] = { text: report.workDescription || "" };
-    formattedValues["ID Intervenção"] = { text: report.interventionId.toString() };
-    
-    // Number column
-    formattedValues["Valor estimado"] = { text: report.estimateAmount || "0" };
-    
-    // Status/dropdown columns
-    formattedValues["Categoria do problema"] = { label: report.problemCategory };
-    formattedValues["Necessita de intervenção"] = { label: report.needsIntervention ? "Sim" : "Não" };
+    // Format the data for Monday.com technician board
+    const formattedValues: Record<string, any> = {
+      // Text columns
+      "text6": report.clientName, // Cliente
+      "text4": report.address, // Endereço
+      "text8": report.diagnoseDescription, // Diagnóstico
+      "text1": report.workDescription || "", // Trabalhos a realizar
+      "text": report.interventionId.toString(), // ID Intervenção
+      
+      // Email column
+      "email": { "email": report.clientEmail, "text": report.clientEmail },
+      
+      // Phone column
+      "phone": { "phone": report.clientPhone, "countryShortName": "PT" },
+      
+      // Number column
+      "numbers8": report.estimateAmount ? Number(report.estimateAmount) : 0,
+      
+      // Status/dropdown columns
+      "dropdown5": { "label": report.problemCategory },
+      "dropdown": { "label": report.needsIntervention ? "Sim" : "Não" }
+    };
     
     // Log the column values before sending
-    console.log("Column values being sent to Monday.com for technician report:", formattedValues);
+    console.log("Column values for technician report:", formattedValues);
     
     // Create item in the technician board
     const itemId = await createTechnicianReport(

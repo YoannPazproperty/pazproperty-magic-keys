@@ -43,8 +43,14 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         nif: values.nif,
       };
       
+      // Add declaration to local storage
       const newDeclaration = await addWithMedia(declarationData, mediaFiles);
       console.log("Declaration saved locally:", newDeclaration);
+      
+      // Create a success toast for local storage
+      toast.success("Declaração salva localmente", {
+        description: "Sua declaração foi registrada em nosso sistema."
+      });
       
       // Send to Monday.com with improved error handling
       try {
@@ -53,7 +59,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         
         if (mondayResult) {
           toast.success("Declaração enviada para Monday.com", {
-            description: `Sua declaração foi registrada com sucesso no Monday.com (ID: ${mondayResult})`
+            description: `Sua declaração foi registrada no Monday.com (ID: ${mondayResult})`
           });
           console.log("Successfully sent to Monday.com with ID:", mondayResult);
         } else {
@@ -62,20 +68,18 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
           });
           console.error("Failed to send to Monday.com");
         }
-      } catch (error) {
-        console.error("Error sending to Monday.com:", error);
+      } catch (mondayError) {
+        console.error("Error sending to Monday.com:", mondayError);
         toast.error("Erro ao enviar para Monday.com", {
           description: "Sua declaração foi salva localmente, mas houve um erro ao enviá-la para Monday.com."
         });
       }
       
+      // Even if Monday.com fails, we consider the form submission a success if the local storage worked
       form.reset();
       setMediaFiles([]);
       onSuccess();
       
-      toast.success("Declaração enviada com sucesso!", {
-        description: "Entraremos em contato em breve sobre o seu problema."
-      });
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error("Erro ao enviar", {

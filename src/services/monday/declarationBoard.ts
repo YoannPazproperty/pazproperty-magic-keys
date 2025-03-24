@@ -16,13 +16,7 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Item Name:", itemName);
     console.log("Board ID:", boardId);
     console.log("API Key available:", apiKey ? "Yes" : "No");
-    console.log("Column values before JSON stringify:", columnValues);
-    
-    // Monday.com expects column values as a JSON string
-    // After stringify, verify the result matches the expected format
-    const mondayColumnValues = JSON.stringify(columnValues);
-    
-    console.log("Monday.com column values after stringify:", mondayColumnValues);
+    console.log("Column values:", columnValues);
     
     // Make the actual API call to Monday.com
     const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
@@ -34,14 +28,13 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     const variables = {
       boardId: boardId,
       itemName,
-      columnValues: mondayColumnValues
+      columnValues: JSON.stringify(columnValues)
     };
     
     console.log("Sending query to Monday.com with variables:", {
       boardId: variables.boardId,
       itemName: variables.itemName,
-      // Log a preview of the column values for debugging
-      columnValues: mondayColumnValues.substring(0, 500) + (mondayColumnValues.length > 500 ? "..." : "")
+      columnValues: variables.columnValues
     });
     
     const response = await fetch("https://api.monday.com/v2", {
@@ -53,20 +46,15 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
       body: JSON.stringify({ query, variables })
     });
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Monday.com API error:", errorText);
-      return null;
-    }
-    
     const responseData = await response.json();
+    
+    // Log the full response for better debugging
+    console.log("Monday.com API full response:", responseData);
     
     if (responseData.errors) {
       console.error("Monday.com GraphQL errors:", responseData.errors);
       return null;
     }
-    
-    console.log("Monday.com API response:", responseData);
     
     if (responseData.data && responseData.data.create_item) {
       return responseData.data.create_item.id;
