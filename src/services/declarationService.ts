@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { Declaration, TechnicianReport, TechnicianReportResult, issueTypeToMondayMap, urgencyToMondayMap } from "./types";
 import { loadDeclarations, saveDeclarations } from "./storageService";
@@ -83,7 +84,10 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
         urgencia: mondayUrgency,
         status: "Novo",
         nif: declaration.nif || "",
-        id_declaracao: declaration.id
+        id_declaracao: declaration.id,
+        cidade: declaration.city || "",
+        codigo_postal: declaration.postalCode || "",
+        data_submissao: new Date(declaration.submittedAt).toLocaleString('pt-PT')
       }
     );
     

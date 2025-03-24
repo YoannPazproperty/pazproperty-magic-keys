@@ -25,7 +25,17 @@ import {
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Declaration } from "@/services/types";
 import { addWithMedia, sendToExternalService } from "@/services/declarationService";
-import { getMondayConfig } from "@/services/storageService";
+import { saveMondayConfig } from "@/services/storageService";
+
+// Ensure we have a default Monday configuration for testing
+// This is just for development - in production this would be set in the admin panel
+(() => {
+  // Only set default config if none exists yet
+  if (!localStorage.getItem('mondayApiKey')) {
+    console.log("Setting default Monday.com configuration for testing");
+    saveMondayConfig('your_monday_api_key_here', '1861342035');
+  }
+})();
 
 const formSchema = z.object({
   nif: z.string().min(1, {
@@ -121,32 +131,24 @@ const AreaCliente = () => {
       const newDeclaration = await addWithMedia(declarationData, mediaFiles);
       console.log("Declaration saved locally:", newDeclaration);
       
-      const config = getMondayConfig();
-      
-      if (config.apiKey && config.boardId) {
-        try {
-          console.log("Sending declaration to Monday:", newDeclaration);
-          const mondayResult = await sendToExternalService(newDeclaration);
-          
-          if (mondayResult) {
-            toast.success("Declaração enviada para Monday.com", {
-              description: "Sua declaração foi registrada com sucesso no nosso sistema."
-            });
-          } else {
-            toast.error("Erro na integração com Monday.com", {
-              description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com."
-            });
-          }
-        } catch (error) {
-          console.error("Error sending to Monday.com:", error);
-          toast.error("Erro ao enviar para Monday.com", {
-            description: "Sua declaração foi salva localmente, mas houve um erro ao enviá-la para Monday.com."
+      // Always attempt to send to Monday without config check
+      try {
+        console.log("Sending declaration to Monday:", newDeclaration);
+        const mondayResult = await sendToExternalService(newDeclaration);
+        
+        if (mondayResult) {
+          toast.success("Declaração enviada para Monday.com", {
+            description: "Sua declaração foi registrada com sucesso no nosso sistema."
+          });
+        } else {
+          toast.error("Erro na integração com Monday.com", {
+            description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com."
           });
         }
-      } else {
-        console.log("Monday.com not configured, saving locally only");
-        toast.info("Monday.com não configurado", {
-          description: "Sua declaração foi salva localmente. A equipe será notificada de outra forma."
+      } catch (error) {
+        console.error("Error sending to Monday.com:", error);
+        toast.error("Erro ao enviar para Monday.com", {
+          description: "Sua declaração foi salva localmente, mas houve um erro ao enviá-la para Monday.com."
         });
       }
       
@@ -173,9 +175,9 @@ const AreaCliente = () => {
 
   const mapIssueTypeToMondayFormat = (problemType: string): string => {
     const mapping: Record<string, string> = {
-      "canalização": "plumbing",
-      "eletricidade": "electrical",
-      "predial": "structural",
+      "canalização": "plomberie",
+      "eletricidade": "electricite",
+      "predial": "menuiserie",
       "outro": "other"
     };
     
@@ -218,7 +220,7 @@ const AreaCliente = () => {
                   <div>
                     <h3 className="font-semibold text-blue-700">Importante</h3>
                     <p className="text-blue-700 text-sm">
-                      Para emergências que exigem aten��ão imediata (como vazamentos graves ou falta de energia), 
+                      Para emergências que exigem atenão imediata (como vazamentos graves ou falta de energia), 
                       por favor ligue para +351 912 345 678 além de preencher este formulário.
                     </p>
                   </div>
