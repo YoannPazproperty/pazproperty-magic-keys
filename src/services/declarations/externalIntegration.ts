@@ -7,37 +7,36 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   try {
     console.log("Sending declaration to Monday.com:", declaration);
     
-    // Format the data for Monday.com using the exact column IDs from the mapping table
-    // Important: Format each column according to its type in Monday.com
+    // Format the data for Monday.com with exact column IDs based on the mapping table
     const formattedValues: Record<string, any> = {
-      // Text columns - simple string values
-      "text0": declaration.name, // Nome do Inquilino
-      "text8": declaration.property, // Endereço 
-      "text7": declaration.city || "", // Cidade
-      "text00": declaration.postalCode || "", // Código Postal
-      "text92": declaration.issueType, // Tipo de problema
-      "text6": declaration.description, // Descrição
-      "text4": declaration.id, // ID Declaração
+      // Text columns - direct string values without additional formatting
+      "text": declaration.name,             // Nome do Inquilino
+      "text4": declaration.property,        // Endereço 
+      "text5": declaration.city || "",      // Cidade
+      "text7": declaration.postalCode || "", // Código Postal
+      "text6": declaration.issueType,       // Tipo de problema
+      "text87": declaration.description,    // Descrição
+      "text1": declaration.id,              // ID Declaração
       
-      // Email column - requires specific format
-      "email": { "email": declaration.email, "text": declaration.email },
+      // Email column - format as string (Monday.com formats it internally)
+      "email": declaration.email,
       
-      // Phone column - requires specific format
-      "phone1": { "phone": declaration.phone, "countryShortName": "PT" },
+      // Phone column - format as string (Monday.com formats it internally)
+      "phone": declaration.phone,
       
-      // Numeric column
-      "numbers": declaration.nif ? Number(declaration.nif) : null,
+      // NIF number - just send as a string
+      "text0": declaration.nif || "",
       
-      // Status column - requires label format
-      "status": { "label": "Nouveau" },
+      // Status column - send as string
+      "status": "Nouveau",
       
-      // Dropdown column - requires label format
-      "dropdown9": { "label": declaration.urgency },
+      // Priority dropdown - send as string
+      "priority": declaration.urgency,
       
-      // Date column - requires date format YYYY-MM-DD
+      // Date column - send in YYYY-MM-DD format
       "date4": declaration.submittedAt ? 
-        { "date": new Date(declaration.submittedAt).toISOString().split('T')[0] } : 
-        null
+        new Date(declaration.submittedAt).toISOString().split('T')[0] : 
+        new Date().toISOString().split('T')[0]
     };
     
     // Log the formatted values
@@ -74,17 +73,17 @@ export const sendTechnicianReportToMonday = async (
       "text": report.interventionId.toString(), // ID Intervenção
       
       // Email column
-      "email": { "email": report.clientEmail, "text": report.clientEmail },
+      "email": report.clientEmail,
       
       // Phone column
-      "phone": { "phone": report.clientPhone, "countryShortName": "PT" },
+      "phone": report.clientPhone,
       
       // Number column
-      "numbers8": report.estimateAmount ? Number(report.estimateAmount) : 0,
+      "numbers8": report.estimateAmount || "0",
       
       // Status/dropdown columns
-      "dropdown5": { "label": report.problemCategory },
-      "dropdown": { "label": report.needsIntervention ? "Sim" : "Não" }
+      "dropdown5": report.problemCategory,
+      "dropdown": report.needsIntervention ? "Sim" : "Não"
     };
     
     // Log the column values before sending

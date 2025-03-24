@@ -27,7 +27,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       
       const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}`;
       
-      // Map the Portuguese/French problem type names to the exact values used in Monday.com
+      // Map the Portuguese problem type names to the exact values used in Monday.com
       const issueType = mapIssueTypeToMondayFormat(values.problemType);
       
       const declarationData = {
