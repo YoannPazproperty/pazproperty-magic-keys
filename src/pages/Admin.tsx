@@ -7,6 +7,7 @@ import { DeclarationList } from "@/components/admin/DeclarationList";
 import { ApiSettings } from "@/components/admin/ApiSettings";
 import { NotificationSettings } from "@/components/admin/NotificationSettings";
 import { LoginForm } from "@/components/admin/LoginForm";
+import { toast } from "sonner";
 import { saveMondayConfig, validateMondayConfig, getMondayConfig } from "@/services/monday";
 
 const Admin = () => {
@@ -35,11 +36,11 @@ const Admin = () => {
   }, []);
 
   const handleLogin = (username: string, password: string): boolean => {
-    // In a real application, you would validate against a secure backend
-    // This is just a simple example for demonstration
+    // Simple hard-coded authentication for demonstration
     if (username === 'admin' && password === 'password') {
       localStorage.setItem('adminLoggedIn', 'true');
       setIsLoggedIn(true);
+      toast.success("Connexion réussie");
       
       // Check API configuration status after login
       validateMondayConfig().then(validation => {
@@ -54,6 +55,7 @@ const Admin = () => {
   const handleLogout = () => {
     localStorage.removeItem('adminLoggedIn');
     setIsLoggedIn(false);
+    toast.info("Vous avez été déconnecté");
   };
 
   const handleTabChange = (value: string) => {
@@ -73,7 +75,7 @@ const Admin = () => {
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow">
+        <div className="w-full max-w-md p-8 space-y-8">
           <h1 className="text-2xl font-bold text-center">Admin Login</h1>
           <LoginForm onLogin={handleLogin} />
         </div>

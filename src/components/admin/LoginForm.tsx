@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,17 +20,29 @@ interface LoginFormProps {
 export const LoginForm = ({ onLogin }: LoginFormProps) => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    return onLogin(username, password);
+    setError("");
+    
+    try {
+      const success = onLogin(username, password);
+      if (!success) {
+        setError("Identifiants incorrects. Essayez admin/password");
+        toast.error("Échec de la connexion. Vérifiez vos identifiants.");
+      }
+    } catch (err) {
+      setError("Une erreur s'est produite lors de la connexion");
+      toast.error("Erreur de connexion");
+    }
   };
 
   return (
     <div className="max-w-md mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Administração Pazproperty</CardTitle>
+          <CardTitle>Administration Pazproperty</CardTitle>
           <CardDescription>
             Inicie sessão para aceder à interface de administração.
           </CardDescription>
@@ -59,6 +72,11 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
                 required
               />
             </div>
+            {error && (
+              <div className="text-red-500 text-sm py-2">
+                {error}
+              </div>
+            )}
             <Button type="submit" className="w-full">
               Iniciar sessão
             </Button>
@@ -71,6 +89,7 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
               <div className="text-sm">
                 <p className="font-medium">Importante:</p>
                 <p>Após iniciar sessão, configure a API Monday.com no separador "Configurações API" para ativar a sincronização das declarações.</p>
+                <p className="mt-1 text-amber-700 font-medium">Identifiants par défault: admin / password</p>
               </div>
             </div>
           </div>
