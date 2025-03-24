@@ -3,16 +3,19 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import DeclarationList from "@/components/admin/DeclarationList";
-import ApiSettings from "@/components/admin/ApiSettings";
-import NotificationSettings from "@/components/admin/NotificationSettings";
-import LoginForm from "@/components/admin/LoginForm";
-import { saveMondayConfig, validateMondayConfig } from "@/services/monday";
+import { DeclarationList } from "@/components/admin/DeclarationList";
+import { ApiSettings } from "@/components/admin/ApiSettings";
+import { NotificationSettings } from "@/components/admin/NotificationSettings";
+import { LoginForm } from "@/components/admin/LoginForm";
+import { saveMondayConfig, validateMondayConfig, getMondayConfig } from "@/services/monday";
 
 const Admin = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
   const [activeTab, setActiveTab] = useState("declarations");
+  
+  // Récupérer les configurations Monday.com
+  const { apiKey, boardId, techBoardId } = getMondayConfig();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -93,13 +96,19 @@ const Admin = () => {
         </TabsList>
         
         <TabsContent value="declarations" className="space-y-4">
-          <DeclarationList />
+          <DeclarationList 
+            declarations={[]} 
+            onStatusUpdate={() => {}} 
+          />
         </TabsContent>
         
         <TabsContent value="apiConfig" className="space-y-4">
           <ApiSettings 
-            onSave={handleSaveApiConfig}
-            connectionStatus={apiStatus}
+            mondayApiKey={apiKey}
+            mondayBoardId={boardId}
+            mondayTechBoardId={techBoardId}
+            mondayConfigStatus={apiStatus}
+            onConfigUpdate={handleSaveApiConfig}
           />
         </TabsContent>
         

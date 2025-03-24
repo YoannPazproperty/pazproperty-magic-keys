@@ -51,7 +51,7 @@ const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
       <FormHeader />
       
       <FormProvider {...form}>
-        <Form>
+        <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <PersonalInfoFields />
             <AddressFields />

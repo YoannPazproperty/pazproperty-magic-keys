@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2, Settings, Info } from "lucide-react";
-import { setMondayConfig } from "@/services/monday";
+import { saveMondayConfig, validateMondayConfig } from "@/services/monday";
 import {
   Accordion,
   AccordionContent,
@@ -47,7 +47,10 @@ export const ApiSettings = ({
       // Log to verify values being sent
       console.log("Saving Monday.com config:", { apiKey, boardId, techBoardId });
       
-      const result = await setMondayConfig(apiKey, boardId, techBoardId);
+      saveMondayConfig(apiKey, boardId, techBoardId);
+      
+      // Validate the configuration after saving
+      const result = await validateMondayConfig();
       
       if (result.valid) {
         toast.success("Configuration Monday.com sauvegardée", {

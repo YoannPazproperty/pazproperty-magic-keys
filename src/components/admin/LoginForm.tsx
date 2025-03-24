@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import {
 import { AlertCircle } from "lucide-react";
 
 interface LoginFormProps {
-  onLogin: (username: string, password: string) => void;
+  onLogin: (username: string, password: string) => boolean;
 }
 
 export const LoginForm = ({ onLogin }: LoginFormProps) => {
@@ -23,7 +22,7 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin(username, password);
+    return onLogin(username, password);
   };
 
   return (
