@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { formSchema, RapportFormValues, TechnicienRapportFormProps } from "./rapportFormTypes";
-import { sendTechnicianReportToMonday } from "@/services/declarationService";
+import { sendTechnicianReportToMonday } from "@/services/declarations/externalIntegration";
 
 export const useRapportForm = (
   interventionId: number,

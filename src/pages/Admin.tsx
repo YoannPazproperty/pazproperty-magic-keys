@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +13,7 @@ import { LoginForm } from "@/components/admin/LoginForm";
 import { DeclarationList } from "@/components/admin/DeclarationList";
 import { ApiSettings } from "@/components/admin/ApiSettings";
 import { NotificationSettings } from "@/components/admin/NotificationSettings";
-import { getMondayConfig, validateMondayConfig, saveMondayConfig } from "@/services/storageService";
+import { getMondayConfig, validateMondayConfig } from "@/services/monday";
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "pazproperty2024";

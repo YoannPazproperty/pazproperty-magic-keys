@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2, Settings, Info } from "lucide-react";
-import { setMondayConfig } from "@/services/mondayService";
+import { setMondayConfig } from "@/services/monday";
 import {
   Accordion,
   AccordionContent,
