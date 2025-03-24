@@ -19,17 +19,20 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Monday.com formatted column values:", columnValues);
     
     // Make the actual API call to Monday.com
-    const query = `mutation ($boardId: Int!, $itemName: String!, $columnValues: JSON!) {
+    // Fix the GraphQL query to use ID! instead of Int! for boardId
+    const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
         id
       }
     }`;
     
     const variables = {
-      boardId: parseInt(boardId),
+      boardId: boardId, // Send as string - will be coerced to ID type
       itemName,
       columnValues: JSON.stringify(columnValues)
     };
+    
+    console.log("Sending query to Monday.com with variables:", variables);
     
     const response = await fetch("https://api.monday.com/v2", {
       method: "POST",
