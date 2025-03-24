@@ -1,3 +1,4 @@
+
 import { MondayConfigValidation } from "./types";
 
 // Validate Monday.com configuration
@@ -68,18 +69,23 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Item Name:", itemName);
     
     // Log column values in a way that matches the actual Monday.com board structure
-    // Based on the screenshot provided
+    // Updated column mapping to include all required fields
     const mondayColumnMap = {
       // Map our internal field names to the actual Monday.com column IDs
-      nome_do_cliente: "Nome do Inquilino", // client name
-      email: "email_mknvfg3r",              // client email
-      telefone: "phone_mknyxy109",          // client phone
-      endereco: "text_mknyjz67",            // property address
-      tipo_de_problema: "Tipo de problema", // issue type
-      descricao: "Descrição",               // description
-      urgencia: "Urgência",                 // urgency
-      status: "Status",                     // status
-      id_declaracao: "ID Declaração"        // declaration ID
+      nome_do_cliente: "Nome do Inquilino",    // client name
+      email: "Email",                          // client email
+      telefone: "Telefone",                    // client phone
+      nif: "NIF",                              // fiscal number
+      endereco: "Endereço",                    // property address
+      cidade: "Cidade",                        // city
+      codigo_postal: "Codigo Postal",          // postal code
+      tipo_de_problema: "Tipo de problema",    // issue type
+      descricao: "Descrição",                  // description
+      urgencia: "Urgência",                    // urgency
+      status: "Status",                        // status
+      id_declaracao: "ID Declaração",          // declaration ID
+      upload_inquilino: "Upload do Inquilino", // uploaded files
+      data_submissao: "Data de submissão"      // submission date
     };
     
     // Transform the column values to match Monday.com column IDs

@@ -26,10 +26,19 @@ export const DeclarationDetails = ({
           <p><span className="font-medium">Nom:</span> {declaration.name}</p>
           <p><span className="font-medium">Email:</span> {declaration.email}</p>
           <p><span className="font-medium">Téléphone:</span> {declaration.phone}</p>
+          {declaration.nif && (
+            <p><span className="font-medium">NIF:</span> {declaration.nif}</p>
+          )}
         </div>
         <div className="space-y-2">
           <h3 className="font-semibold">Informations du problème</h3>
           <p><span className="font-medium">Propriété:</span> {declaration.property}</p>
+          {declaration.city && (
+            <p><span className="font-medium">Ville:</span> {declaration.city}</p>
+          )}
+          {declaration.postalCode && (
+            <p><span className="font-medium">Code postal:</span> {declaration.postalCode}</p>
+          )}
           <p>
             <span className="font-medium">Type:</span> {translateIssueType(declaration.issueType)}
           </p>
@@ -51,6 +60,25 @@ export const DeclarationDetails = ({
           <p>{declaration.description}</p>
         </div>
       </div>
+      
+      {declaration.mediaFiles && declaration.mediaFiles.length > 0 && (
+        <div className="space-y-2 py-2">
+          <h3 className="font-semibold">Fichiers médias</h3>
+          <div className="flex flex-wrap gap-2">
+            {declaration.mediaFiles.map((fileUrl, index) => (
+              <a 
+                key={index}
+                href={fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-blue-50 rounded border border-blue-100 text-blue-600 text-sm hover:bg-blue-100"
+              >
+                {fileUrl.includes('image') ? 'Photo' : 'Vidéo'} {index + 1}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
       
       {declaration.mondayId && (
         <div className="space-y-2 py-2">

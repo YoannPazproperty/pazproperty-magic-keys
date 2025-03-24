@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -104,13 +103,15 @@ const AreaCliente = () => {
       console.log("Form data:", values);
       console.log("Media files:", mediaFiles);
       
-      const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}, ${values.city}, ${values.state}, ${values.postalCode}`;
+      const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}`;
       
       const declarationData = {
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
         phone: values.telefone,
         property: fullAddress,
+        city: values.city,
+        postalCode: values.postalCode,
         issueType: mapIssueTypeToMondayFormat(values.problemType),
         description: values.description,
         urgency: "medium", // Default urgency as it's not in the form

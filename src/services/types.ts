@@ -6,6 +6,8 @@ export interface Declaration {
   email: string;
   phone: string;
   property: string;
+  city?: string;
+  postalCode?: string;
   issueType: string;
   description: string;
   urgency: string;
