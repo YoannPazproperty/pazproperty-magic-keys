@@ -79,17 +79,21 @@ export const getMondayConfig = () => {
 // Create Monday.com item based on the actual board structure
 export const createMondayItem = async (itemName: string, columnValues: Record<string, any>): Promise<string | null> => {
   try {
-    // In a real app, this would make an API call to Monday.com
-    // For demonstration, we'll just log the values that would be sent
+    // Get the API key and board ID from localStorage
+    const apiKey = localStorage.getItem('mondayApiKey');
+    const boardId = localStorage.getItem('mondayBoardId');
     
-    const boardId = localStorage.getItem('mondayBoardId') || '';
+    if (!apiKey || !boardId) {
+      console.error("Monday.com API key or board ID not configured");
+      return null;
+    }
     
     console.log("Creating Monday.com item with the following data:");
     console.log("Item Name:", itemName);
-    console.log("Board ID:", boardId); // Log which board we're targeting
+    console.log("Board ID:", boardId);
+    console.log("API Key available:", apiKey ? "Yes" : "No");
     
     // Log column values in a way that matches the actual Monday.com board structure
-    // Updated column mapping to include all required fields
     const mondayColumnMap = {
       // Map our internal field names to the actual Monday.com column IDs
       nome_do_cliente: "Nome do Inquilino",    // client name
@@ -121,6 +125,36 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     }
     
     console.log("Monday.com formatted column values:", mondayFormatValues);
+    
+    // In a real implementation, we would make an API call to Monday.com here
+    // For now, we're just simulating it with a log
+    
+    // The real Monday.com API call would look something like this:
+    /*
+    const query = `mutation ($boardId: Int!, $itemName: String!, $columnValues: JSON!) {
+      create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
+        id
+      }
+    }`;
+    
+    const variables = {
+      boardId: parseInt(boardId),
+      itemName,
+      columnValues: JSON.stringify(mondayFormatValues)
+    };
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": apiKey
+      },
+      body: JSON.stringify({ query, variables })
+    });
+    
+    const responseData = await response.json();
+    return responseData.data.create_item.id;
+    */
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));

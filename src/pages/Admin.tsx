@@ -14,7 +14,7 @@ import { LoginForm } from "@/components/admin/LoginForm";
 import { DeclarationList } from "@/components/admin/DeclarationList";
 import { ApiSettings } from "@/components/admin/ApiSettings";
 import { NotificationSettings } from "@/components/admin/NotificationSettings";
-import { getMondayConfig, validateMondayConfig } from "@/services/storageService";
+import { getMondayConfig, validateMondayConfig, saveMondayConfig } from "@/services/storageService";
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "pazproperty2024";
@@ -54,6 +54,8 @@ const Admin = () => {
     setMondayApiKey(config.apiKey);
     setMondayBoardId(config.boardId);
     setMondayTechBoardId(config.techBoardId);
+    
+    console.log("Loaded Monday.com config:", config);
     
     if (config.apiKey && config.boardId && config.techBoardId) {
       try {
@@ -97,9 +99,13 @@ const Admin = () => {
   };
   
   const handleMondayConfigUpdate = async (apiKey: string, boardId: string, techBoardId: string) => {
+    console.log("Updating Monday.com config:", { apiKey, boardId, techBoardId });
     setMondayApiKey(apiKey);
     setMondayBoardId(boardId);
     setMondayTechBoardId(techBoardId);
+    
+    // Save the configuration to localStorage
+    saveMondayConfig(apiKey, boardId, techBoardId);
     
     const result = validateMondayConfig(apiKey, boardId, techBoardId);
     setMondayConfigStatus(result);

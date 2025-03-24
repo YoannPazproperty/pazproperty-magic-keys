@@ -44,6 +44,9 @@ export const ApiSettings = ({
     setIsTesting(true);
     
     try {
+      // Log to verify values being sent
+      console.log("Saving Monday.com config:", { apiKey, boardId, techBoardId });
+      
       const result = await setMondayConfig(apiKey, boardId, techBoardId);
       
       if (result.valid) {
@@ -153,9 +156,9 @@ export const ApiSettings = ({
                 <p className="font-medium">Colonnes utilisées pour les déclarations:</p>
                 <ul className="list-disc pl-5 space-y-1">
                   <li><span className="font-medium">Nom du client:</span> "Nome do Inquilino"</li>
-                  <li><span className="font-medium">Email:</span> "email_mknvfg3r"</li>
-                  <li><span className="font-medium">Téléphone:</span> "phone_mknyxy109"</li>
-                  <li><span className="font-medium">Adresse:</span> "text_mknyjz67"</li>
+                  <li><span className="font-medium">Email:</span> "Email"</li>
+                  <li><span className="font-medium">Téléphone:</span> "Telefone"</li>
+                  <li><span className="font-medium">Adresse:</span> "Endereço"</li>
                   <li><span className="font-medium">Type de problème:</span> "Tipo de problema"</li>
                   <li><span className="font-medium">Description:</span> "Descrição"</li>
                   <li><span className="font-medium">Urgence:</span> "Urgência"</li>

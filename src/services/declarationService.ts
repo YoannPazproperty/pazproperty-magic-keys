@@ -71,6 +71,22 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
     // Log the current configuration
     console.log("Monday.com configuration:", config);
     
+    if (!config.apiKey) {
+      console.error("Monday.com API key is not configured");
+      toast.error("Clé API Monday.com non configurée", {
+        description: "Veuillez configurer la clé API dans les paramètres"
+      });
+      return null;
+    }
+    
+    if (!config.boardId) {
+      console.error("Monday.com board ID is not configured");
+      toast.error("ID du tableau Monday.com non configuré", {
+        description: "Veuillez configurer l'ID du tableau dans les paramètres"
+      });
+      return null;
+    }
+    
     // Convert issue type and urgency to Monday.com values
     const mondayIssueType = issueTypeToMondayMap[declaration.issueType] || declaration.issueType;
     const mondayUrgency = urgencyToMondayMap[declaration.urgency] || declaration.urgency;
@@ -106,6 +122,10 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
       });
       return itemId;
     }
+    
+    toast.error("Échec de la création dans Monday.com", {
+      description: "Vérifiez les paramètres de l'API et réessayez"
+    });
     return null;
   } catch (error) {
     console.error("Error creating Monday item:", error);
