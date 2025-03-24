@@ -53,12 +53,14 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         
         if (mondayResult) {
           toast.success("Declaração enviada para Monday.com", {
-            description: "Sua declaração foi registrada com sucesso no nosso sistema."
+            description: `Sua declaração foi registrada com sucesso no Monday.com (ID: ${mondayResult})`
           });
+          console.log("Successfully sent to Monday.com with ID:", mondayResult);
         } else {
           toast.error("Erro na integração com Monday.com", {
             description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com."
           });
+          console.error("Failed to send to Monday.com with proper column values");
         }
       } catch (error) {
         console.error("Error sending to Monday.com:", error);

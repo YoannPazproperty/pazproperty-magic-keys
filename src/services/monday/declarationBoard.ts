@@ -16,9 +16,16 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Item Name:", itemName);
     console.log("Board ID:", boardId);
     console.log("API Key available:", apiKey ? "Yes" : "No");
-    console.log("Formatted column values:", columnValues);
+    console.log("Column values before JSON stringify:", columnValues);
     
-    // Make the actual API call to Monday.com with the pre-formatted values
+    // Monday.com expects column values as a JSON string
+    // Important: For the API, we need to directly stringify the columnValues object
+    // WITHOUT wrapping each value in nested objects like {text: value}
+    const mondayColumnValues = JSON.stringify(columnValues);
+    
+    console.log("Monday.com column values after stringify:", mondayColumnValues);
+    
+    // Make the actual API call to Monday.com
     const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
         id
@@ -28,14 +35,14 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     const variables = {
       boardId: boardId,
       itemName,
-      columnValues: JSON.stringify(columnValues)
+      columnValues: mondayColumnValues
     };
     
     console.log("Sending query to Monday.com with variables:", {
       boardId: variables.boardId,
       itemName: variables.itemName,
       // Log a preview of the column values for debugging
-      columnValues: JSON.stringify(columnValues).substring(0, 500) + "..."
+      columnValues: mondayColumnValues.substring(0, 500) + "..."
     });
     
     const response = await fetch("https://api.monday.com/v2", {

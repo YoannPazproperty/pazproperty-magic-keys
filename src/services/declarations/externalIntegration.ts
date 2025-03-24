@@ -7,44 +7,45 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   try {
     console.log("Sending declaration to Monday.com:", declaration);
     
-    // Format the data for Monday.com - using correct field mappings based on your Monday board
+    // Format the data for Monday.com in the correct format for their API
+    // Monday.com expects a flat object with column keys exactly matching the column IDs
     const formattedValues: Record<string, any> = {};
     
-    // Text columns
-    formattedValues["Nome do Inquilino"] = { text: declaration.name };
-    formattedValues["Email"] = { text: declaration.email };
-    formattedValues["Telefone"] = { text: declaration.phone };
-    formattedValues["Endereço"] = { text: declaration.property };
-    formattedValues["Descrição"] = { text: declaration.description };
-    formattedValues["ID Declaração"] = { text: declaration.id };
+    // Text columns - no nested objects
+    formattedValues["text"] = declaration.name; // Assuming "text" is the column ID for the item name
+    formattedValues["text1"] = declaration.email; // Email column
+    formattedValues["text6"] = declaration.phone; // Phone column
+    formattedValues["text0"] = declaration.property; // Address column
+    formattedValues["long_text"] = declaration.description; // Description column
+    formattedValues["text8"] = declaration.id; // ID column
     
     // Optional text fields
-    if (declaration.city) formattedValues["Cidade"] = { text: declaration.city };
-    if (declaration.postalCode) formattedValues["Codigo Postal"] = { text: declaration.postalCode };
-    if (declaration.nif) formattedValues["NIF"] = { text: declaration.nif };
+    if (declaration.city) formattedValues["text4"] = declaration.city;
+    if (declaration.postalCode) formattedValues["text9"] = declaration.postalCode;
+    if (declaration.nif) formattedValues["text5"] = declaration.nif;
     
-    // Status column - map to exact status values in Monday board
+    // Status column - directly use status values without wrapping in objects
     const statusMap: Record<string, string> = {
       "pending": "Nouveau",
       "in_progress": "En cours",
       "resolved": "Fait"
     };
-    formattedValues["Status"] = { label: statusMap[declaration.status] || "Nouveau" };
+    formattedValues["status"] = statusMap[declaration.status] || "Nouveau";
     
-    // Dropdown columns need exact label matches
-    formattedValues["Tipo de problema"] = { label: declaration.issueType };
-    formattedValues["Urgência"] = { label: declaration.urgency === "medium" ? "Média" : declaration.urgency };
+    // Dropdown columns - use the value directly (not wrapped in label object)
+    formattedValues["dropdown"] = declaration.issueType;
+    formattedValues["dropdown8"] = declaration.urgency === "medium" ? "Média" : declaration.urgency;
     
-    // Date column
+    // Date column - format as YYYY-MM-DD
     if (declaration.submittedAt) {
       const date = new Date(declaration.submittedAt);
       if (!isNaN(date.getTime())) {
-        formattedValues["Data de submissão"] = { date: date.toISOString().split('T')[0] };
+        formattedValues["date4"] = date.toISOString().split('T')[0];
       }
     }
     
     // Log the column values before sending
-    console.log("Monday.com formatted column values:", formattedValues);
+    console.log("Monday.com formatted column values (flat object):", formattedValues);
     
     // Send to Monday.com with properly formatted values
     const itemId = await createMondayItem(
