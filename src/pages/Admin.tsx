@@ -14,7 +14,8 @@ import { LoginForm } from "@/components/admin/LoginForm";
 import { DeclarationList } from "@/components/admin/DeclarationList";
 import { ApiSettings } from "@/components/admin/ApiSettings";
 import { NotificationSettings } from "@/components/admin/NotificationSettings";
-import { getMondayConfig, validateMondayConfig } from "@/services/storageService";
+import { getMondayConfig } from "@/services/storageService";
+import { validateMondayConfig } from "@/services/mondayService";
 
 const ADMIN_USERNAME = "admin";
 const ADMIN_PASSWORD = "pazproperty2024";
@@ -48,16 +49,18 @@ const Admin = () => {
     setDeclarations(allDeclarations);
   };
   
-  const loadMondayConfig = () => {
+  const loadMondayConfig = async () => {
     const config = getMondayConfig();
     setMondayApiKey(config.apiKey);
     setMondayBoardId(config.boardId);
     
     if (config.apiKey && config.boardId) {
-      validateMondayConfig(config.apiKey, config.boardId)
-        .then(result => {
-          setMondayConfigStatus(result);
-        });
+      try {
+        const result = await validateMondayConfig(config.apiKey, config.boardId);
+        setMondayConfigStatus(result);
+      } catch (error) {
+        console.error("Error validating Monday config:", error);
+      }
     }
   };
   
@@ -84,7 +87,7 @@ const Admin = () => {
     });
   };
 
-  const updateDeclarationStatus = (id: string, newStatus: Declaration["status"]) => {
+  const handleStatusUpdate = (id: string, newStatus: Declaration["status"]) => {
     const success = updateDeclarationStatus(id, newStatus);
     
     if (success) {
@@ -92,14 +95,16 @@ const Admin = () => {
     }
   };
   
-  const handleMondayConfigUpdate = (apiKey: string, boardId: string) => {
+  const handleMondayConfigUpdate = async (apiKey: string, boardId: string) => {
     setMondayApiKey(apiKey);
     setMondayBoardId(boardId);
     if (apiKey && boardId) {
-      validateMondayConfig(apiKey, boardId)
-        .then(result => {
-          setMondayConfigStatus(result);
-        });
+      try {
+        const result = await validateMondayConfig(apiKey, boardId);
+        setMondayConfigStatus(result);
+      } catch (error) {
+        console.error("Error validating Monday config:", error);
+      }
     } else {
       setMondayConfigStatus(null);
     }
@@ -134,7 +139,7 @@ const Admin = () => {
                 <TabsContent value="declarations">
                   <DeclarationList 
                     declarations={declarations} 
-                    onStatusUpdate={updateDeclarationStatus} 
+                    onStatusUpdate={handleStatusUpdate} 
                   />
                 </TabsContent>
                 

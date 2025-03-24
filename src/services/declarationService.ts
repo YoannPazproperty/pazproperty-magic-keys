@@ -2,7 +2,7 @@
 import { toast } from "sonner";
 import { Declaration, TechnicianReport, TechnicianReportResult } from "./types";
 import { loadDeclarations, saveDeclarations } from "./storageService";
-import { createMondayItem, createTechnicianReport } from "./mondayService";
+import { createMondayItem, createTechnicianReport, getMondayBoardStatus } from "./mondayService";
 import { sendNotificationEmail } from "./notificationService";
 import { issueTypeToMondayMap, urgencyToMondayMap } from "./types";
 
@@ -139,6 +139,12 @@ export const updateDeclaration = (id: string, updates: Partial<Declaration>): De
   return declarations[index];
 };
 
+// Update declaration status (alias for updateDeclaration with status)
+export const updateDeclarationStatus = (id: string, status: Declaration["status"]): boolean => {
+  const result = updateDeclaration(id, { status });
+  return result !== null;
+};
+
 // Send technician report to Monday.com
 export const sendTechnicianReportToMonday = async (report: TechnicianReport): Promise<TechnicianReportResult> => {
   try {
@@ -181,3 +187,6 @@ export const sendTechnicianReportToMonday = async (report: TechnicianReport): Pr
     };
   }
 };
+
+// Get Monday board status (alias for getMondayBoardStatus)
+export const getMonday5BoardStatus = getMondayBoardStatus;

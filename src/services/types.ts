@@ -1,3 +1,4 @@
+
 // Shared interfaces for services
 export interface Declaration {
   id: string;
