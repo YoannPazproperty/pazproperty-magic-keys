@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -23,7 +24,8 @@ import {
   RadioGroupItem,
 } from "@/components/ui/radio-group";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import declarationService, { Declaration } from "@/services/declarationService";
+import { Declaration } from "@/services/types";
+import { addWithMedia, sendToExternalService } from "@/services/declarationService";
 import { getMondayConfig } from "@/services/storageService";
 
 const formSchema = z.object({
@@ -115,7 +117,7 @@ const AreaCliente = () => {
         nif: values.nif,
       };
       
-      const newDeclaration = await declarationService.addWithMedia(declarationData, mediaFiles);
+      const newDeclaration = await addWithMedia(declarationData, mediaFiles);
       console.log("Declaration saved locally:", newDeclaration);
       
       const config = getMondayConfig();
@@ -123,7 +125,7 @@ const AreaCliente = () => {
       if (config.apiKey && config.boardId) {
         try {
           console.log("Sending declaration to Monday:", newDeclaration);
-          const mondayResult = await declarationService.sendToExternalService(newDeclaration);
+          const mondayResult = await sendToExternalService(newDeclaration);
           
           if (mondayResult) {
             toast.success("Declaração enviada para Monday.com", {

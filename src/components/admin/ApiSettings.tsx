@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2, Settings } from "lucide-react";
-import declarationService from "@/services/declarationService";
+import { setMondayConfig } from "@/services/mondayService";
 
 interface ApiSettingsProps {
   mondayApiKey: string;
@@ -35,7 +35,7 @@ export const ApiSettings = ({
     setIsTesting(true);
     
     try {
-      const result = await declarationService.setMondayConfig(apiKey, boardId);
+      const result = await setMondayConfig(apiKey, boardId);
       
       if (result.valid) {
         toast.success("Configuração Monday.com guardada", {

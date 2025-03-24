@@ -1,4 +1,3 @@
-
 // Shared interfaces for services
 export interface Declaration {
   id: string;
@@ -149,3 +148,30 @@ export const EMAIL_CONFIG = {
 
 // Monday.com board configurations
 export const TECHNICIAN_BOARD_ID = "1863361499"; // The board ID specified by the user
+
+// Email notification function
+export const sendNotificationEmail = async (
+  recipientEmail: string,
+  recipientType: 'tenant' | 'technician' | 'admin',
+  notificationType: string,
+  data: any
+): Promise<{success: boolean; message: string}> => {
+  try {
+    // This is a placeholder function that would typically integrate with an email service
+    console.log(`Would send email to ${recipientEmail} (${recipientType}) about ${notificationType}:`, data);
+    
+    // Simulate sending email
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return {
+      success: true,
+      message: "Email sent successfully"
+    };
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Erreur lors de l'envoi de l'email"
+    };
+  }
+};

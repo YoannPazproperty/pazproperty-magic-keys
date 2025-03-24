@@ -1,9 +1,10 @@
 
 import { toast } from "sonner";
-import { mondayService } from "./mondayService";
-import { notificationService } from "./notificationService";
+import { Declaration, TechnicianReport, TechnicianReportResult } from "./types";
 import { loadDeclarations, saveDeclarations } from "./storageService";
-import { Declaration, TechnicianReport, TechnicianReportResult, issueTypeToMondayMap, urgencyToMondayMap } from "./types";
+import { createMondayItem, createTechnicianReport } from "./mondayService";
+import { sendNotificationEmail } from "./notificationService";
+import { issueTypeToMondayMap, urgencyToMondayMap } from "./types";
 
 // Generate unique ID for new declarations
 const generateUniqueId = (): string => {
@@ -30,97 +31,40 @@ export const getDeclarationById = (id: string): Declaration | undefined => {
   return declarations.find(decl => decl.id === id);
 };
 
-// Create a new declaration
-export const createDeclaration = async (declarationData: Omit<Declaration, 'id' | 'status' | 'submittedAt'>): Promise<Declaration> => {
-  const declarations = loadDeclarations();
-  
+// Create a new declaration with media files
+export const addWithMedia = async (
+  declarationData: Omit<Declaration, 'id' | 'status' | 'submittedAt'>,
+  mediaFiles: File[]
+): Promise<Declaration> => {
   const newDeclaration: Declaration = {
     ...declarationData,
     id: generateUniqueId(),
     status: "pending",
     submittedAt: new Date().toISOString(),
+    mediaFiles: []
   };
   
+  const declarations = loadDeclarations();
   declarations.push(newDeclaration);
   saveDeclarations(declarations);
   
-  // Send notification to tenant
+  // Send notification
   try {
-    await notificationService.sendNotificationEmail(
+    await sendNotificationEmail(
       newDeclaration.email,
       "tenant",
       "declarationReceived",
       newDeclaration
     );
   } catch (error) {
-    console.error("Error sending email notification:", error);
-    // Continue even if notification fails
-  }
-  
-  // Create item in Monday.com
-  try {
-    const mondayConfig = localStorage.getItem('mondayApiKey') && localStorage.getItem('mondayBoardId');
-    if (mondayConfig) {
-      const mondayItemId = await createMondayItem(newDeclaration);
-      if (mondayItemId) {
-        // Update declaration with Monday.com item ID
-        updateDeclaration(newDeclaration.id, { mondayId: mondayItemId });
-      }
-    }
-  } catch (error) {
-    console.error("Error creating Monday.com item:", error);
-    // Continue even if Monday.com integration fails
+    console.error("Error sending notification:", error);
   }
   
   return newDeclaration;
 };
 
-// Update an existing declaration
-export const updateDeclaration = (id: string, updates: Partial<Declaration>): Declaration | null => {
-  const declarations = loadDeclarations();
-  const index = declarations.findIndex(decl => decl.id === id);
-  
-  if (index === -1) return null;
-  
-  // Update the declaration
-  declarations[index] = {
-    ...declarations[index],
-    ...updates,
-  };
-  
-  saveDeclarations(declarations);
-
-  // Check if there's a status update that requires notification
-  if (updates.status && updates.status !== declarations[index].status) {
-    // Send notification for status change
-    notificationService.sendNotificationEmail(
-      declarations[index].email,
-      "tenant",
-      "statusUpdate",
-      declarations[index]
-    ).catch(error => {
-      console.error("Error sending status update email:", error);
-    });
-  }
-  
-  return declarations[index];
-};
-
-// Delete a declaration
-export const deleteDeclaration = (id: string): boolean => {
-  const declarations = loadDeclarations();
-  const filteredDeclarations = declarations.filter(decl => decl.id !== id);
-  
-  if (filteredDeclarations.length === declarations.length) {
-    return false; // Nothing was deleted
-  }
-  
-  saveDeclarations(filteredDeclarations);
-  return true;
-};
-
-// Create a Monday.com item for a declaration
-const createMondayItem = async (declaration: Declaration): Promise<string | null> => {
+// Send declaration to external service (Monday.com)
+export const sendToExternalService = async (declaration: Declaration): Promise<string | null> => {
   try {
     // Convert issue type and urgency to Monday.com values
     const mondayIssueType = issueTypeToMondayMap[declaration.issueType] || declaration.issueType;
@@ -129,7 +73,7 @@ const createMondayItem = async (declaration: Declaration): Promise<string | null
     const itemName = `${declaration.name} - ${declaration.property}`;
     
     // Create the item in Monday.com
-    const itemId = await mondayService.createItem(
+    const itemId = await createMondayItem(
       itemName,
       {
         nome_do_cliente: declaration.name,
@@ -146,6 +90,9 @@ const createMondayItem = async (declaration: Declaration): Promise<string | null
     );
     
     if (itemId) {
+      // Update declaration with Monday ID
+      updateDeclaration(declaration.id, { mondayId: itemId });
+      
       toast.success("Créé avec succès dans Monday.com", {
         description: `ID de l'élément: ${itemId}`
       });
@@ -159,6 +106,37 @@ const createMondayItem = async (declaration: Declaration): Promise<string | null
     });
     return null;
   }
+};
+
+// Update an existing declaration
+export const updateDeclaration = (id: string, updates: Partial<Declaration>): Declaration | null => {
+  const declarations = loadDeclarations();
+  const index = declarations.findIndex(decl => decl.id === id);
+  
+  if (index === -1) return null;
+  
+  // Update the declaration
+  declarations[index] = {
+    ...declarations[index],
+    ...updates,
+  };
+  
+  saveDeclarations(declarations);
+  
+  // Check if there's a status update that requires notification
+  if (updates.status && updates.status !== declarations[index].status) {
+    // Send notification for status change
+    sendNotificationEmail(
+      declarations[index].email,
+      "tenant",
+      "statusUpdate",
+      declarations[index]
+    ).catch(error => {
+      console.error("Error sending status update email:", error);
+    });
+  }
+  
+  return declarations[index];
 };
 
 // Send technician report to Monday.com
@@ -181,7 +159,7 @@ export const sendTechnicianReportToMonday = async (report: TechnicianReport): Pr
       id_intervenção: report.interventionId.toString()
     };
     
-    const itemId = await mondayService.createTechnicianReport(itemName, columnValues);
+    const itemId = await createTechnicianReport(itemName, columnValues);
     
     if (itemId) {
       return {
@@ -203,33 +181,3 @@ export const sendTechnicianReportToMonday = async (report: TechnicianReport): Pr
     };
   }
 };
-
-// Check Monday.com board status for the technician board
-export const getMonday5BoardStatus = async () => {
-  try {
-    const boardId = localStorage.getItem('mondayBoardId') || '';
-    
-    if (!boardId) {
-      return {
-        connected: false,
-        message: "ID du board Monday.com non configuré"
-      };
-    }
-    
-    const result = await mondayService.validateConfig();
-    
-    return {
-      connected: result.valid,
-      message: result.message
-    };
-  } catch (error) {
-    console.error("Error checking Monday board status:", error);
-    return {
-      connected: false,
-      message: error instanceof Error ? error.message : "Erreur de connexion à Monday.com"
-    };
-  }
-};
-
-// Re-export types
-export type { Declaration, TechnicianReport, TechnicianReportResult };

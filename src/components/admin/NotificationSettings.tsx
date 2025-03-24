@@ -14,13 +14,15 @@ import {
 } from "@/components/ui/card";
 import { Loader2, Bell, Users } from "lucide-react";
 import {
+  NotificationPreference
+} from "@/services/types";
+import {
   setupNotificationWebhook,
   getWebhookIntegrations,
   deleteWebhook,
   getNotificationPreferences,
-  saveNotificationPreferences,
-  NotificationPreference
-} from "@/services/declarationService";
+  saveNotificationPreferences
+} from "@/services/notificationService";
 
 export const NotificationSettings = () => {
   const [webhookUrl, setWebhookUrl] = useState<string>("");

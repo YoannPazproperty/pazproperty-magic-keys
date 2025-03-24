@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TechnicienManager from "@/components/TechnicienManager";
-import declarationService, { Declaration } from "@/services/declarationService";
+import { Declaration } from "@/services/types";
+import { getDeclarations, updateDeclarationStatus } from "@/services/declarationService";
 import { LoginForm } from "@/components/admin/LoginForm";
 import { DeclarationList } from "@/components/admin/DeclarationList";
 import { ApiSettings } from "@/components/admin/ApiSettings";
@@ -42,7 +44,7 @@ const Admin = () => {
   }, [isAuthenticated]);
 
   const loadDeclarations = () => {
-    const allDeclarations = declarationService.getAll();
+    const allDeclarations = getDeclarations();
     setDeclarations(allDeclarations);
   };
   
@@ -52,9 +54,10 @@ const Admin = () => {
     setMondayBoardId(config.boardId);
     
     if (config.apiKey && config.boardId) {
-      validateMondayConfig(config.apiKey, config.boardId).then(result => {
-        setMondayConfigStatus(result);
-      });
+      validateMondayConfig(config.apiKey, config.boardId)
+        .then(result => {
+          setMondayConfigStatus(result);
+        });
     }
   };
   
@@ -82,9 +85,9 @@ const Admin = () => {
   };
 
   const updateDeclarationStatus = (id: string, newStatus: Declaration["status"]) => {
-    const updatedDeclaration = declarationService.updateStatus(id, newStatus);
+    const success = updateDeclarationStatus(id, newStatus);
     
-    if (updatedDeclaration) {
+    if (success) {
       loadDeclarations();
     }
   };
@@ -93,9 +96,10 @@ const Admin = () => {
     setMondayApiKey(apiKey);
     setMondayBoardId(boardId);
     if (apiKey && boardId) {
-      validateMondayConfig(apiKey, boardId).then(result => {
-        setMondayConfigStatus(result);
-      });
+      validateMondayConfig(apiKey, boardId)
+        .then(result => {
+          setMondayConfigStatus(result);
+        });
     } else {
       setMondayConfigStatus(null);
     }
