@@ -7,33 +7,33 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   try {
     console.log("Sending declaration to Monday.com:", declaration);
     
-    // Format the data for Monday.com with exact column IDs based on the mapping table
+    // Format the data for Monday.com using EXACT column IDs from your screenshot
     const formattedValues: Record<string, any> = {
-      // Text columns - direct string values without additional formatting
-      "text": declaration.name,             // Nome do Inquilino
-      "text4": declaration.property,        // Endereço 
-      "text5": declaration.city || "",      // Cidade
-      "text7": declaration.postalCode || "", // Código Postal
-      "text6": declaration.issueType,       // Tipo de problema
-      "text87": declaration.description,    // Descrição
-      "text1": declaration.id,              // ID Declaração
+      // Text columns
+      "text0": declaration.name,            // Nome do Inquilino
+      "text8": declaration.property,        // Endereço 
+      "text7": declaration.city || "",      // Cidade
+      "text00": declaration.postalCode || "", // Código Postal
+      "text92": declaration.issueType,       // Tipo de problema
+      "text6": declaration.description,     // Descrição
+      "text4": declaration.id,              // ID Declaração
       
-      // Email column - format as string (Monday.com formats it internally)
+      // Email column
       "email": declaration.email,
       
-      // Phone column - format as string (Monday.com formats it internally)
-      "phone": declaration.phone,
+      // Phone column
+      "phone1": declaration.phone,
       
-      // NIF number - just send as a string
-      "text0": declaration.nif || "",
+      // NIF field
+      "numbers": declaration.nif || "",
       
-      // Status column - send as string
+      // Status dropdown
       "status": "Nouveau",
       
-      // Priority dropdown - send as string
-      "priority": declaration.urgency,
+      // Priority dropdown
+      "dropdown9": declaration.urgency,
       
-      // Date column - send in YYYY-MM-DD format
+      // Date column
       "date4": declaration.submittedAt ? 
         new Date(declaration.submittedAt).toISOString().split('T')[0] : 
         new Date().toISOString().split('T')[0]

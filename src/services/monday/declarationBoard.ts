@@ -18,6 +18,48 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("API Key available:", apiKey ? "Yes" : "No");
     console.log("Column values:", columnValues);
     
+    // Prepare column values for Monday.com API
+    // This step is critical - Monday.com requires properly formatted JSON for its column values
+    const formattedColumnValues = {};
+    
+    // Process each value to ensure proper formatting based on column type
+    Object.entries(columnValues).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        // Monday.com expects a specifically formatted JSON string
+        switch (key) {
+          case 'email':
+            formattedColumnValues[key] = JSON.stringify({ "email": value, "text": value });
+            break;
+          case 'phone':
+            formattedColumnValues[key] = JSON.stringify({ "phone": value, "countryShortName": "PT" });
+            break;
+          case 'status':
+            formattedColumnValues[key] = JSON.stringify({ "label": value });
+            break;
+          case 'priority':
+            formattedColumnValues[key] = JSON.stringify({ "label": value });
+            break;
+          case 'date4':
+            formattedColumnValues[key] = JSON.stringify({ "date": value });
+            break;
+          case 'dropdown':
+          case 'dropdown5':
+            formattedColumnValues[key] = JSON.stringify({ "label": value });
+            break;
+          case 'numbers8':
+            // Convert to number if possible
+            const numValue = isNaN(Number(value)) ? 0 : Number(value);
+            formattedColumnValues[key] = JSON.stringify(numValue);
+            break;
+          default:
+            // Text columns just need their values as strings
+            formattedColumnValues[key] = JSON.stringify(value);
+        }
+      }
+    });
+    
+    console.log("Formatted column values for Monday.com API:", formattedColumnValues);
+    
     // Make the actual API call to Monday.com
     const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
@@ -28,7 +70,7 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     const variables = {
       boardId: boardId,
       itemName,
-      columnValues: JSON.stringify(columnValues)
+      columnValues: formattedColumnValues
     };
     
     console.log("Sending query to Monday.com with variables:", {

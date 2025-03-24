@@ -39,7 +39,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         postalCode: values.postalCode,
         issueType: issueType,
         description: values.description,
-        urgency: "Média", // Using value that matches Monday.com dropdown
+        urgency: "Média", // Value that matches Monday.com dropdown
         nif: values.nif,
       };
       
