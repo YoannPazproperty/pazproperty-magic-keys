@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Declaration } from "@/services/types";
 import { translateIssueType, translateUrgency } from "./DeclarationList";
+import { Info } from "lucide-react";
 
 interface DeclarationDetailsProps {
   declaration: Declaration;
@@ -50,6 +51,21 @@ export const DeclarationDetails = ({
           <p>{declaration.description}</p>
         </div>
       </div>
+      
+      {declaration.mondayId && (
+        <div className="space-y-2 py-2">
+          <h3 className="font-semibold flex items-center">
+            <Info className="h-4 w-4 mr-2 text-blue-500" />
+            Information Monday.com
+          </h3>
+          <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
+            <p><span className="font-medium">ID Monday:</span> {declaration.mondayId}</p>
+            <p className="text-xs text-blue-600 mt-1">
+              Cet élément a été synchronisé avec Monday.com
+            </p>
+          </div>
+        </div>
+      )}
       
       <div className="space-y-2 py-2">
         <h3 className="font-semibold">Mettre à jour le statut</h3>

@@ -1,4 +1,3 @@
-
 import { MondayConfigValidation } from "./types";
 
 // Validate Monday.com configuration
@@ -59,13 +58,43 @@ export const setMondayConfig = async (apiKey: string, boardId: string): Promise<
   }
 };
 
-// Create Monday.com item
+// Create Monday.com item based on the actual board structure
 export const createMondayItem = async (itemName: string, columnValues: Record<string, any>): Promise<string | null> => {
   try {
     // In a real app, this would make an API call to Monday.com
-    // For demonstration, we'll just return a fake item ID
+    // For demonstration, we'll just log the values that would be sent
     
-    console.log("Creating Monday.com item:", itemName, columnValues);
+    console.log("Creating Monday.com item with the following data:");
+    console.log("Item Name:", itemName);
+    
+    // Log column values in a way that matches the actual Monday.com board structure
+    // Based on the screenshot provided
+    const mondayColumnMap = {
+      // Map our internal field names to the actual Monday.com column IDs
+      nome_do_cliente: "Nome do Inquilino", // client name
+      email: "email_mknvfg3r",              // client email
+      telefone: "phone_mknyxy109",          // client phone
+      endereco: "text_mknyjz67",            // property address
+      tipo_de_problema: "Tipo de problema", // issue type
+      descricao: "Descrição",               // description
+      urgencia: "Urgência",                 // urgency
+      status: "Status",                     // status
+      id_declaracao: "ID Declaração"        // declaration ID
+    };
+    
+    // Transform the column values to match Monday.com column IDs
+    const mondayFormatValues: Record<string, any> = {};
+    
+    for (const [key, value] of Object.entries(columnValues)) {
+      if (mondayColumnMap[key]) {
+        mondayFormatValues[mondayColumnMap[key]] = value;
+      } else {
+        // For fields not in our map, keep them as is
+        mondayFormatValues[key] = value;
+      }
+    }
+    
+    console.log("Monday.com formatted column values:", mondayFormatValues);
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -82,7 +111,36 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
 export const createTechnicianReport = async (itemName: string, columnValues: Record<string, any>): Promise<string | null> => {
   try {
     // In a real app, this would make an API call to Monday.com
-    console.log("Creating technician report in Monday.com:", itemName, columnValues);
+    console.log("Creating technician report in Monday.com:");
+    console.log("Item Name:", itemName);
+    
+    // Map our internal field names to the actual Monday.com column IDs for technician reports
+    const techReportColumnMap = {
+      diagnóstico: "Diagnóstico", 
+      necessita_de_intervenção: "Necessita intervenção",
+      valor_estimado: "Valor estimado",
+      trabalhos_a_realizar: "Trabalhos a realizar",
+      cliente: "Nome do Cliente",
+      email: "Email", 
+      telefone: "Telefone",
+      endereço: "Endereço",
+      categoria_do_problema: "Categoria do problema",
+      id_intervenção: "ID Intervenção"
+    };
+    
+    // Transform the column values to match Monday.com column IDs
+    const mondayFormatValues: Record<string, any> = {};
+    
+    for (const [key, value] of Object.entries(columnValues)) {
+      if (techReportColumnMap[key]) {
+        mondayFormatValues[techReportColumnMap[key]] = value;
+      } else {
+        // For fields not in our map, keep them as is
+        mondayFormatValues[key] = value;
+      }
+    }
+    
+    console.log("Monday.com formatted column values for technician report:", mondayFormatValues);
     
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
