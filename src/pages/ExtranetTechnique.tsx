@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TechnicienManager from "@/components/TechnicienManager";
-import { getMonday5BoardStatus } from "@/services/monday";
+import { validateMondayConfig } from "@/services/monday";
 
 const ExtranetTechnique = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -13,7 +13,7 @@ const ExtranetTechnique = () => {
   useEffect(() => {
     // Check API configuration status
     const checkApiStatus = async () => {
-      const status = await getMonday5BoardStatus();
+      const status = await validateMondayConfig();
       setApiStatus(status);
     };
     
