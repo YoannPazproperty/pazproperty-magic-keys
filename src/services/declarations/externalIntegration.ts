@@ -1,3 +1,4 @@
+
 import { Declaration, TechnicianReport, TechnicianReportResult } from "../types";
 import { createMondayItem, createTechnicianReport } from "../monday";
 
@@ -6,7 +7,8 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   try {
     console.log("Sending declaration to Monday.com:", declaration);
     
-    // Format the data for Monday.com using simplified direct values
+    // Format the data for Monday.com using simplified values
+    // Use the exact column IDs from Monday.com
     const formattedValues = {
       "text": declaration.name,              // Nome do Inquilino
       "text8": declaration.property,         // Endereço 
@@ -18,8 +20,8 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
       "email": declaration.email,
       "phone": declaration.phone,
       "numbers8": declaration.nif || "",
-      "status": "Nouveau",
-      "priority": declaration.urgency,
+      "status": { "label": "Nouveau" },      // Use the correct format for status
+      "priority": { "label": declaration.urgency },  // Use the correct format for priority
       "date4": new Date().toISOString().split('T')[0]
     };
     
@@ -65,9 +67,9 @@ export const sendTechnicianReportToMonday = async (
       // Number column
       "numbers8": report.estimateAmount || "0",
       
-      // Status/dropdown columns
-      "dropdown5": report.problemCategory,
-      "dropdown": report.needsIntervention ? "Sim" : "Não"
+      // Status/dropdown columns - use the correct format
+      "dropdown5": { "label": report.problemCategory },
+      "dropdown": { "label": report.needsIntervention ? "Sim" : "Não" }
     };
     
     // Log the column values before sending

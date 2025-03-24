@@ -18,28 +18,28 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("API Key available:", apiKey ? "Yes" : "No");
     console.log("Column values:", columnValues);
     
-    // Create the correct formatted columnValues for Monday.com
-    // Monday.com is very specific about the format
+    // Create the correctly formatted columnValues for Monday.com
     const mondayFormatted = {};
     
-    // Simplify formatting - use direct string values for text fields
+    // Format each column value properly
     Object.entries(columnValues).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
         mondayFormatted[key] = value;
       }
     });
     
-    console.log("Simplified format for Monday.com:", mondayFormatted);
+    console.log("Formatted for Monday.com:", mondayFormatted);
     
-    // Make the actual API call to Monday.com
-    const query = `mutation ($boardId: Int!, $itemName: String!, $columnValues: JSON!) {
+    // Make the actual API call to Monday.com with corrected types
+    // Note: boardId needs to be sent as ID! type, not Int!
+    const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
         id
       }
     }`;
     
     const variables = {
-      boardId: parseInt(boardId),
+      boardId: boardId, // Send as string/ID, not as parseInt
       itemName,
       columnValues: JSON.stringify(mondayFormatted)
     };
