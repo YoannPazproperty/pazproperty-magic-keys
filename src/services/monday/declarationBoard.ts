@@ -19,8 +19,7 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Column values before JSON stringify:", columnValues);
     
     // Monday.com expects column values as a JSON string
-    // Important: For the API, we need to directly stringify the columnValues object
-    // WITHOUT wrapping each value in nested objects like {text: value}
+    // After stringify, verify the result matches the expected format
     const mondayColumnValues = JSON.stringify(columnValues);
     
     console.log("Monday.com column values after stringify:", mondayColumnValues);
@@ -42,7 +41,7 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
       boardId: variables.boardId,
       itemName: variables.itemName,
       // Log a preview of the column values for debugging
-      columnValues: mondayColumnValues.substring(0, 500) + "..."
+      columnValues: mondayColumnValues.substring(0, 500) + (mondayColumnValues.length > 500 ? "..." : "")
     });
     
     const response = await fetch("https://api.monday.com/v2", {

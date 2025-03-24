@@ -39,14 +39,14 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         postalCode: values.postalCode,
         issueType: issueType,
         description: values.description,
-        urgency: "Média", // Using exact value that matches Monday.com dropdown
+        urgency: "Média", // Using value that matches Monday.com dropdown
         nif: values.nif,
       };
       
       const newDeclaration = await addWithMedia(declarationData, mediaFiles);
       console.log("Declaration saved locally:", newDeclaration);
       
-      // Always attempt to send to Monday without config check
+      // Send to Monday.com with improved error handling
       try {
         console.log("Sending declaration to Monday:", newDeclaration);
         const mondayResult = await sendToExternalService(newDeclaration);
@@ -60,7 +60,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
           toast.error("Erro na integração com Monday.com", {
             description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com."
           });
-          console.error("Failed to send to Monday.com with proper column values");
+          console.error("Failed to send to Monday.com");
         }
       } catch (error) {
         console.error("Error sending to Monday.com:", error);

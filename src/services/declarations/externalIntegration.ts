@@ -1,4 +1,3 @@
-
 import { Declaration, TechnicianReport, TechnicianReportResult } from "../types";
 import { createMondayItem, createTechnicianReport } from "../monday";
 
@@ -7,45 +6,41 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   try {
     console.log("Sending declaration to Monday.com:", declaration);
     
-    // Format the data for Monday.com in the correct format for their API
-    // Monday.com expects a flat object with column keys exactly matching the column IDs
+    // Format the data for Monday.com using the exact column IDs from our mapping table
     const formattedValues: Record<string, any> = {};
     
-    // Text columns - no nested objects
-    formattedValues["text"] = declaration.name; // Assuming "text" is the column ID for the item name
-    formattedValues["text1"] = declaration.email; // Email column
-    formattedValues["text6"] = declaration.phone; // Phone column
-    formattedValues["text0"] = declaration.property; // Address column
-    formattedValues["long_text"] = declaration.description; // Description column
-    formattedValues["text8"] = declaration.id; // ID column
+    // Name and contact details
+    formattedValues["text_mknxg830"] = declaration.name; // Nome do Inquilino 
+    formattedValues["email_mknxfg3r"] = declaration.email; // E-mail
+    formattedValues["phone_mknyw109"] = declaration.phone; // Telefone
+    if (declaration.nif) formattedValues["numeric_mknx2s4b"] = declaration.nif; // NIF
     
-    // Optional text fields
-    if (declaration.city) formattedValues["text4"] = declaration.city;
-    if (declaration.postalCode) formattedValues["text9"] = declaration.postalCode;
-    if (declaration.nif) formattedValues["text5"] = declaration.nif;
+    // Address information
+    formattedValues["text_mknx4pjn"] = declaration.property; // Endereço
+    if (declaration.city) formattedValues["text_mknxe74j"] = declaration.city; // Cidade
+    if (declaration.postalCode) formattedValues["text_mknxq2zr"] = declaration.postalCode; // Código Postal
     
-    // Status column - directly use status values without wrapping in objects
-    const statusMap: Record<string, string> = {
-      "pending": "Nouveau",
-      "in_progress": "En cours",
-      "resolved": "Fait"
-    };
-    formattedValues["status"] = statusMap[declaration.status] || "Nouveau";
+    // Problem information
+    formattedValues["text_mknxny1h"] = declaration.issueType; // Tipo de problema
+    formattedValues["text_mknxj2e7"] = declaration.description; // Descrição
     
-    // Dropdown columns - use the value directly (not wrapped in label object)
-    formattedValues["dropdown"] = declaration.issueType;
-    formattedValues["dropdown8"] = declaration.urgency === "medium" ? "Média" : declaration.urgency;
+    // Status and urgency
+    formattedValues["status"] = { label: "Nouveau" }; // Status
+    formattedValues["dropdown_mkpbfgd4"] = { label: declaration.urgency }; // Urgência
+    
+    // ID and date
+    formattedValues["text_mkpbmd7q"] = declaration.id; // ID Declaração
     
     // Date column - format as YYYY-MM-DD
     if (declaration.submittedAt) {
       const date = new Date(declaration.submittedAt);
       if (!isNaN(date.getTime())) {
-        formattedValues["date4"] = date.toISOString().split('T')[0];
+        formattedValues["date4"] = { date: date.toISOString().split('T')[0] };
       }
     }
     
     // Log the column values before sending
-    console.log("Monday.com formatted column values (flat object):", formattedValues);
+    console.log("Monday.com formatted column values with correct IDs:", formattedValues);
     
     // Send to Monday.com with properly formatted values
     const itemId = await createMondayItem(
