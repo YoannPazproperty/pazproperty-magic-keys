@@ -1,173 +1,113 @@
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import TechnicienManager from "@/components/TechnicienManager";
-import { Declaration } from "@/services/types";
-import { getDeclarations, updateDeclarationStatus } from "@/services/declarationService";
-import { LoginForm } from "@/components/admin/LoginForm";
-import { DeclarationList } from "@/components/admin/DeclarationList";
-import { ApiSettings } from "@/components/admin/ApiSettings";
-import { NotificationSettings } from "@/components/admin/NotificationSettings";
-import { getMondayConfig, validateMondayConfig } from "@/services/monday";
 
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "pazproperty2024";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import DeclarationList from "@/components/admin/DeclarationList";
+import ApiSettings from "@/components/admin/ApiSettings";
+import NotificationSettings from "@/components/admin/NotificationSettings";
+import LoginForm from "@/components/admin/LoginForm";
+import { saveMondayConfig, validateMondayConfig } from "@/services/monday";
 
 const Admin = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [declarations, setDeclarations] = useState<Declaration[]>([]);
-  const [mondayApiKey, setMondayApiKey] = useState<string>("");
-  const [mondayBoardId, setMondayBoardId] = useState<string>("");
-  const [mondayTechBoardId, setMondayTechBoardId] = useState<string>("");
-  const [mondayConfigStatus, setMondayConfigStatus] = useState<{valid: boolean, message: string} | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("declarations");
-  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
+  const [activeTab, setActiveTab] = useState("declarations");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const authStatus = localStorage.getItem("adminAuthenticated");
-    if (authStatus === "true") {
-      setIsAuthenticated(true);
+    // Check if admin is logged in
+    const adminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+    setIsLoggedIn(adminLoggedIn);
+    
+    // Check API configuration status
+    const checkApiStatus = async () => {
+      const validation = await validateMondayConfig();
+      setApiStatus(validation);
+    };
+    
+    if (adminLoggedIn) {
+      checkApiStatus();
     }
   }, []);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadDeclarations();
-      loadMondayConfig();
-    }
-  }, [isAuthenticated]);
-
-  const loadDeclarations = () => {
-    const allDeclarations = getDeclarations();
-    setDeclarations(allDeclarations);
-  };
-  
-  const loadMondayConfig = async () => {
-    const config = getMondayConfig();
-    setMondayApiKey(config.apiKey);
-    setMondayBoardId(config.boardId);
-    setMondayTechBoardId(config.techBoardId);
-    
-    console.log("Loaded Monday.com config:", config);
-    
-    if (config.apiKey && config.boardId && config.techBoardId) {
-      try {
-        const result = validateMondayConfig(config.apiKey, config.boardId, config.techBoardId);
-        setMondayConfigStatus(result);
-      } catch (error) {
-        console.error("Error validating Monday config:", error);
-      }
-    }
-  };
-  
-  const handleLogin = (username: string, password: string) => {
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      setIsAuthenticated(true);
-      localStorage.setItem("adminAuthenticated", "true");
-      toast("Connexion réussie", {
-        description: "Bienvenue dans l'interface d'administration."
+  const handleLogin = (username: string, password: string): boolean => {
+    // In a real application, you would validate against a secure backend
+    // This is just a simple example for demonstration
+    if (username === 'admin' && password === 'password') {
+      localStorage.setItem('adminLoggedIn', 'true');
+      setIsLoggedIn(true);
+      
+      // Check API configuration status after login
+      validateMondayConfig().then(validation => {
+        setApiStatus(validation);
       });
-      loadDeclarations();
-    } else {
-      toast.error("Échec de la connexion", {
-        description: "Nom d'utilisateur ou mot de passe incorrect."
-      });
+      
+      return true;
     }
+    return false;
   };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem("adminAuthenticated");
-    toast("Déconnexion réussie", {
-      description: "Vous avez été déconnecté avec succès."
+    localStorage.removeItem('adminLoggedIn');
+    setIsLoggedIn(false);
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+
+  const handleSaveApiConfig = (apiKey: string, boardId: string, techBoardId: string) => {
+    saveMondayConfig(apiKey, boardId, techBoardId);
+    
+    // Validate the new configuration
+    validateMondayConfig().then(validation => {
+      setApiStatus(validation);
     });
   };
 
-  const handleStatusUpdate = (id: string, newStatus: Declaration["status"]) => {
-    const success = updateDeclarationStatus(id, newStatus);
-    
-    if (success) {
-      loadDeclarations();
-    }
-  };
-  
-  const handleMondayConfigUpdate = async (apiKey: string, boardId: string, techBoardId: string) => {
-    console.log("Updating Monday.com config:", { apiKey, boardId, techBoardId });
-    setMondayApiKey(apiKey);
-    setMondayBoardId(boardId);
-    setMondayTechBoardId(techBoardId);
-    
-    // Save the configuration to localStorage
-    saveMondayConfig(apiKey, boardId, techBoardId);
-    
-    const result = validateMondayConfig(apiKey, boardId, techBoardId);
-    setMondayConfigStatus(result);
-  };
+  // If not logged in, show login form
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+        <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow">
+          <h1 className="text-2xl font-bold text-center">Admin Login</h1>
+          <LoginForm onLogin={handleLogin} />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      
-      <main className="flex-1 pt-32 pb-20">
-        <div className="container mx-auto px-4">
-          {!isAuthenticated ? (
-            <LoginForm onLogin={handleLogin} />
-          ) : (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Interface d'Administration</h1>
-                <Button variant="outline" onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Déconnexion
-                </Button>
-              </div>
-              
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-                <TabsList className="grid w-full grid-cols-4 mb-6">
-                  <TabsTrigger value="declarations">Déclarations</TabsTrigger>
-                  <TabsTrigger value="technicians">Prestataires</TabsTrigger>
-                  <TabsTrigger value="settings">Paramètres API</TabsTrigger>
-                  <TabsTrigger value="notifications">Notifications</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="declarations">
-                  <DeclarationList 
-                    declarations={declarations} 
-                    onStatusUpdate={handleStatusUpdate} 
-                  />
-                </TabsContent>
-                
-                <TabsContent value="technicians">
-                  <TechnicienManager />
-                </TabsContent>
-                
-                <TabsContent value="settings">
-                  <ApiSettings 
-                    mondayApiKey={mondayApiKey}
-                    mondayBoardId={mondayBoardId}
-                    mondayTechBoardId={mondayTechBoardId}
-                    mondayConfigStatus={mondayConfigStatus}
-                    onConfigUpdate={handleMondayConfigUpdate}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="notifications">
-                  <NotificationSettings />
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-        </div>
-      </main>
-      
-      <Footer />
-    </div>
+    <AdminLayout 
+      activeTab={activeTab} 
+      onTabChange={handleTabChange}
+      onLogout={handleLogout}
+      apiConnected={apiStatus.valid}
+    >
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsTrigger value="declarations">Declarações</TabsTrigger>
+          <TabsTrigger value="apiConfig">Config. API</TabsTrigger>
+          <TabsTrigger value="notifications">Notificações</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="declarations" className="space-y-4">
+          <DeclarationList />
+        </TabsContent>
+        
+        <TabsContent value="apiConfig" className="space-y-4">
+          <ApiSettings 
+            onSave={handleSaveApiConfig}
+            connectionStatus={apiStatus}
+          />
+        </TabsContent>
+        
+        <TabsContent value="notifications" className="space-y-4">
+          <NotificationSettings />
+        </TabsContent>
+      </Tabs>
+    </AdminLayout>
   );
 };
 

@@ -6,7 +6,7 @@ import { createMondayItem, createTechnicianReport } from "../monday";
 export const sendToExternalService = async (declaration: Declaration): Promise<string | null> => {
   try {
     // Format the data for Monday.com
-    const columnValues = {
+    const columnValues: Record<string, any> = {
       nome_do_cliente: declaration.name,
       email: declaration.email,
       telefone: declaration.phone,

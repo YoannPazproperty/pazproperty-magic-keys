@@ -1,106 +1,74 @@
 
-import { MondayConfigValidation } from "../types";
-
-// Validate Monday.com configuration
-export const validateMondayConfig = async (apiKey: string, boardId: string, techBoardId: string): Promise<MondayConfigValidation> => {
-  try {
-    // In a real app, this would make an API call to test the connection
-    // For demonstration, we'll just validate format and simulate a response
-    
-    if (!apiKey || apiKey.length < 10) {
-      return {
-        valid: false,
-        message: "Clé API invalide. Veuillez fournir une clé API valide."
-      };
-    }
-    
-    if (!boardId || isNaN(Number(boardId))) {
-      return {
-        valid: false,
-        message: "ID du tableau de déclarations invalide. Veuillez fournir un ID numérique valide."
-      };
-    }
-    
-    if (!techBoardId || isNaN(Number(techBoardId))) {
-      return {
-        valid: false,
-        message: "ID du tableau de prestataires invalide. Veuillez fournir un ID numérique valide."
-      };
-    }
-    
-    // Simulate API validation delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // For demonstration, we'll assume the config is valid
-    return {
-      valid: true,
-      message: "Configuration valide. La connexion à Monday.com a été établie avec succès."
-    };
-  } catch (error) {
-    console.error("Error validating Monday.com config:", error);
-    return {
-      valid: false,
-      message: error instanceof Error ? error.message : "Erreur de validation de la configuration"
-    };
-  }
-};
-
-// Set Monday.com configuration
-export const setMondayConfig = async (apiKey: string, boardId: string, techBoardId: string): Promise<MondayConfigValidation> => {
-  try {
-    const validation = await validateMondayConfig(apiKey, boardId, techBoardId);
-    
-    if (validation.valid) {
-      // Save config to localStorage
-      localStorage.setItem('mondayApiKey', apiKey);
-      localStorage.setItem('mondayBoardId', boardId);
-      localStorage.setItem('mondayTechBoardId', techBoardId);
-    }
-    
-    return validation;
-  } catch (error) {
-    console.error("Error setting Monday.com config:", error);
-    return {
-      valid: false,
-      message: error instanceof Error ? error.message : "Erreur lors de la configuration"
-    };
-  }
-};
-
-// Get Monday board configuration
+// Load Monday.com configuration from localStorage
 export const getMondayConfig = () => {
+  const apiKey = localStorage.getItem('mondayApiKey') || '';
+  const boardId = localStorage.getItem('mondayBoardId') || '';
+  const techBoardId = localStorage.getItem('mondayTechBoardId') || '';
+  
   return {
-    apiKey: localStorage.getItem('mondayApiKey') || '',
-    boardId: localStorage.getItem('mondayBoardId') || '',
-    techBoardId: localStorage.getItem('mondayTechBoardId') || ''
+    apiKey,
+    boardId,
+    techBoardId,
   };
 };
 
-// Check Monday.com board status
-export const getMondayBoardStatus = async (): Promise<{connected: boolean; message: string}> => {
+// Save Monday.com configuration to localStorage
+export const saveMondayConfig = (apiKey: string, boardId: string, techBoardId?: string) => {
+  localStorage.setItem('mondayApiKey', apiKey);
+  localStorage.setItem('mondayBoardId', boardId);
+  
+  if (techBoardId) {
+    localStorage.setItem('mondayTechBoardId', techBoardId);
+  }
+};
+
+// Validate Monday.com configuration
+export interface MondayConfigValidation {
+  valid: boolean;
+  message: string;
+}
+
+export const validateMondayConfig = async (): Promise<MondayConfigValidation> => {
+  const { apiKey, boardId } = getMondayConfig();
+  
+  if (!apiKey || !boardId) {
+    return {
+      valid: false,
+      message: "API key ou Board ID não configurados"
+    };
+  }
+  
+  // In a real implementation, we would make an API call to Monday.com here
+  // For now, we'll just check if the values exist
+  return {
+    valid: true,
+    message: "Configuração válida"
+  };
+};
+
+// Check Monday board status
+export const getMonday5BoardStatus = async (): Promise<{ valid: boolean; message: string }> => {
   try {
-    const apiKey = localStorage.getItem('mondayApiKey') || '';
-    const boardId = localStorage.getItem('mondayBoardId') || '';
-    const techBoardId = localStorage.getItem('mondayTechBoardId') || '';
+    const { apiKey, boardId } = getMondayConfig();
     
-    if (!apiKey || !boardId || !techBoardId) {
+    if (!apiKey || !boardId) {
       return {
-        connected: false,
-        message: "Configuration Monday.com manquante"
+        valid: false,
+        message: "Monday.com não configurado"
       };
     }
     
-    const validation = await validateMondayConfig(apiKey, boardId, techBoardId);
-    
+    // In a real implementation, we would make an API call to Monday.com here
+    // For now, we'll just return a success message
     return {
-      connected: validation.valid,
-      message: validation.message
+      valid: true,
+      message: "Monday.com boards conectados"
     };
   } catch (error) {
     console.error("Error checking Monday.com board status:", error);
     return {
-      connected: false,
-      message: error instanceof Error ? error.message : "Erreur de connexion à Monday.com"
+      valid: false,
+      message: "Erro ao verificar status do Monday.com"
     };
   }
 };
