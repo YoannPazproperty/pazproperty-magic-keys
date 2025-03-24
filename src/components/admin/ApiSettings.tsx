@@ -23,25 +23,28 @@ import {
 interface ApiSettingsProps {
   mondayApiKey: string;
   mondayBoardId: string;
+  mondayTechBoardId: string;
   mondayConfigStatus: { valid: boolean; message: string } | null;
-  onConfigUpdate: (apiKey: string, boardId: string) => void;
+  onConfigUpdate: (apiKey: string, boardId: string, techBoardId: string) => void;
 }
 
 export const ApiSettings = ({ 
   mondayApiKey, 
   mondayBoardId, 
+  mondayTechBoardId,
   mondayConfigStatus,
   onConfigUpdate
 }: ApiSettingsProps) => {
   const [apiKey, setApiKey] = useState(mondayApiKey);
   const [boardId, setBoardId] = useState(mondayBoardId);
+  const [techBoardId, setTechBoardId] = useState(mondayTechBoardId);
   const [isTesting, setIsTesting] = useState<boolean>(false);
 
   const handleSaveMondayConfig = async () => {
     setIsTesting(true);
     
     try {
-      const result = await setMondayConfig(apiKey, boardId);
+      const result = await setMondayConfig(apiKey, boardId, techBoardId);
       
       if (result.valid) {
         toast.success("Configuration Monday.com guardada", {
@@ -53,7 +56,7 @@ export const ApiSettings = ({
         });
       }
       
-      onConfigUpdate(apiKey, boardId);
+      onConfigUpdate(apiKey, boardId, techBoardId);
     } catch (error) {
       toast.error("Erreur au guardada", {
         description: "Ocorreu um erro ao guardar a configuração."
@@ -66,9 +69,11 @@ export const ApiSettings = ({
   const handleReset = () => {
     setApiKey("");
     setBoardId("");
+    setTechBoardId("");
     localStorage.removeItem('mondayApiKey');
     localStorage.removeItem('mondayBoardId');
-    onConfigUpdate("", "");
+    localStorage.removeItem('mondayTechBoardId');
+    onConfigUpdate("", "", "");
     toast("Configuration reiniciada");
   };
 
@@ -99,16 +104,31 @@ export const ApiSettings = ({
         
         <div className="space-y-2">
           <label htmlFor="monday-board-id" className="font-medium">
-            ID do Quadro Monday.com
+            ID do Quadro de Declarações
           </label>
           <Input
             id="monday-board-id"
             value={boardId}
             onChange={(e) => setBoardId(e.target.value)}
-            placeholder="ID do quadro (ex: 123456789)"
+            placeholder="ID do quadro de declarações (ex: 1861342035)"
           />
           <p className="text-sm text-gray-500">
-            O ID do quadro encontra-se no URL do seu quadro: https://your-domain.monday.com/boards/[ID DO QUADRO]
+            O quadro onde serão enviadas as declarações dos clientes
+          </p>
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="monday-tech-board-id" className="font-medium">
+            ID do Quadro de Prestataires
+          </label>
+          <Input
+            id="monday-tech-board-id"
+            value={techBoardId}
+            onChange={(e) => setTechBoardId(e.target.value)}
+            placeholder="ID do quadro de prestataires (ex: 1863361499)"
+          />
+          <p className="text-sm text-gray-500">
+            O quadro onde serão enviados os relatórios dos prestataires técnicos
           </p>
         </div>
         
@@ -156,7 +176,7 @@ export const ApiSettings = ({
         </Button>
         <Button 
           onClick={handleSaveMondayConfig}
-          disabled={!apiKey || !boardId || isTesting}
+          disabled={!apiKey || !boardId || !techBoardId || isTesting}
         >
           {isTesting ? (
             <>

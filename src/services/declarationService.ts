@@ -1,7 +1,7 @@
 
 import { toast } from "sonner";
 import { Declaration, TechnicianReport, TechnicianReportResult, issueTypeToMondayMap, urgencyToMondayMap } from "./types";
-import { loadDeclarations, saveDeclarations } from "./storageService";
+import { loadDeclarations, saveDeclarations, getMondayConfig } from "./storageService";
 import { createMondayItem, createTechnicianReport, getMondayBoardStatus } from "./mondayService";
 import { sendNotificationEmail } from "./notificationService";
 
@@ -65,6 +65,12 @@ export const addWithMedia = async (
 // Send declaration to external service (Monday.com)
 export const sendToExternalService = async (declaration: Declaration): Promise<string | null> => {
   try {
+    // Get the Monday.com configuration
+    const config = getMondayConfig();
+    
+    // Log the current configuration
+    console.log("Monday.com configuration:", config);
+    
     // Convert issue type and urgency to Monday.com values
     const mondayIssueType = issueTypeToMondayMap[declaration.issueType] || declaration.issueType;
     const mondayUrgency = urgencyToMondayMap[declaration.urgency] || declaration.urgency;

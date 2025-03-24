@@ -86,23 +86,30 @@ export const saveNotificationPreferences = (preferences: NotificationPreference)
 export const getMondayConfig = () => {
   return {
     apiKey: localStorage.getItem('mondayApiKey') || '',
-    boardId: localStorage.getItem('mondayBoardId') || ''
+    boardId: localStorage.getItem('mondayBoardId') || '',
+    techBoardId: localStorage.getItem('mondayTechBoardId') || ''
   };
 };
 
-export const saveMondayConfig = (apiKey: string, boardId: string) => {
+export const saveMondayConfig = (apiKey: string, boardId: string, techBoardId: string = '') => {
   localStorage.setItem('mondayApiKey', apiKey);
   localStorage.setItem('mondayBoardId', boardId);
+  
+  // Ensure techBoardId is also saved if provided
+  if (techBoardId) {
+    localStorage.setItem('mondayTechBoardId', techBoardId);
+  }
 };
 
 export const clearMondayConfig = () => {
   localStorage.removeItem('mondayApiKey');
   localStorage.removeItem('mondayBoardId');
+  localStorage.removeItem('mondayTechBoardId');
 };
 
 // Validate Monday.com configuration
-export const validateMondayConfig = (apiKey: string, boardId: string) => {
-  // Simple validation - both fields must be present
+export const validateMondayConfig = (apiKey: string, boardId: string, techBoardId: string = '') => {
+  // Simple validation - required fields must be present
   if (!apiKey || !boardId) {
     return {
       valid: false,

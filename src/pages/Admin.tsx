@@ -25,6 +25,7 @@ const Admin = () => {
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [mondayApiKey, setMondayApiKey] = useState<string>("");
   const [mondayBoardId, setMondayBoardId] = useState<string>("");
+  const [mondayTechBoardId, setMondayTechBoardId] = useState<string>("");
   const [mondayConfigStatus, setMondayConfigStatus] = useState<{valid: boolean, message: string} | null>(null);
   const [activeTab, setActiveTab] = useState<string>("declarations");
   
@@ -53,10 +54,11 @@ const Admin = () => {
     const config = getMondayConfig();
     setMondayApiKey(config.apiKey);
     setMondayBoardId(config.boardId);
+    setMondayTechBoardId(config.techBoardId);
     
     if (config.apiKey && config.boardId) {
       try {
-        const result = await validateMondayConfig(config.apiKey, config.boardId);
+        const result = await validateMondayConfig(config.apiKey, config.boardId, config.techBoardId);
         setMondayConfigStatus(result);
       } catch (error) {
         console.error("Error validating Monday config:", error);
@@ -95,12 +97,14 @@ const Admin = () => {
     }
   };
   
-  const handleMondayConfigUpdate = async (apiKey: string, boardId: string) => {
+  const handleMondayConfigUpdate = async (apiKey: string, boardId: string, techBoardId: string) => {
     setMondayApiKey(apiKey);
     setMondayBoardId(boardId);
-    if (apiKey && boardId) {
+    setMondayTechBoardId(techBoardId);
+    
+    if (apiKey && boardId && techBoardId) {
       try {
-        const result = await validateMondayConfig(apiKey, boardId);
+        const result = await validateMondayConfig(apiKey, boardId, techBoardId);
         setMondayConfigStatus(result);
       } catch (error) {
         console.error("Error validating Monday config:", error);
@@ -151,6 +155,7 @@ const Admin = () => {
                   <ApiSettings 
                     mondayApiKey={mondayApiKey}
                     mondayBoardId={mondayBoardId}
+                    mondayTechBoardId={mondayTechBoardId}
                     mondayConfigStatus={mondayConfigStatus}
                     onConfigUpdate={handleMondayConfigUpdate}
                   />

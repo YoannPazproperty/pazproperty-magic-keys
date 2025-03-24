@@ -1,7 +1,8 @@
-import { MondayConfigValidation, DECLARATION_BOARD_ID, TECHNICIAN_BOARD_ID } from "./types";
+
+import { MondayConfigValidation } from "./types";
 
 // Validate Monday.com configuration
-export const validateMondayConfig = async (apiKey: string, boardId: string): Promise<MondayConfigValidation> => {
+export const validateMondayConfig = async (apiKey: string, boardId: string, techBoardId: string): Promise<MondayConfigValidation> => {
   try {
     // In a real app, this would make an API call to test the connection
     // For demonstration, we'll just validate format and simulate a response
@@ -16,7 +17,14 @@ export const validateMondayConfig = async (apiKey: string, boardId: string): Pro
     if (!boardId || isNaN(Number(boardId))) {
       return {
         valid: false,
-        message: "ID du tableau invalide. Veuillez fournir un ID numérique valide."
+        message: "ID du tableau de déclarations invalide. Veuillez fournir un ID numérique valide."
+      };
+    }
+    
+    if (!techBoardId || isNaN(Number(techBoardId))) {
+      return {
+        valid: false,
+        message: "ID du tableau de prestataires invalide. Veuillez fournir un ID numérique valide."
       };
     }
     
@@ -38,14 +46,15 @@ export const validateMondayConfig = async (apiKey: string, boardId: string): Pro
 };
 
 // Set Monday.com configuration
-export const setMondayConfig = async (apiKey: string, boardId: string): Promise<MondayConfigValidation> => {
+export const setMondayConfig = async (apiKey: string, boardId: string, techBoardId: string): Promise<MondayConfigValidation> => {
   try {
-    const validation = await validateMondayConfig(apiKey, boardId);
+    const validation = await validateMondayConfig(apiKey, boardId, techBoardId);
     
     if (validation.valid) {
       // Save config to localStorage
       localStorage.setItem('mondayApiKey', apiKey);
       localStorage.setItem('mondayBoardId', boardId);
+      localStorage.setItem('mondayTechBoardId', techBoardId);
     }
     
     return validation;
@@ -58,15 +67,26 @@ export const setMondayConfig = async (apiKey: string, boardId: string): Promise<
   }
 };
 
+// Get Monday board configuration
+export const getMondayConfig = () => {
+  return {
+    apiKey: localStorage.getItem('mondayApiKey') || '',
+    boardId: localStorage.getItem('mondayBoardId') || '',
+    techBoardId: localStorage.getItem('mondayTechBoardId') || ''
+  };
+};
+
 // Create Monday.com item based on the actual board structure
 export const createMondayItem = async (itemName: string, columnValues: Record<string, any>): Promise<string | null> => {
   try {
     // In a real app, this would make an API call to Monday.com
     // For demonstration, we'll just log the values that would be sent
     
+    const boardId = localStorage.getItem('mondayBoardId') || '';
+    
     console.log("Creating Monday.com item with the following data:");
     console.log("Item Name:", itemName);
-    console.log("Board ID:", DECLARATION_BOARD_ID); // Log which board we're targeting
+    console.log("Board ID:", boardId); // Log which board we're targeting
     
     // Log column values in a way that matches the actual Monday.com board structure
     // Updated column mapping to include all required fields
@@ -117,9 +137,11 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
 export const createTechnicianReport = async (itemName: string, columnValues: Record<string, any>): Promise<string | null> => {
   try {
     // In a real app, this would make an API call to Monday.com
+    const techBoardId = localStorage.getItem('mondayTechBoardId') || '';
+    
     console.log("Creating technician report in Monday.com:");
     console.log("Item Name:", itemName);
-    console.log("Board ID:", TECHNICIAN_BOARD_ID); // Log which board we're targeting
+    console.log("Board ID:", techBoardId); // Log which board we're targeting
     
     // Map our internal field names to the actual Monday.com column IDs for technician reports
     const techReportColumnMap = {
@@ -165,15 +187,16 @@ export const getMondayBoardStatus = async (): Promise<{connected: boolean; messa
   try {
     const apiKey = localStorage.getItem('mondayApiKey') || '';
     const boardId = localStorage.getItem('mondayBoardId') || '';
+    const techBoardId = localStorage.getItem('mondayTechBoardId') || '';
     
-    if (!apiKey || !boardId) {
+    if (!apiKey || !boardId || !techBoardId) {
       return {
         connected: false,
         message: "Configuration Monday.com manquante"
       };
     }
     
-    const validation = await validateMondayConfig(apiKey, boardId);
+    const validation = await validateMondayConfig(apiKey, boardId, techBoardId);
     
     return {
       connected: validation.valid,
