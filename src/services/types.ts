@@ -1,4 +1,3 @@
-
 // Shared interfaces for services
 export interface Declaration {
   id: string;
@@ -150,7 +149,7 @@ export const EMAIL_CONFIG = {
 };
 
 // Monday.com board configurations
-export const TECHNICIAN_BOARD_ID = "1863361499"; // The board ID specified by the user
+export const TECHNICIAN_BOARD_ID = "1861342035"; // Mise à jour de l'ID du tableau selon votre configuration
 
 // Email notification function
 export const sendNotificationEmail = async (
