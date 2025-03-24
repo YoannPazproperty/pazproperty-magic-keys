@@ -63,15 +63,15 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
           });
           console.log("Successfully sent to Monday.com with ID:", mondayResult);
         } else {
-          toast.error("Erro na integração com Monday.com", {
-            description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com."
+          toast.warning("Declaração não enviada para Monday.com", {
+            description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com. Nossa equipe irá processá-la manualmente."
           });
           console.error("Failed to send to Monday.com");
         }
       } catch (mondayError) {
         console.error("Error sending to Monday.com:", mondayError);
-        toast.error("Erro ao enviar para Monday.com", {
-          description: "Sua declaração foi salva localmente, mas houve um erro ao enviá-la para Monday.com."
+        toast.warning("Erro ao enviar para Monday.com", {
+          description: "Sua declaração foi salva localmente, mas houve um erro ao enviá-la para Monday.com. Nossa equipe irá processá-la manualmente."
         });
       }
       

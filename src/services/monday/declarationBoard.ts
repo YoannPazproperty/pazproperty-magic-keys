@@ -18,65 +18,36 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("API Key available:", apiKey ? "Yes" : "No");
     console.log("Column values:", columnValues);
     
-    // Prepare column values for Monday.com API
-    // This step is critical - Monday.com requires properly formatted JSON for its column values
-    const formattedColumnValues = {};
+    // Create the correct formatted columnValues for Monday.com
+    // Monday.com is very specific about the format
+    const mondayFormatted = {};
     
-    // Process each value to ensure proper formatting based on column type
+    // Simplify formatting - use direct string values for text fields
     Object.entries(columnValues).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
-        // Monday.com expects a specifically formatted JSON string
-        switch (key) {
-          case 'email':
-            formattedColumnValues[key] = JSON.stringify({ "email": value, "text": value });
-            break;
-          case 'phone':
-            formattedColumnValues[key] = JSON.stringify({ "phone": value, "countryShortName": "PT" });
-            break;
-          case 'status':
-            formattedColumnValues[key] = JSON.stringify({ "label": value });
-            break;
-          case 'priority':
-            formattedColumnValues[key] = JSON.stringify({ "label": value });
-            break;
-          case 'date4':
-            formattedColumnValues[key] = JSON.stringify({ "date": value });
-            break;
-          case 'dropdown':
-          case 'dropdown5':
-            formattedColumnValues[key] = JSON.stringify({ "label": value });
-            break;
-          case 'numbers8':
-            // Convert to number if possible
-            const numValue = isNaN(Number(value)) ? 0 : Number(value);
-            formattedColumnValues[key] = JSON.stringify(numValue);
-            break;
-          default:
-            // Text columns just need their values as strings
-            formattedColumnValues[key] = JSON.stringify(value);
-        }
+        mondayFormatted[key] = value;
       }
     });
     
-    console.log("Formatted column values for Monday.com API:", formattedColumnValues);
+    console.log("Simplified format for Monday.com:", mondayFormatted);
     
     // Make the actual API call to Monday.com
-    const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
+    const query = `mutation ($boardId: Int!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
         id
       }
     }`;
     
     const variables = {
-      boardId: boardId,
+      boardId: parseInt(boardId),
       itemName,
-      columnValues: formattedColumnValues
+      columnValues: JSON.stringify(mondayFormatted)
     };
     
     console.log("Sending query to Monday.com with variables:", {
       boardId: variables.boardId,
       itemName: variables.itemName,
-      columnValues: variables.columnValues
+      columnValuesJSON: variables.columnValues
     });
     
     const response = await fetch("https://api.monday.com/v2", {
@@ -88,17 +59,19 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
       body: JSON.stringify({ query, variables })
     });
     
-    const responseData = await response.json();
+    // Log full response for debugging
+    const responseText = await response.text();
+    console.log("Monday.com API raw response:", responseText);
     
-    // Log the full response for better debugging
-    console.log("Monday.com API full response:", responseData);
+    const responseData = responseText ? JSON.parse(responseText) : null;
+    console.log("Monday.com API parsed response:", responseData);
     
-    if (responseData.errors) {
+    if (responseData && responseData.errors) {
       console.error("Monday.com GraphQL errors:", responseData.errors);
       return null;
     }
     
-    if (responseData.data && responseData.data.create_item) {
+    if (responseData && responseData.data && responseData.data.create_item) {
       return responseData.data.create_item.id;
     } else {
       console.error("Unexpected response structure from Monday.com");

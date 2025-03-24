@@ -1,4 +1,3 @@
-
 import { Declaration, TechnicianReport, TechnicianReportResult } from "../types";
 import { createMondayItem, createTechnicianReport } from "../monday";
 
@@ -7,42 +6,27 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   try {
     console.log("Sending declaration to Monday.com:", declaration);
     
-    // Format the data for Monday.com using EXACT column IDs from your screenshot
-    const formattedValues: Record<string, any> = {
-      // Text columns
-      "text0": declaration.name,            // Nome do Inquilino
-      "text8": declaration.property,        // Endereço 
-      "text7": declaration.city || "",      // Cidade
-      "text00": declaration.postalCode || "", // Código Postal
-      "text92": declaration.issueType,       // Tipo de problema
-      "text6": declaration.description,     // Descrição
-      "text4": declaration.id,              // ID Declaração
-      
-      // Email column
+    // Format the data for Monday.com using simplified direct values
+    const formattedValues = {
+      "text": declaration.name,              // Nome do Inquilino
+      "text8": declaration.property,         // Endereço 
+      "text7": declaration.city || "",       // Cidade
+      "text9": declaration.postalCode || "", // Código Postal
+      "text_1": declaration.issueType,       // Tipo de problema
+      "long_text": declaration.description,  // Descrição
+      "text4": declaration.id,               // ID Declaração
       "email": declaration.email,
-      
-      // Phone column
-      "phone1": declaration.phone,
-      
-      // NIF field
-      "numbers": declaration.nif || "",
-      
-      // Status dropdown
+      "phone": declaration.phone,
+      "numbers8": declaration.nif || "",
       "status": "Nouveau",
-      
-      // Priority dropdown
-      "dropdown9": declaration.urgency,
-      
-      // Date column
-      "date4": declaration.submittedAt ? 
-        new Date(declaration.submittedAt).toISOString().split('T')[0] : 
-        new Date().toISOString().split('T')[0]
+      "priority": declaration.urgency,
+      "date4": new Date().toISOString().split('T')[0]
     };
     
     // Log the formatted values
-    console.log("Monday.com formatted column values:", formattedValues);
+    console.log("Monday.com formatted values:", formattedValues);
     
-    // Send to Monday.com with properly formatted values
+    // Send to Monday.com
     const itemId = await createMondayItem(
       `Ocorrência: ${declaration.name} - ${declaration.issueType}`, 
       formattedValues
