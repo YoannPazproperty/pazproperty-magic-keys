@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -28,7 +27,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Declaration } from "@/services/declarationService";
+import { getDeclarations, updateDeclarationStatus } from "@/services/declarationService";
+import type { Declaration } from "@/services/types";
 import { DeclarationDetails } from "./DeclarationDetails";
 
 // Helper functions for translations and formatting

@@ -1,10 +1,8 @@
-
 import { toast } from "sonner";
-import { Declaration, TechnicianReport, TechnicianReportResult } from "./types";
+import { Declaration, TechnicianReport, TechnicianReportResult, issueTypeToMondayMap, urgencyToMondayMap } from "./types";
 import { loadDeclarations, saveDeclarations } from "./storageService";
 import { createMondayItem, createTechnicianReport, getMondayBoardStatus } from "./mondayService";
 import { sendNotificationEmail } from "./notificationService";
-import { issueTypeToMondayMap, urgencyToMondayMap } from "./types";
 
 // Generate unique ID for new declarations
 const generateUniqueId = (): string => {
@@ -190,3 +188,6 @@ export const sendTechnicianReportToMonday = async (report: TechnicianReport): Pr
 
 // Get Monday board status (alias for getMondayBoardStatus)
 export const getMonday5BoardStatus = getMondayBoardStatus;
+
+// Re-export the Declaration type to ensure it's available to components
+export type { Declaration };

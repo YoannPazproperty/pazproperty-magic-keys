@@ -1,7 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Declaration } from "@/services/declarationService";
+import type { Declaration } from "@/services/types";
 import { translateIssueType, translateUrgency } from "./DeclarationList";
 
 interface DeclarationDetailsProps {
