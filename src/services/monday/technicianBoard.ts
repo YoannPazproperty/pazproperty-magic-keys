@@ -1,48 +1,71 @@
-// Create Monday.com technician report
-export const createTechnicianReport = async (itemName: string, columnValues: Record<string, any>): Promise<string | null> => {
+
+import { getMondayConfig } from "./mondayConfig";
+
+// Create technician report in Monday.com
+export const createTechnicianReport = async (
+  itemName: string,
+  columnValues: Record<string, any>
+): Promise<string | null> => {
   try {
-    // In a real app, this would make an API call to Monday.com
-    const techBoardId = localStorage.getItem('mondayTechBoardId') || '';
+    // Get the API key and technician board ID
+    const { apiKey, techBoardId } = getMondayConfig();
     
-    console.log("Creating technician report in Monday.com:");
-    console.log("Item Name:", itemName);
-    console.log("Board ID:", techBoardId); // Log which board we're targeting
-    
-    // Map our internal field names to the actual Monday.com column IDs for technician reports
-    const techReportColumnMap = {
-      diagnóstico: "Diagnóstico", 
-      necessita_de_intervenção: "Necessita intervenção",
-      valor_estimado: "Valor estimado",
-      trabalhos_a_realizar: "Trabalhos a realizar",
-      cliente: "Nome do Cliente",
-      email: "Email", 
-      telefone: "Telefone",
-      endereço: "Endereço",
-      categoria_do_problema: "Categoria do problema",
-      id_intervenção: "ID Intervenção"
-    };
-    
-    // Transform the column values to match Monday.com column IDs
-    const mondayFormatValues: Record<string, any> = {};
-    
-    for (const [key, value] of Object.entries(columnValues)) {
-      if (techReportColumnMap[key]) {
-        mondayFormatValues[techReportColumnMap[key]] = value;
-      } else {
-        // For fields not in our map, keep them as is
-        mondayFormatValues[key] = value;
-      }
+    if (!apiKey || !techBoardId) {
+      console.error("Monday.com API key or technician board ID not configured");
+      return null;
     }
     
-    console.log("Monday.com formatted column values for technician report:", mondayFormatValues);
+    console.log("Creating Monday.com technician report with the following data:");
+    console.log("Item Name:", itemName);
+    console.log("Tech Board ID:", techBoardId);
+    console.log("API Key available:", apiKey ? "Yes" : "No");
+    console.log("Monday.com formatted column values:", columnValues);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Make the actual API call to Monday.com
+    const query = `mutation ($boardId: Int!, $itemName: String!, $columnValues: JSON!) {
+      create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
+        id
+      }
+    }`;
     
-    // Return a fake item ID
-    return `TR-${Date.now()}`;
+    const variables = {
+      boardId: parseInt(techBoardId),
+      itemName,
+      columnValues: JSON.stringify(columnValues)
+    };
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": apiKey
+      },
+      body: JSON.stringify({ query, variables })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Monday.com API error for technician report:", errorText);
+      return null;
+    }
+    
+    const responseData = await response.json();
+    
+    if (responseData.errors) {
+      console.error("Monday.com GraphQL errors for technician report:", responseData.errors);
+      return null;
+    }
+    
+    console.log("Monday.com API response for technician report:", responseData);
+    
+    if (responseData.data && responseData.data.create_item) {
+      return responseData.data.create_item.id;
+    } else {
+      console.error("Unexpected response structure from Monday.com for technician report");
+      return null;
+    }
   } catch (error) {
-    console.error("Error creating technician report in Monday.com:", error);
+    console.error("Error creating Monday.com technician report:", error);
     return null;
   }
 };

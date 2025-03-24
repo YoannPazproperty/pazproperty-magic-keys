@@ -20,6 +20,8 @@ export const saveMondayConfig = (apiKey: string, boardId: string, techBoardId?: 
   if (techBoardId) {
     localStorage.setItem('mondayTechBoardId', techBoardId);
   }
+  
+  console.log("Monday.com configuration saved:", { apiKey: apiKey ? "Set" : "Empty", boardId, techBoardId });
 };
 
 // Validate Monday.com configuration
@@ -29,21 +31,69 @@ export interface MondayConfigValidation {
 }
 
 export const validateMondayConfig = async (): Promise<MondayConfigValidation> => {
-  const { apiKey, boardId } = getMondayConfig();
+  const { apiKey, boardId, techBoardId } = getMondayConfig();
   
-  if (!apiKey || !boardId) {
+  if (!apiKey) {
     return {
       valid: false,
-      message: "API key ou Board ID não configurados"
+      message: "API key não configurada"
     };
   }
   
-  // In a real implementation, we would make an API call to Monday.com here
-  // For now, we'll just check if the values exist
-  return {
-    valid: true,
-    message: "Configuração válida"
-  };
+  if (!boardId) {
+    return {
+      valid: false,
+      message: "Board ID não configurado"
+    };
+  }
+  
+  if (!techBoardId) {
+    return {
+      valid: false,
+      message: "Tech Board ID não configurado"
+    };
+  }
+  
+  try {
+    // Test API connection with a simple query
+    const query = `query { boards(ids: ${parseInt(boardId)}) { name } }`;
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": apiKey
+      },
+      body: JSON.stringify({ query })
+    });
+    
+    if (!response.ok) {
+      return {
+        valid: false,
+        message: `Erro de conexão: ${response.status} ${response.statusText}`
+      };
+    }
+    
+    const data = await response.json();
+    
+    if (data.errors) {
+      return {
+        valid: false,
+        message: `Erro de API: ${data.errors[0]?.message || "Erro desconhecido"}`
+      };
+    }
+    
+    return {
+      valid: true,
+      message: "Configuração válida"
+    };
+  } catch (error) {
+    console.error("Error validating Monday.com config:", error);
+    return {
+      valid: false,
+      message: `Erro de validação: ${error instanceof Error ? error.message : "Erro desconhecido"}`
+    };
+  }
 };
 
 // Check Monday board status
@@ -58,8 +108,34 @@ export const getMonday5BoardStatus = async (): Promise<{ valid: boolean; message
       };
     }
     
-    // In a real implementation, we would make an API call to Monday.com here
-    // For now, we'll just return a success message
+    // Test API connection with a simple query
+    const query = `query { boards(ids: ${parseInt(boardId)}) { name } }`;
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": apiKey
+      },
+      body: JSON.stringify({ query })
+    });
+    
+    if (!response.ok) {
+      return {
+        valid: false,
+        message: `Erro de conexão: ${response.status} ${response.statusText}`
+      };
+    }
+    
+    const data = await response.json();
+    
+    if (data.errors) {
+      return {
+        valid: false,
+        message: `Erro de API: ${data.errors[0]?.message || "Erro desconhecido"}`
+      };
+    }
+    
     return {
       valid: true,
       message: "Monday.com boards conectados"

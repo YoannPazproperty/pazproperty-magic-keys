@@ -1,11 +1,11 @@
+
 import { getMondayConfig } from "./mondayConfig";
 
 // Create Monday.com item based on the actual board structure
 export const createMondayItem = async (itemName: string, columnValues: Record<string, any>): Promise<string | null> => {
   try {
     // Get the API key and board ID from localStorage
-    const apiKey = localStorage.getItem('mondayApiKey');
-    const boardId = localStorage.getItem('mondayBoardId');
+    const { apiKey, boardId } = getMondayConfig();
     
     if (!apiKey || !boardId) {
       console.error("Monday.com API key or board ID not configured");
@@ -16,45 +16,9 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Item Name:", itemName);
     console.log("Board ID:", boardId);
     console.log("API Key available:", apiKey ? "Yes" : "No");
+    console.log("Monday.com formatted column values:", columnValues);
     
-    // Log column values in a way that matches the actual Monday.com board structure
-    const mondayColumnMap = {
-      // Map our internal field names to the actual Monday.com column IDs
-      nome_do_cliente: "Nome do Inquilino",    // client name
-      email: "Email",                          // client email
-      telefone: "Telefone",                    // client phone
-      nif: "NIF",                              // fiscal number
-      endereco: "Endereço",                    // property address
-      cidade: "Cidade",                        // city
-      codigo_postal: "Codigo Postal",          // postal code
-      tipo_de_problema: "Tipo de problema",    // issue type
-      descricao: "Descrição",                  // description
-      urgencia: "Urgência",                    // urgency
-      status: "Status",                        // status
-      id_declaracao: "ID Declaração",          // declaration ID
-      upload_inquilino: "Upload do Inquilino", // uploaded files
-      data_submissao: "Data de submissão"      // submission date
-    };
-    
-    // Transform the column values to match Monday.com column IDs
-    const mondayFormatValues: Record<string, any> = {};
-    
-    for (const [key, value] of Object.entries(columnValues)) {
-      if (mondayColumnMap[key]) {
-        mondayFormatValues[mondayColumnMap[key]] = value;
-      } else {
-        // For fields not in our map, keep them as is
-        mondayFormatValues[key] = value;
-      }
-    }
-    
-    console.log("Monday.com formatted column values:", mondayFormatValues);
-    
-    // In a real implementation, we would make an API call to Monday.com here
-    // For now, we're just simulating it with a log
-    
-    // The real Monday.com API call would look something like this:
-    /*
+    // Make the actual API call to Monday.com
     const query = `mutation ($boardId: Int!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
         id
@@ -64,7 +28,7 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     const variables = {
       boardId: parseInt(boardId),
       itemName,
-      columnValues: JSON.stringify(mondayFormatValues)
+      columnValues: JSON.stringify(columnValues)
     };
     
     const response = await fetch("https://api.monday.com/v2", {
@@ -76,15 +40,27 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
       body: JSON.stringify({ query, variables })
     });
     
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Monday.com API error:", errorText);
+      return null;
+    }
+    
     const responseData = await response.json();
-    return responseData.data.create_item.id;
-    */
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    if (responseData.errors) {
+      console.error("Monday.com GraphQL errors:", responseData.errors);
+      return null;
+    }
     
-    // Return a fake item ID
-    return `${Date.now()}`;
+    console.log("Monday.com API response:", responseData);
+    
+    if (responseData.data && responseData.data.create_item) {
+      return responseData.data.create_item.id;
+    } else {
+      console.error("Unexpected response structure from Monday.com");
+      return null;
+    }
   } catch (error) {
     console.error("Error creating Monday.com item:", error);
     return null;
