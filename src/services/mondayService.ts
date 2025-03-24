@@ -1,5 +1,4 @@
-
-import { MondayConfigValidation } from "./types";
+import { MondayConfigValidation, DECLARATION_BOARD_ID, TECHNICIAN_BOARD_ID } from "./types";
 
 // Validate Monday.com configuration
 export const validateMondayConfig = async (apiKey: string, boardId: string): Promise<MondayConfigValidation> => {
@@ -67,6 +66,7 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     
     console.log("Creating Monday.com item with the following data:");
     console.log("Item Name:", itemName);
+    console.log("Board ID:", DECLARATION_BOARD_ID); // Log which board we're targeting
     
     // Log column values in a way that matches the actual Monday.com board structure
     // Updated column mapping to include all required fields
@@ -119,6 +119,7 @@ export const createTechnicianReport = async (itemName: string, columnValues: Rec
     // In a real app, this would make an API call to Monday.com
     console.log("Creating technician report in Monday.com:");
     console.log("Item Name:", itemName);
+    console.log("Board ID:", TECHNICIAN_BOARD_ID); // Log which board we're targeting
     
     // Map our internal field names to the actual Monday.com column IDs for technician reports
     const techReportColumnMap = {

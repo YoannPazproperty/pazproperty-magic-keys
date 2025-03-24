@@ -149,7 +149,8 @@ export const EMAIL_CONFIG = {
 };
 
 // Monday.com board configurations
-export const TECHNICIAN_BOARD_ID = "1861342035"; // Mise à jour de l'ID du tableau selon votre configuration
+export const DECLARATION_BOARD_ID = "1861342035"; // Board ID for declarations/events
+export const TECHNICIAN_BOARD_ID = "1863361499"; // Board ID for technician reports
 
 // Email notification function
 export const sendNotificationEmail = async (
