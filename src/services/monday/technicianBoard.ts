@@ -19,10 +19,47 @@ export const createTechnicianReport = async (
     console.log("Item Name:", itemName);
     console.log("Tech Board ID:", techBoardId);
     console.log("API Key available:", apiKey ? "Yes" : "No");
-    console.log("Monday.com formatted column values:", columnValues);
+    console.log("Column values before JSON conversion:", columnValues);
+    
+    // Convert column values to Monday.com format with the correct column IDs
+    const mondayFormattedValues: Record<string, any> = {};
+    
+    // Map each column with the proper format based on column type
+    Object.entries(columnValues).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      
+      switch(key) {
+        case "Cliente":
+        case "Email":
+        case "Telefone":
+        case "Endereço":
+        case "Diagnóstico":
+        case "Trabalhos a realizar":
+        case "ID Intervenção":
+        case "Valor estimado":
+          // Text columns - simple text
+          mondayFormattedValues[key] = { text: String(value) };
+          break;
+          
+        case "Categoria do problema":
+          // Dropdown column - needs the exact label that exists in Monday
+          mondayFormattedValues[key] = { label: String(value) };
+          break;
+          
+        case "Necessita de intervenção":
+          // Status column - needs the exact label that exists in Monday
+          mondayFormattedValues[key] = { label: String(value) };
+          break;
+          
+        default:
+          // For any other columns, try as text by default
+          mondayFormattedValues[key] = { text: String(value) };
+      }
+    });
+    
+    console.log("Monday.com formatted column values:", mondayFormattedValues);
     
     // Make the actual API call to Monday.com
-    // Fix the GraphQL query to use ID! instead of Int! for boardId
     const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
         id
@@ -30,9 +67,9 @@ export const createTechnicianReport = async (
     }`;
     
     const variables = {
-      boardId: techBoardId, // Send as string - will be coerced to ID type
+      boardId: techBoardId,
       itemName,
-      columnValues: JSON.stringify(columnValues)
+      columnValues: JSON.stringify(mondayFormattedValues)
     };
     
     const response = await fetch("https://api.monday.com/v2", {

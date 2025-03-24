@@ -28,6 +28,9 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
       columnValues["NIF"] = declaration.nif;
     }
     
+    // Log the column values before sending
+    console.log("Column values being sent to Monday.com:", columnValues);
+    
     // Send to Monday.com
     const itemId = await createMondayItem(
       `Ocorrência: ${declaration.name} - ${declaration.issueType}`, 
@@ -62,6 +65,9 @@ export const sendTechnicianReportToMonday = async (
       "Trabalhos a realizar": report.workDescription,
       "ID Intervenção": report.interventionId.toString()
     };
+    
+    // Log the column values before sending
+    console.log("Column values being sent to Monday.com for technician report:", columnValues);
     
     // Create item in the technician board
     const itemId = await createTechnicianReport(

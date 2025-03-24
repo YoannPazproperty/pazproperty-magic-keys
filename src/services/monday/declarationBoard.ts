@@ -16,10 +16,70 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Item Name:", itemName);
     console.log("Board ID:", boardId);
     console.log("API Key available:", apiKey ? "Yes" : "No");
-    console.log("Monday.com formatted column values:", columnValues);
+    console.log("Column values before JSON conversion:", columnValues);
+    
+    // Convert column values to Monday.com format with the correct column IDs
+    // Monday.com expects column values in a specific format with text/dropdown values mapped to their IDs
+    const mondayFormattedValues: Record<string, any> = {};
+    
+    // Map each column with the proper format based on column type
+    Object.entries(columnValues).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      
+      switch(key) {
+        case "Nome do Inquilino":
+        case "Email":
+        case "Telefone":
+        case "Endereço":
+        case "Cidade":
+        case "Codigo Postal":
+        case "Descrição":
+        case "ID Declaração":
+        case "NIF":
+          // Text columns - simple text
+          mondayFormattedValues[key] = { text: String(value) };
+          break;
+          
+        case "Tipo de problema":
+          // Dropdown column - needs the exact label that exists in Monday
+          mondayFormattedValues[key] = { label: String(value) };
+          break;
+          
+        case "Urgência":
+          // Status column - needs the exact label that exists in Monday
+          mondayFormattedValues[key] = { label: String(value) };
+          break;
+          
+        case "Status":
+          // Status column - needs the exact label that exists in Monday
+          // Map our status values to Monday.com status column values
+          let statusLabel = "Nouveau"; // Default
+          if (value === "pending") statusLabel = "Nouveau";
+          else if (value === "in_progress") statusLabel = "En cours";
+          else if (value === "resolved") statusLabel = "Fait";
+          
+          mondayFormattedValues[key] = { label: statusLabel };
+          break;
+          
+        case "Data de submissão":
+          // Date column
+          if (typeof value === 'string') {
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+              mondayFormattedValues[key] = { date: date.toISOString().split('T')[0] };
+            }
+          }
+          break;
+          
+        default:
+          // For any other columns, try as text by default
+          mondayFormattedValues[key] = { text: String(value) };
+      }
+    });
+    
+    console.log("Monday.com formatted column values:", mondayFormattedValues);
     
     // Make the actual API call to Monday.com
-    // Fix the GraphQL query to use ID! instead of Int! for boardId
     const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
         id
@@ -27,9 +87,9 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     }`;
     
     const variables = {
-      boardId: boardId, // Send as string - will be coerced to ID type
+      boardId: boardId,
       itemName,
-      columnValues: JSON.stringify(columnValues)
+      columnValues: JSON.stringify(mondayFormattedValues)
     };
     
     console.log("Sending query to Monday.com with variables:", variables);
