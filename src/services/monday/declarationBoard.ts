@@ -24,14 +24,22 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     // Format each column value properly
     Object.entries(columnValues).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
-        mondayFormatted[key] = value;
+        // If the value is for mediaFiles, format it as a list of links
+        if (key === "mediaFiles" && Array.isArray(value)) {
+          const formattedLinks = value.map((url, idx) => {
+            const fileType = url.includes('image') ? 'Photo' : url.includes('video') ? 'Vidéo' : 'Fichier';
+            return { url, text: `${fileType} ${idx + 1}` };
+          });
+          mondayFormatted[key] = JSON.stringify(formattedLinks);
+        } else {
+          mondayFormatted[key] = value;
+        }
       }
     });
     
     console.log("Formatted for Monday.com:", mondayFormatted);
     
     // Make the actual API call to Monday.com with corrected types
-    // Note: boardId needs to be sent as ID! type, not Int!
     const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
         id
@@ -39,7 +47,7 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     }`;
     
     const variables = {
-      boardId: boardId, // Send as string/ID, not as parseInt
+      boardId: boardId,
       itemName,
       columnValues: JSON.stringify(mondayFormatted)
     };

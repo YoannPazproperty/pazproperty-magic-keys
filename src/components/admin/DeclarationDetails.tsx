@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Declaration } from "@/services/types";
 import { translateIssueType, translateUrgency } from "@/utils/translationUtils";
-import { Info } from "lucide-react";
+import { Info, Image, Video, FileIcon } from "lucide-react";
 
 interface DeclarationDetailsProps {
   declaration: Declaration;
@@ -18,6 +18,17 @@ export const DeclarationDetails = ({
   getStatusBadgeColor,
   translateStatus
 }: DeclarationDetailsProps) => {
+  // Helper function to determine file type icon
+  const getFileIcon = (fileUrl: string) => {
+    if (fileUrl.includes('image')) {
+      return <Image className="h-4 w-4 mr-1" />;
+    } else if (fileUrl.includes('video')) {
+      return <Video className="h-4 w-4 mr-1" />;
+    } else {
+      return <FileIcon className="h-4 w-4 mr-1" />;
+    }
+  };
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
@@ -61,21 +72,31 @@ export const DeclarationDetails = ({
         </div>
       </div>
       
-      {declaration.mediaFiles && declaration.mediaFiles.length > 0 && (
+      {declaration.mediaFiles && declaration.mediaFiles.length > 0 ? (
         <div className="space-y-2 py-2">
           <h3 className="font-semibold">Fichiers médias</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {declaration.mediaFiles.map((fileUrl, index) => (
               <a 
                 key={index}
                 href={fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-blue-50 rounded border border-blue-100 text-blue-600 text-sm hover:bg-blue-100"
+                className="flex items-center p-3 bg-blue-50 rounded border border-blue-100 text-blue-600 hover:bg-blue-100 transition-colors"
               >
-                {fileUrl.includes('image') ? 'Photo' : 'Vidéo'} {index + 1}
+                {getFileIcon(fileUrl)}
+                <span>
+                  {fileUrl.includes('image') ? 'Photo' : fileUrl.includes('video') ? 'Vidéo' : 'Fichier'} {index + 1}
+                </span>
               </a>
             ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2 py-2">
+          <h3 className="font-semibold">Fichiers médias</h3>
+          <div className="bg-gray-50 p-3 rounded-md border text-gray-500">
+            Aucun fichier média n'a été téléchargé pour cette déclaration.
           </div>
         </div>
       )}

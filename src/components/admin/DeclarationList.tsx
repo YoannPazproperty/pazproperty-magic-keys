@@ -11,6 +11,7 @@ import {
 import type { Declaration } from "@/services/types";
 import { DeclarationListTable } from "./DeclarationListTable";
 import { DeclarationDetailsDialog } from "./DeclarationDetailsDialog";
+import { translateStatus } from "@/utils/translationUtils";
 
 interface DeclarationListProps {
   declarations: Declaration[];
@@ -36,15 +37,6 @@ export const DeclarationList = ({ declarations, onStatusUpdate }: DeclarationLis
     toast("Statut mis à jour", {
       description: `La déclaration a été mise à jour avec le statut "${translateStatus(newStatus)}".`
     });
-  };
-  
-  const translateStatus = (status: string): string => {
-    const translations: Record<string, string> = {
-      pending: "Em espera",
-      in_progress: "Em progresso",
-      resolved: "Resolvido",
-    };
-    return translations[status] || status;
   };
 
   return (
