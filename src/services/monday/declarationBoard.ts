@@ -18,42 +18,11 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("API Key available:", apiKey ? "Yes" : "No");
     console.log("Column values:", columnValues);
     
-    // Create the correctly formatted columnValues for Monday.com
-    const mondayFormatted: Record<string, any> = {};
+    // Monday.com requires the column values to be sent as a JSON string
+    // We'll convert it to the format Monday.com expects
+    const columnValuesString = JSON.stringify(columnValues);
     
-    // Format each column value properly
-    Object.entries(columnValues).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        // Format different column types according to Monday.com requirements
-        if (key === "mediaFiles" && Array.isArray(value)) {
-          // Format media files as a list of links
-          const formattedLinks = value.map((url, idx) => {
-            const fileType = url.includes('image') ? 'Photo' : url.includes('video') ? 'Vidéo' : 'Fichier';
-            return { url, text: `${fileType} ${idx + 1}` };
-          });
-          mondayFormatted[key] = JSON.stringify(formattedLinks);
-        } else if (key === "status" && typeof value === 'object' && value.label) {
-          // Status is already formatted correctly
-          mondayFormatted[key] = JSON.stringify(value);
-        } else if (key === "priority" && typeof value === 'object' && value.label) {
-          // Priority is already formatted correctly
-          mondayFormatted[key] = JSON.stringify(value);
-        } else if (key === "status" && typeof value === 'string') {
-          // Format status as a status column value
-          mondayFormatted[key] = JSON.stringify({ label: value });
-        } else if (key === "priority" && typeof value === 'string') {
-          // Format priority as a dropdown column value
-          mondayFormatted[key] = JSON.stringify({ label: value });
-        } else {
-          // For regular text/number/etc columns
-          mondayFormatted[key] = value;
-        }
-      }
-    });
-    
-    console.log("Formatted for Monday.com:", mondayFormatted);
-    
-    // Make the actual API call to Monday.com with corrected types
+    // Make the actual API call to Monday.com
     const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
       create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
         id
@@ -63,13 +32,12 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     const variables = {
       boardId: boardId,
       itemName,
-      columnValues: JSON.stringify(mondayFormatted)
+      columnValues: columnValuesString
     };
     
-    console.log("Sending query to Monday.com with variables:", {
-      boardId: variables.boardId,
-      itemName: variables.itemName,
-      columnValuesJSON: variables.columnValues
+    console.log("Sending API request to Monday.com:", {
+      query,
+      variables
     });
     
     const response = await fetch("https://api.monday.com/v2", {
@@ -85,18 +53,29 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     const responseText = await response.text();
     console.log("Monday.com API raw response:", responseText);
     
-    const responseData = responseText ? JSON.parse(responseText) : null;
-    console.log("Monday.com API parsed response:", responseData);
-    
-    if (responseData && responseData.errors) {
-      console.error("Monday.com GraphQL errors:", responseData.errors);
+    if (!responseText) {
+      console.error("Empty response from Monday.com API");
       return null;
     }
     
-    if (responseData && responseData.data && responseData.data.create_item) {
-      return responseData.data.create_item.id;
-    } else {
-      console.error("Unexpected response structure from Monday.com");
+    // Parse the response
+    try {
+      const responseData = JSON.parse(responseText);
+      console.log("Monday.com API parsed response:", responseData);
+      
+      if (responseData.errors) {
+        console.error("Monday.com GraphQL errors:", responseData.errors);
+        return null;
+      }
+      
+      if (responseData.data && responseData.data.create_item) {
+        return responseData.data.create_item.id;
+      } else {
+        console.error("Unexpected response structure from Monday.com");
+        return null;
+      }
+    } catch (parseError) {
+      console.error("Error parsing Monday.com response:", parseError);
       return null;
     }
   } catch (error) {
