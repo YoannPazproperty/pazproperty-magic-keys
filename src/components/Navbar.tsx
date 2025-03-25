@@ -33,7 +33,7 @@ const Navbar = () => {
             Contacto
           </Link>
           <Button asChild className="bg-brand-blue hover:bg-primary/90">
-            <Link to="/area-cliente">Área de Cliente</Link>
+            <Link to="/area-cliente">Declara um sinistro</Link>
           </Button>
           <Button asChild variant="outline" size="icon" title="Espace Technique Monday.com" className="ml-2">
             <Link to="/extranet-technique"><Wrench className="h-5 w-5" /></Link>
@@ -89,7 +89,7 @@ const Navbar = () => {
               </Link>
               <Button asChild className="bg-brand-blue hover:bg-primary/90 mt-4">
                 <Link to="/area-cliente" onClick={() => setIsOpen(false)}>
-                  Área de Cliente
+                  Declara um sinistro
                 </Link>
               </Button>
               <Link 

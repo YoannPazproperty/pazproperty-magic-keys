@@ -34,7 +34,7 @@ const AreaCliente = () => {
       
       <main className="flex-1 pt-32 pb-20">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Área de Cliente</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Declara um sinistro</h1>
           <p className="text-gray-600 mb-8">
             Bem-vindo à sua área de cliente. Utilize o formulário abaixo para declarar qualquer problema ou necessidade relacionada ao seu imóvel.
           </p>
