@@ -1,10 +1,12 @@
 
+import { getMondayConfig } from "./mondayConfig";
+
 // Load Monday.com configuration from localStorage
 export const getMondayConfig = () => {
   const apiKey = localStorage.getItem('mondayApiKey') || '';
   const boardId = localStorage.getItem('mondayBoardId') || '';
   const techBoardId = localStorage.getItem('mondayTechBoardId') || '';
-  const eventosGroupId = localStorage.getItem('mondayEventosGroupId') || '';
+  const eventosGroupId = localStorage.getItem('mondayEventosGroupId') || 'topics'; // Ajout de la valeur par défaut
   
   return {
     apiKey,
