@@ -19,19 +19,33 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Column values:", columnValues);
     
     // Create the correctly formatted columnValues for Monday.com
-    const mondayFormatted = {};
+    const mondayFormatted: Record<string, any> = {};
     
     // Format each column value properly
     Object.entries(columnValues).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
-        // If the value is for mediaFiles, format it as a list of links
+        // Format different column types according to Monday.com requirements
         if (key === "mediaFiles" && Array.isArray(value)) {
+          // Format media files as a list of links
           const formattedLinks = value.map((url, idx) => {
             const fileType = url.includes('image') ? 'Photo' : url.includes('video') ? 'Vidéo' : 'Fichier';
             return { url, text: `${fileType} ${idx + 1}` };
           });
           mondayFormatted[key] = JSON.stringify(formattedLinks);
+        } else if (key === "status" && typeof value === 'object' && value.label) {
+          // Status is already formatted correctly
+          mondayFormatted[key] = JSON.stringify(value);
+        } else if (key === "priority" && typeof value === 'object' && value.label) {
+          // Priority is already formatted correctly
+          mondayFormatted[key] = JSON.stringify(value);
+        } else if (key === "status" && typeof value === 'string') {
+          // Format status as a status column value
+          mondayFormatted[key] = JSON.stringify({ label: value });
+        } else if (key === "priority" && typeof value === 'string') {
+          // Format priority as a dropdown column value
+          mondayFormatted[key] = JSON.stringify({ label: value });
         } else {
+          // For regular text/number/etc columns
           mondayFormatted[key] = value;
         }
       }

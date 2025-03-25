@@ -8,7 +8,7 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
     console.log("Sending declaration to Monday.com:", declaration);
     
     // Format the data for Monday.com using simplified values
-    // Use the exact column IDs from Monday.com
+    // Use the exact column IDs from Monday.com and proper format for status/dropdown fields
     const formattedValues = {
       "text": declaration.name,              // Nome do Inquilino
       "text8": declaration.property,         // Endereço 
@@ -20,9 +20,10 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
       "email": declaration.email,
       "phone": declaration.phone,
       "numbers8": declaration.nif || "",
-      "status": { "label": "Nouveau" },      // Use the correct format for status
-      "priority": { "label": declaration.urgency },  // Use the correct format for priority
-      "date4": new Date().toISOString().split('T')[0]
+      "status": { "label": "Nouveau" },      // Status column requires { label: "value" } format
+      "priority": { "label": declaration.urgency }, // Use the correct format for priority dropdown
+      "date4": new Date().toISOString().split('T')[0],
+      "mediaFiles": declaration.mediaFiles || []  // Add media files if available
     };
     
     // Log the formatted values
@@ -67,7 +68,7 @@ export const sendTechnicianReportToMonday = async (
       // Number column
       "numbers8": report.estimateAmount || "0",
       
-      // Status/dropdown columns - use the correct format
+      // Status/dropdown columns - use the correct format with label
       "dropdown5": { "label": report.problemCategory },
       "dropdown": { "label": report.needsIntervention ? "Sim" : "Não" }
     };
