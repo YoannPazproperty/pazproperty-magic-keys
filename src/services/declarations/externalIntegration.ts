@@ -1,4 +1,3 @@
-
 import { Declaration, TechnicianReport, TechnicianReportResult } from "../types";
 import { createMondayItem } from "../monday/declarationBoard";
 import { createTechnicianReport } from "../monday";
@@ -13,36 +12,41 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
     const { eventosGroupId } = getMondayConfig();
     console.log("Using Eventos group ID:", eventosGroupId || "Not configured (will use default group)");
     
-    // Format the data for Monday.com using the exact column IDs from the correspondence table
-    // IMPORTANT: The format for Monday.com API is { "column_id": value } for text fields
-    // and { "column_id": {"label": "value"} } for status/dropdown fields
-    const formattedValues: Record<string, any> = {};
-    
-    // Text columns - use simple text value directly
-    formattedValues["text_mknxg830"] = declaration.name;             // Nome do Inquilino
-    formattedValues["text_mknx4pjn"] = declaration.property;         // Endereço
-    formattedValues["text_mknxe74j"] = declaration.city || "";       // Cidade
-    formattedValues["text_mknxq2zr"] = declaration.postalCode || ""; // Código Postal
-    formattedValues["text_mknxny1h"] = declaration.issueType;        // Tipo de problema
-    formattedValues["text_mknxj2e7"] = declaration.description;      // Descrição
-    formattedValues["text_mkpbmd7q"] = declaration.id;               // ID Declaração
-    
-    // Specific format columns
-    formattedValues["email_mknxfg3r"] = declaration.email;          // E-mail
-    formattedValues["phone_mknyw109"] = declaration.phone;          // Telefone
-    formattedValues["numeric_mknx2s4b"] = declaration.nif || "";   // NIF
-    
-    // Date column - format as YYYY-MM-DD
-    formattedValues["date4"] = new Date().toISOString().split('T')[0]; // Data de submissão
-    
-    // Status and dropdown columns - use the object format with label
-    formattedValues["status"] = { "label": "Nouveau" };                // Status
-    formattedValues["dropdown_mkpbfgd4"] = { "label": declaration.urgency }; // Urgência
-    
-    // Media files - if any
-    if (declaration.mediaFiles && declaration.mediaFiles.length > 0) {
-      formattedValues["link_mknx8vyw"] = declaration.mediaFiles[0];  // Upload do Inquilino (first file)
-    }
+    // Format the data for Monday.com according to the correspondence table
+    // The format must match exactly the column types in Monday.com
+    const formattedValues: Record<string, any> = {
+      // TEXT fields
+      "text_mknxg830": declaration.name,             // Nome do Inquilino
+      "text_mknx4pjn": declaration.property,         // Endereço
+      "text_mknxe74j": declaration.city || "",       // Cidade
+      "text_mknxq2zr": declaration.postalCode || "", // Código Postal
+      "text_mknxny1h": declaration.issueType,        // Tipo de problema
+      "text_mknxj2e7": declaration.description,      // Descrição
+      "text_mkpbmd7q": declaration.id,               // ID Declaração
+      
+      // EMAIL field
+      "email_mknxfg3r": declaration.email,           // E-mail
+      
+      // PHONE field
+      "phone_mknyw109": declaration.phone,           // Telefone
+      
+      // NUMERIC field
+      "numeric_mknx2s4b": declaration.nif || "",     // NIF
+      
+      // DATE field
+      "date4": new Date().toISOString().split('T')[0], // Data de submissão
+      
+      // STATUS field (dropdown)
+      "status": { "label": "Nouveau" },              // Status
+      
+      // DROPDOWN field
+      "dropdown_mkpbfgd4": { "label": declaration.urgency }, // Urgência
+      
+      // LINK field (for uploads)
+      "link_mknx8vyw": declaration.mediaFiles && declaration.mediaFiles.length > 0 
+        ? declaration.mediaFiles[0] 
+        : "",  // Upload do Inquilino
+    };
     
     // Log the formatted values
     console.log("Monday.com formatted values:", JSON.stringify(formattedValues, null, 2));
@@ -51,7 +55,7 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
     const itemId = await createMondayItem(
       `Ocorrência: ${declaration.name} - ${declaration.issueType}`, 
       formattedValues,
-      eventosGroupId // Pass the Eventos group ID to specify which group to create the item in
+      eventosGroupId // Use "topics" as defined in mondayConfig.ts
     );
     
     console.log("Monday.com item created with ID:", itemId);

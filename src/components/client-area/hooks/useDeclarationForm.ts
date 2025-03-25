@@ -27,9 +27,10 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       
       const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}`;
       
-      // Map the Portuguese problem type names to the exact values used in Monday.com
+      // Make sure to map the problem type correctly according to Monday.com format
       const issueType = mapIssueTypeToMondayFormat(values.problemType);
       
+      // Prepare data matching the Monday.com column structure
       const declarationData = {
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
@@ -43,7 +44,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         nif: values.nif,
       };
       
-      // Add declaration to local storage
+      // Add declaration to local storage with any attached media files
       const newDeclaration = await addWithMedia(declarationData, mediaFiles);
       console.log("Declaration saved locally:", newDeclaration);
       

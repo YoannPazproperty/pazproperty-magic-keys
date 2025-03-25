@@ -23,11 +23,10 @@ export const createMondayItem = async (
     console.log("API Key available:", apiKey ? "Yes" : "No");
     console.log("Column values (original):", columnValues);
     
-    // For Monday.com, we need to transform the values
-    // Text columns need to be wrapped in {"text": value} format
+    // For Monday.com API, column values need to be properly formatted based on column type
     const transformedColumnValues: Record<string, any> = {};
     
-    // Process each column value based on its type
+    // Process each column value based on its column ID prefix
     for (const [columnId, value] of Object.entries(columnValues)) {
       // Skip null or undefined values
       if (value === null || value === undefined) continue;
@@ -35,26 +34,49 @@ export const createMondayItem = async (
       // If it's already an object (for status/dropdown fields), use it directly
       if (typeof value === 'object') {
         transformedColumnValues[columnId] = value;
-      } 
+        continue;
+      }
+      
       // Handle specific column types based on their ID prefix
+      if (columnId.startsWith('text_')) {
+        // Text columns
+        transformedColumnValues[columnId] = { "text": String(value) };
+      }
       else if (columnId.startsWith('email_')) {
-        transformedColumnValues[columnId] = { "email": value };
+        // Email columns
+        transformedColumnValues[columnId] = { "email": String(value) };
       }
       else if (columnId.startsWith('phone_')) {
-        transformedColumnValues[columnId] = { "phone": value };
+        // Phone columns
+        transformedColumnValues[columnId] = { "phone": String(value) };
       }
       else if (columnId.startsWith('numeric_')) {
-        transformedColumnValues[columnId] = { "number": value };
+        // Numeric columns
+        transformedColumnValues[columnId] = { "number": Number(value) || 0 };
       }
       else if (columnId.startsWith('date')) {
-        transformedColumnValues[columnId] = { "date": value };
+        // Date columns
+        transformedColumnValues[columnId] = { "date": String(value) };
       }
       else if (columnId.startsWith('link_')) {
-        transformedColumnValues[columnId] = { "url": value };
+        // Link columns
+        transformedColumnValues[columnId] = { "url": String(value) };
+      }
+      else if (columnId === 'status') {
+        // Status column - requires label format
+        transformedColumnValues[columnId] = typeof value === 'string' 
+          ? { "label": value } 
+          : value;
+      }
+      else if (columnId.startsWith('dropdown_')) {
+        // Dropdown columns - requires label format
+        transformedColumnValues[columnId] = typeof value === 'string' 
+          ? { "label": value } 
+          : value;
       }
       // Default case: treat as text column
       else {
-        transformedColumnValues[columnId] = { "text": value };
+        transformedColumnValues[columnId] = { "text": String(value) };
       }
     }
     
