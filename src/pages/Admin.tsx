@@ -9,11 +9,14 @@ import { NotificationSettings } from "@/components/admin/NotificationSettings";
 import { LoginForm } from "@/components/admin/LoginForm";
 import { toast } from "sonner";
 import { saveMondayConfig, validateMondayConfig, getMondayConfig } from "@/services/monday";
+import { getDeclarations, updateDeclarationStatus } from "@/services/declarationService";
+import type { Declaration } from "@/services/types";
 
 const Admin = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
   const [activeTab, setActiveTab] = useState("declarations");
+  const [declarations, setDeclarations] = useState<Declaration[]>([]);
   
   // Récupérer les configurations Monday.com
   const { apiKey, boardId, techBoardId } = getMondayConfig();
@@ -32,8 +35,26 @@ const Admin = () => {
     
     if (adminLoggedIn) {
       checkApiStatus();
+      // Load declarations
+      loadDeclarations();
     }
   }, []);
+
+  const loadDeclarations = () => {
+    const allDeclarations = getDeclarations();
+    console.log("Loaded declarations:", allDeclarations);
+    setDeclarations(allDeclarations);
+  };
+
+  const handleStatusUpdate = (id: string, status: Declaration["status"]) => {
+    const updated = updateDeclarationStatus(id, status);
+    if (updated) {
+      loadDeclarations(); // Reload declarations to reflect changes
+      toast.success("Statut mis à jour");
+    } else {
+      toast.error("Erreur lors de la mise à jour du statut");
+    }
+  };
 
   const handleLogin = (username: string, password: string): boolean => {
     // Simple hard-coded authentication for demonstration
@@ -46,6 +67,9 @@ const Admin = () => {
       validateMondayConfig().then(validation => {
         setApiStatus(validation);
       });
+      
+      // Load declarations after login
+      loadDeclarations();
       
       return true;
     }
@@ -99,8 +123,8 @@ const Admin = () => {
         
         <TabsContent value="declarations" className="space-y-4">
           <DeclarationList 
-            declarations={[]} 
-            onStatusUpdate={() => {}} 
+            declarations={declarations} 
+            onStatusUpdate={handleStatusUpdate} 
           />
         </TabsContent>
         
