@@ -4,16 +4,23 @@ export const getMondayConfig = () => {
   const apiKey = localStorage.getItem('mondayApiKey') || '';
   const boardId = localStorage.getItem('mondayBoardId') || '';
   const techBoardId = localStorage.getItem('mondayTechBoardId') || '';
+  const eventosGroupId = localStorage.getItem('mondayEventosGroupId') || '';
   
   return {
     apiKey,
     boardId,
     techBoardId,
+    eventosGroupId,
   };
 };
 
 // Save Monday.com configuration to localStorage
-export const saveMondayConfig = (apiKey: string, boardId: string, techBoardId?: string) => {
+export const saveMondayConfig = (
+  apiKey: string, 
+  boardId: string, 
+  techBoardId?: string,
+  eventosGroupId?: string
+) => {
   localStorage.setItem('mondayApiKey', apiKey);
   localStorage.setItem('mondayBoardId', boardId);
   
@@ -21,7 +28,16 @@ export const saveMondayConfig = (apiKey: string, boardId: string, techBoardId?: 
     localStorage.setItem('mondayTechBoardId', techBoardId);
   }
   
-  console.log("Monday.com configuration saved:", { apiKey: apiKey ? "Set" : "Empty", boardId, techBoardId });
+  if (eventosGroupId) {
+    localStorage.setItem('mondayEventosGroupId', eventosGroupId);
+  }
+  
+  console.log("Monday.com configuration saved:", { 
+    apiKey: apiKey ? "Set" : "Empty", 
+    boardId, 
+    techBoardId,
+    eventosGroupId
+  });
 };
 
 // Validate Monday.com configuration
@@ -146,5 +162,56 @@ export const getMonday5BoardStatus = async (): Promise<{ valid: boolean; message
       valid: false,
       message: "Erro ao verificar status do Monday.com"
     };
+  }
+};
+
+// Get board groups
+export const getBoardGroups = async (boardId: string): Promise<Array<{ id: string, title: string }> | null> => {
+  try {
+    const { apiKey } = getMondayConfig();
+    
+    if (!apiKey || !boardId) {
+      console.error("Monday.com API key or board ID not configured");
+      return null;
+    }
+    
+    const query = `query {
+      boards(ids: ${parseInt(boardId)}) {
+        groups {
+          id
+          title
+        }
+      }
+    }`;
+    
+    const response = await fetch("https://api.monday.com/v2", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": apiKey
+      },
+      body: JSON.stringify({ query })
+    });
+    
+    if (!response.ok) {
+      console.error(`Error getting board groups: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (data.errors) {
+      console.error("GraphQL errors:", data.errors);
+      return null;
+    }
+    
+    if (data.data?.boards?.[0]?.groups) {
+      return data.data.boards[0].groups;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error getting Monday.com board groups:", error);
+    return null;
   }
 };

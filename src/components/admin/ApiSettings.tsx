@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,43 +11,93 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Loader2, Settings, Info } from "lucide-react";
-import { saveMondayConfig, validateMondayConfig } from "@/services/monday";
+import { Loader2, Settings, Info, RefreshCw } from "lucide-react";
+import { 
+  saveMondayConfig, 
+  validateMondayConfig, 
+  getBoardGroups 
+} from "@/services/monday";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 interface ApiSettingsProps {
   mondayApiKey: string;
   mondayBoardId: string;
   mondayTechBoardId: string;
+  mondayEventosGroupId?: string;
   mondayConfigStatus: { valid: boolean; message: string } | null;
-  onConfigUpdate: (apiKey: string, boardId: string, techBoardId: string) => void;
+  onConfigUpdate: (apiKey: string, boardId: string, techBoardId: string, eventosGroupId?: string) => void;
 }
 
 export const ApiSettings = ({ 
   mondayApiKey, 
   mondayBoardId, 
   mondayTechBoardId,
+  mondayEventosGroupId = "",
   mondayConfigStatus,
   onConfigUpdate
 }: ApiSettingsProps) => {
   const [apiKey, setApiKey] = useState(mondayApiKey);
   const [boardId, setBoardId] = useState(mondayBoardId);
   const [techBoardId, setTechBoardId] = useState(mondayTechBoardId);
+  const [eventosGroupId, setEventosGroupId] = useState(mondayEventosGroupId);
   const [isTesting, setIsTesting] = useState<boolean>(false);
+  const [isLoadingGroups, setIsLoadingGroups] = useState<boolean>(false);
+  const [boardGroups, setBoardGroups] = useState<Array<{ id: string, title: string }> | null>(null);
+
+  // Fetch board groups when boardId changes
+  useEffect(() => {
+    if (boardId && apiKey) {
+      fetchBoardGroups();
+    }
+  }, [boardId, apiKey]);
+
+  const fetchBoardGroups = async () => {
+    if (!boardId || !apiKey) return;
+    
+    setIsLoadingGroups(true);
+    try {
+      const groups = await getBoardGroups(boardId);
+      setBoardGroups(groups);
+      console.log("Fetched board groups:", groups);
+      
+      // If Eventos group exists and no group is selected, auto-select it
+      if (groups && !eventosGroupId) {
+        const eventosGroup = groups.find(g => g.title === "Eventos");
+        if (eventosGroup) {
+          console.log("Auto-selecting Eventos group:", eventosGroup);
+          setEventosGroupId(eventosGroup.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching board groups:", error);
+      toast.error("Erreur lors du chargement des groupes");
+    } finally {
+      setIsLoadingGroups(false);
+    }
+  };
 
   const handleSaveMondayConfig = async () => {
     setIsTesting(true);
     
     try {
       // Log to verify values being sent
-      console.log("Saving Monday.com config:", { apiKey, boardId, techBoardId });
+      console.log("Saving Monday.com config:", { apiKey, boardId, techBoardId, eventosGroupId });
       
-      saveMondayConfig(apiKey, boardId, techBoardId);
+      // Save the configuration including the Eventos group ID
+      saveMondayConfig(apiKey, boardId, techBoardId, eventosGroupId);
       
       // Validate the configuration after saving
       const result = await validateMondayConfig();
@@ -62,7 +112,7 @@ export const ApiSettings = ({
         });
       }
       
-      onConfigUpdate(apiKey, boardId, techBoardId);
+      onConfigUpdate(apiKey, boardId, techBoardId, eventosGroupId);
     } catch (error) {
       toast.error("Erreur lors de la sauvegarde", {
         description: "Une erreur s'est produite lors de la sauvegarde de la configuration."
@@ -76,10 +126,12 @@ export const ApiSettings = ({
     setApiKey("");
     setBoardId("");
     setTechBoardId("");
+    setEventosGroupId("");
     localStorage.removeItem('mondayApiKey');
     localStorage.removeItem('mondayBoardId');
     localStorage.removeItem('mondayTechBoardId');
-    onConfigUpdate("", "", "");
+    localStorage.removeItem('mondayEventosGroupId');
+    onConfigUpdate("", "", "", "");
     toast("Configuration réinitialisée");
   };
 
@@ -122,6 +174,56 @@ export const ApiSettings = ({
             Le tableau où seront envoyées les déclarations des clients
           </p>
         </div>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label htmlFor="monday-group-id" className="font-medium">
+              Groupe Eventos
+            </label>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8"
+              onClick={fetchBoardGroups}
+              disabled={isLoadingGroups || !boardId || !apiKey}
+            >
+              {isLoadingGroups ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3 mr-1" />
+              )}
+              Actualiser
+            </Button>
+          </div>
+          
+          {boardGroups && boardGroups.length > 0 ? (
+            <Select value={eventosGroupId} onValueChange={setEventosGroupId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un groupe" />
+              </SelectTrigger>
+              <SelectContent>
+                {boardGroups.map(group => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.title} {group.title === "Eventos" && "✓"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              id="monday-group-id"
+              value={eventosGroupId}
+              onChange={(e) => setEventosGroupId(e.target.value)}
+              placeholder="ID du groupe Eventos"
+              disabled={isLoadingGroups}
+            />
+          )}
+          <p className="text-sm text-gray-500">
+            Le groupe "Eventos" où seront créés les items (laissez vide pour utiliser le groupe par défaut)
+          </p>
+        </div>
+        
+        <Separator className="my-2" />
         
         <div className="space-y-2">
           <label htmlFor="monday-tech-board-id" className="font-medium">

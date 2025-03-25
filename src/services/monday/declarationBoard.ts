@@ -2,7 +2,11 @@
 import { getMondayConfig } from "./mondayConfig";
 
 // Create Monday.com item based on the actual board structure
-export const createMondayItem = async (itemName: string, columnValues: Record<string, any>): Promise<string | null> => {
+export const createMondayItem = async (
+  itemName: string, 
+  columnValues: Record<string, any>,
+  groupId?: string
+): Promise<string | null> => {
   try {
     // Get the API key and board ID from localStorage
     const { apiKey, boardId } = getMondayConfig();
@@ -15,6 +19,7 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Creating Monday.com item with the following data:");
     console.log("Item Name:", itemName);
     console.log("Board ID:", boardId);
+    console.log("Group ID:", groupId || "Not specified (using default group)");
     console.log("API Key available:", apiKey ? "Yes" : "No");
     console.log("Column values (original):", columnValues);
     
@@ -23,17 +28,29 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Column values after JSON.stringify:", columnValuesString);
     
     // Make the actual API call to Monday.com
-    const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
-      create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
-        id
-      }
-    }`;
+    // Include group_id in the mutation if it's provided
+    const query = groupId 
+      ? `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!, $groupId: String!) {
+          create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues, group_id: $groupId) {
+            id
+          }
+        }`
+      : `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
+          create_item (board_id: $boardId, item_name: $itemName, column_values: $columnValues) {
+            id
+          }
+        }`;
     
-    const variables = {
+    const variables: Record<string, any> = {
       boardId: boardId,
       itemName,
       columnValues: columnValuesString
     };
+    
+    // Add groupId to variables if provided
+    if (groupId) {
+      variables.groupId = groupId;
+    }
     
     console.log("Sending API request to Monday.com with variables:", JSON.stringify(variables, null, 2));
     console.log("Complete query:", query);

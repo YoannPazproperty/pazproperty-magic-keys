@@ -2,11 +2,16 @@
 import { Declaration, TechnicianReport, TechnicianReportResult } from "../types";
 import { createMondayItem } from "../monday/declarationBoard";
 import { createTechnicianReport } from "../monday";
+import { getMondayConfig } from "../monday/mondayConfig";
 
 // Send declaration to Monday.com
 export const sendToExternalService = async (declaration: Declaration): Promise<string | null> => {
   try {
     console.log("Sending declaration to Monday.com:", declaration);
+    
+    // Get the configured group ID for Eventos
+    const { eventosGroupId } = getMondayConfig();
+    console.log("Using Eventos group ID:", eventosGroupId || "Not configured (will use default group)");
     
     // Format the data for Monday.com using the exact column IDs from the correspondence table
     // IMPORTANT: The format for Monday.com API is { "column_id": {"text": "value"} } for text fields
@@ -40,10 +45,11 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
     // Log the formatted values
     console.log("Monday.com formatted values:", JSON.stringify(formattedValues, null, 2));
     
-    // Send to Monday.com
+    // Send to Monday.com with the Eventos group ID if configured
     const itemId = await createMondayItem(
       `Ocorrência: ${declaration.name} - ${declaration.issueType}`, 
-      formattedValues
+      formattedValues,
+      eventosGroupId // Pass the Eventos group ID to specify which group to create the item in
     );
     
     console.log("Monday.com item created with ID:", itemId);
