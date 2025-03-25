@@ -16,11 +16,11 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     console.log("Item Name:", itemName);
     console.log("Board ID:", boardId);
     console.log("API Key available:", apiKey ? "Yes" : "No");
-    console.log("Column values:", columnValues);
+    console.log("Column values (original):", columnValues);
     
     // Monday.com requires the column values to be sent as a JSON string
-    // We'll convert it to the format Monday.com expects
     const columnValuesString = JSON.stringify(columnValues);
+    console.log("Column values after JSON.stringify:", columnValuesString);
     
     // Make the actual API call to Monday.com
     const query = `mutation ($boardId: ID!, $itemName: String!, $columnValues: JSON!) {
@@ -35,10 +35,8 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
       columnValues: columnValuesString
     };
     
-    console.log("Sending API request to Monday.com:", {
-      query,
-      variables
-    });
+    console.log("Sending API request to Monday.com with variables:", JSON.stringify(variables, null, 2));
+    console.log("Complete query:", query);
     
     const response = await fetch("https://api.monday.com/v2", {
       method: "POST",
@@ -49,7 +47,10 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
       body: JSON.stringify({ query, variables })
     });
     
-    // Log full response for debugging
+    // Log response status
+    console.log("Monday.com API response status:", response.status, response.statusText);
+    
+    // Get response as text for debugging
     const responseText = await response.text();
     console.log("Monday.com API raw response:", responseText);
     
@@ -65,13 +66,18 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
       
       if (responseData.errors) {
         console.error("Monday.com GraphQL errors:", responseData.errors);
+        // Log each error in detail
+        responseData.errors.forEach((error: any, index: number) => {
+          console.error(`Error ${index + 1}:`, error.message);
+        });
         return null;
       }
       
       if (responseData.data && responseData.data.create_item) {
+        console.log("Successfully created item with ID:", responseData.data.create_item.id);
         return responseData.data.create_item.id;
       } else {
-        console.error("Unexpected response structure from Monday.com");
+        console.error("Unexpected response structure from Monday.com:", responseData);
         return null;
       }
     } catch (parseError) {
@@ -80,6 +86,9 @@ export const createMondayItem = async (itemName: string, columnValues: Record<st
     }
   } catch (error) {
     console.error("Error creating Monday.com item:", error);
+    if (error instanceof Error) {
+      console.error("Error details:", error.message, error.stack);
+    }
     return null;
   }
 };
