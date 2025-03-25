@@ -14,32 +14,34 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
     console.log("Using Eventos group ID:", eventosGroupId || "Not configured (will use default group)");
     
     // Format the data for Monday.com using the exact column IDs from the correspondence table
-    // IMPORTANT: The format for Monday.com API is { "column_id": {"text": "value"} } for text fields
+    // IMPORTANT: The format for Monday.com API is { "column_id": value } for text fields
     // and { "column_id": {"label": "value"} } for status/dropdown fields
     const formattedValues: Record<string, any> = {};
     
-    // Text and number columns - use correct format for each type
-    formattedValues["text_mknxg830"] = { "text": declaration.name };             // Nome do Inquilino
-    formattedValues["email_mknxfg3r"] = { "email": declaration.email };          // E-mail
-    formattedValues["phone_mknyw109"] = { "phone": declaration.phone };          // Telefone
-    formattedValues["numeric_mknx2s4b"] = { "number": declaration.nif || "" };   // NIF
-    formattedValues["text_mknx4pjn"] = { "text": declaration.property };         // Endereço
-    formattedValues["text_mknxe74j"] = { "text": declaration.city || "" };       // Cidade
-    formattedValues["text_mknxq2zr"] = { "text": declaration.postalCode || "" }; // Código Postal
-    formattedValues["text_mknxny1h"] = { "text": declaration.issueType };        // Tipo de problema
-    formattedValues["text_mknxj2e7"] = { "text": declaration.description };      // Descrição
-    formattedValues["text_mkpbmd7q"] = { "text": declaration.id };               // ID Declaração
+    // Text columns - use simple text value directly
+    formattedValues["text_mknxg830"] = declaration.name;             // Nome do Inquilino
+    formattedValues["text_mknx4pjn"] = declaration.property;         // Endereço
+    formattedValues["text_mknxe74j"] = declaration.city || "";       // Cidade
+    formattedValues["text_mknxq2zr"] = declaration.postalCode || ""; // Código Postal
+    formattedValues["text_mknxny1h"] = declaration.issueType;        // Tipo de problema
+    formattedValues["text_mknxj2e7"] = declaration.description;      // Descrição
+    formattedValues["text_mkpbmd7q"] = declaration.id;               // ID Declaração
+    
+    // Specific format columns
+    formattedValues["email_mknxfg3r"] = declaration.email;          // E-mail
+    formattedValues["phone_mknyw109"] = declaration.phone;          // Telefone
+    formattedValues["numeric_mknx2s4b"] = declaration.nif || "";   // NIF
     
     // Date column - format as YYYY-MM-DD
-    formattedValues["date4"] = { "date": new Date().toISOString().split('T')[0] }; // Data de submissão
+    formattedValues["date4"] = new Date().toISOString().split('T')[0]; // Data de submissão
     
-    // Status and dropdown columns - format as {"label": "value"}
+    // Status and dropdown columns - use the object format with label
     formattedValues["status"] = { "label": "Nouveau" };                // Status
     formattedValues["dropdown_mkpbfgd4"] = { "label": declaration.urgency }; // Urgência
     
     // Media files - if any
     if (declaration.mediaFiles && declaration.mediaFiles.length > 0) {
-      formattedValues["link_mknx8vyw"] = { "url": declaration.mediaFiles[0] };  // Upload do Inquilino (first file)
+      formattedValues["link_mknx8vyw"] = declaration.mediaFiles[0];  // Upload do Inquilino (first file)
     }
     
     // Log the formatted values

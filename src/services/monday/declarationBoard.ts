@@ -23,8 +23,44 @@ export const createMondayItem = async (
     console.log("API Key available:", apiKey ? "Yes" : "No");
     console.log("Column values (original):", columnValues);
     
+    // For Monday.com, we need to transform the values
+    // Text columns need to be wrapped in {"text": value} format
+    const transformedColumnValues: Record<string, any> = {};
+    
+    // Process each column value based on its type
+    for (const [columnId, value] of Object.entries(columnValues)) {
+      // Skip null or undefined values
+      if (value === null || value === undefined) continue;
+      
+      // If it's already an object (for status/dropdown fields), use it directly
+      if (typeof value === 'object') {
+        transformedColumnValues[columnId] = value;
+      } 
+      // Handle specific column types based on their ID prefix
+      else if (columnId.startsWith('email_')) {
+        transformedColumnValues[columnId] = { "email": value };
+      }
+      else if (columnId.startsWith('phone_')) {
+        transformedColumnValues[columnId] = { "phone": value };
+      }
+      else if (columnId.startsWith('numeric_')) {
+        transformedColumnValues[columnId] = { "number": value };
+      }
+      else if (columnId.startsWith('date')) {
+        transformedColumnValues[columnId] = { "date": value };
+      }
+      else if (columnId.startsWith('link_')) {
+        transformedColumnValues[columnId] = { "url": value };
+      }
+      // Default case: treat as text column
+      else {
+        transformedColumnValues[columnId] = { "text": value };
+      }
+    }
+    
     // Monday.com requires the column values to be sent as a JSON string
-    const columnValuesString = JSON.stringify(columnValues);
+    const columnValuesString = JSON.stringify(transformedColumnValues);
+    console.log("Column values after transformation:", transformedColumnValues);
     console.log("Column values after JSON.stringify:", columnValuesString);
     
     // Make the actual API call to Monday.com
