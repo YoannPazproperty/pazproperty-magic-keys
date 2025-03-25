@@ -7,23 +7,22 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   try {
     console.log("Sending declaration to Monday.com:", declaration);
     
-    // Format the data for Monday.com using simplified values
-    // Use the exact column IDs from Monday.com and proper format for status/dropdown fields
+    // Format the data for Monday.com using the exact column IDs from the correspondence table
     const formattedValues = {
-      "text": declaration.name,              // Nome do Inquilino
-      "text8": declaration.property,         // Endereço 
-      "text7": declaration.city || "",       // Cidade
-      "text9": declaration.postalCode || "", // Código Postal
-      "text_1": declaration.issueType,       // Tipo de problema
-      "long_text": declaration.description,  // Descrição
-      "text4": declaration.id,               // ID Declaração
-      "email": declaration.email,
-      "phone": declaration.phone,
-      "numbers8": declaration.nif || "",
-      "status": { "label": "Nouveau" },      // Status column requires { label: "value" } format
-      "priority": { "label": declaration.urgency }, // Use the correct format for priority dropdown
-      "date4": new Date().toISOString().split('T')[0],
-      "mediaFiles": declaration.mediaFiles || []  // Add media files if available
+      "text_mknxg830": declaration.name,              // Nome do Inquilino
+      "email_mknxfg3r": declaration.email,            // E-mail
+      "phone_mknyw109": declaration.phone,            // Telefone
+      "numeric_mknx2s4b": declaration.nif || "",      // NIF
+      "text_mknx4pjn": declaration.property,          // Endereço 
+      "text_mknxe74j": declaration.city || "",        // Cidade
+      "text_mknxq2zr": declaration.postalCode || "",  // Código Postal
+      "text_mknxny1h": declaration.issueType,         // Tipo de problema
+      "text_mknxj2e7": declaration.description,       // Descrição
+      "dropdown_mkpbfgd4": { "label": declaration.urgency }, // Urgência
+      "status": { "label": "Nouveau" },               // Status
+      "text_mkpbmd7q": declaration.id,                // ID Declaração
+      "date4": new Date().toISOString().split('T')[0], // Data de submissão
+      "link_mknx8vyw": declaration.mediaFiles || []    // Upload do Inquilino
     };
     
     // Log the formatted values
@@ -51,6 +50,7 @@ export const sendTechnicianReportToMonday = async (
     console.log("Sending technician report to Monday.com:", report);
     
     // Format the data for Monday.com technician board
+    // Note: These IDs would need to be updated with the correct ones from your technician board
     const formattedValues: Record<string, any> = {
       // Text columns
       "text6": report.clientName, // Cliente
