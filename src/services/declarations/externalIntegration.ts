@@ -1,6 +1,7 @@
 
-import { Declaration } from "../types";
+import { Declaration, TechnicianReport, TechnicianReportResult } from "../types";
 import { createMondayItem } from "../monday/declarationBoard";
+import { createTechnicianReport } from "../monday/technicianBoard";
 import { getMondayConfig } from "../monday/mondayConfig";
 import { issueTypeToMondayMap, urgencyToMondayMap } from "../types";
 
@@ -96,5 +97,57 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
   } catch (error) {
     console.error("Error sending declaration to external service:", error);
     return null;
+  }
+};
+
+// Nouvelle fonction pour envoyer les rapports de techniciens vers Monday.com
+export const sendTechnicianReportToMonday = async (
+  report: TechnicianReport
+): Promise<TechnicianReportResult> => {
+  try {
+    console.log("Sending technician report to Monday.com:", report);
+    
+    // Préparation des valeurs formatées pour le tableau Monday des techniciens
+    const formattedValues: Record<string, any> = {
+      // Colonnes nécessaires au technicien
+      "Cliente": report.clientName,
+      "Email": report.clientEmail,
+      "Telefone": report.clientPhone,
+      "Endereço": report.address,
+      "Categoria do problema": report.problemCategory,
+      "Diagnóstico": report.diagnoseDescription,
+      "Necessita de intervenção": report.needsIntervention ? "Sim" : "Não",
+      "Trabalhos a realizar": report.workDescription || "",
+      "Valor estimado": report.estimateAmount || "0",
+      "ID Intervenção": String(report.interventionId)
+    };
+    
+    console.log("Formatted Monday.com technician values:", JSON.stringify(formattedValues, null, 2));
+    
+    // Création de l'élément sur le tableau Monday des techniciens
+    const itemId = await createTechnicianReport(
+      `Relatório: ${report.clientName} - ${report.problemCategory}`,
+      formattedValues
+    );
+    
+    if (itemId) {
+      console.log("Monday.com technician report created with ID:", itemId);
+      return {
+        success: true,
+        message: "Rapport envoyé avec succès",
+        mondayItemId: itemId
+      };
+    } else {
+      return {
+        success: false,
+        message: "Erreur lors de la création de l'élément dans Monday.com"
+      };
+    }
+  } catch (error) {
+    console.error("Error sending technician report to Monday.com:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Erreur inconnue"
+    };
   }
 };
