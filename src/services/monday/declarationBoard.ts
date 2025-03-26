@@ -1,4 +1,3 @@
-
 import { getMondayConfig } from "./mondayConfig";
 
 // Create Monday.com item based on the actual board structure
@@ -31,8 +30,15 @@ export const createMondayItem = async (
       // Skip null or undefined values
       if (value === null || value === undefined) continue;
       
-      // If it's already an object (for status/dropdown fields), use it directly
-      if (typeof value === 'object') {
+      // If it's already an object with the correct structure, use it directly
+      if (typeof value === 'object' && 
+          (value.hasOwnProperty('text') || 
+           value.hasOwnProperty('email') || 
+           value.hasOwnProperty('phone') || 
+           value.hasOwnProperty('number') || 
+           value.hasOwnProperty('date') || 
+           value.hasOwnProperty('url') || 
+           value.hasOwnProperty('label'))) {
         transformedColumnValues[columnId] = value;
         continue;
       }

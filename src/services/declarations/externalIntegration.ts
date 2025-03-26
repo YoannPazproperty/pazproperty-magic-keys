@@ -1,4 +1,3 @@
-
 import { Declaration, TechnicianReport, TechnicianReportResult } from "../types";
 import { createMondayItem } from "../monday/declarationBoard";
 import { createTechnicianReport } from "../monday/technicianBoard";
@@ -8,8 +7,16 @@ import { issueTypeToMondayMap, urgencyToMondayMap } from "../types";
 export const sendToExternalService = async (declaration: Declaration): Promise<string | null> => {
   try {
     console.log("Sending declaration to Monday.com:", declaration);
+    console.log("Media files:", declaration.mediaFiles);
     
     const { eventosGroupId } = getMondayConfig();
+    
+    // Construire l'URL absolue pour le fichier média
+    const mediaUrl = declaration.mediaFiles && declaration.mediaFiles.length > 0
+      ? `${window.location.origin}${declaration.mediaFiles[0]}`
+      : "";
+    
+    console.log("Media URL:", mediaUrl);
     
     // Mappage précis des valeurs selon le tableau de correspondance
     const formattedValues: Record<string, any> = {
@@ -79,12 +86,11 @@ export const sendToExternalService = async (declaration: Declaration): Promise<s
       },
       
       // Champ Lien: Fichiers média
-      "link_mknx8vyw": declaration.mediaFiles && declaration.mediaFiles.length > 0 
-        ? { "url": declaration.mediaFiles[0] } 
-        : { "url": "" }
+      "link_mknx8vyw": mediaUrl ? { "url": mediaUrl } : { "url": "" }
     };
     
     console.log("Formatted Monday.com values:", JSON.stringify(formattedValues, null, 2));
+    console.log("Link field value:", formattedValues["link_mknx8vyw"]);
     
     const itemId = await createMondayItem(
       `Ocorrência: ${declaration.name} - ${declaration.issueType}`, 
