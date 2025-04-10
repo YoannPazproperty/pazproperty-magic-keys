@@ -1,18 +1,20 @@
 
 import React, { useState } from 'react';
-import { Upload, X, ImageIcon, VideoIcon, FileIcon } from 'lucide-react';
+import { Upload, X, ImageIcon, VideoIcon, FileIcon, Cloud, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FileUploadProps {
   onChange: (files: File[]) => void;
   maxFiles?: number;
   accept?: string;
+  supabaseConnected?: boolean | null;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
   onChange,
   maxFiles = 4,
-  accept = "image/*,video/*"
+  accept = "image/*,video/*",
+  supabaseConnected = null
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -25,7 +27,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
     
     // Limit to maxFiles
     if (totalFiles.length > maxFiles) {
-      alert(`Vous ne pouvez télécharger que ${maxFiles} fichiers maximum.`);
+      alert(`Você pode fazer upload de no máximo ${maxFiles} arquivos.`);
       return;
     }
     
@@ -74,17 +76,33 @@ const FileUpload: React.FC<FileUploadProps> = ({
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
             <Upload className="w-8 h-8 mb-2 text-gray-500" />
             <p className="mb-2 text-sm text-gray-500">
-              <span className="font-semibold">Cliquez pour télécharger</span> ou glissez et déposez
+              <span className="font-semibold">Clique para upload</span> ou arraste e solte
             </p>
             <p className="text-xs text-gray-500">
               {accept.includes('image') && accept.includes('video') 
-                ? 'Photos et vidéos' 
+                ? 'Fotos e vídeos' 
                 : accept.includes('image') 
-                  ? 'Photos' 
+                  ? 'Fotos' 
                   : accept.includes('video') 
-                    ? 'Vidéos' 
-                    : 'Fichiers'} (MAX. {maxFiles} fichiers)
+                    ? 'Vídeos' 
+                    : 'Arquivos'} (MAX. {maxFiles} arquivos)
             </p>
+            
+            {supabaseConnected !== null && (
+              <div className={`flex items-center text-xs mt-1 ${supabaseConnected ? 'text-green-600' : 'text-amber-600'}`}>
+                {supabaseConnected ? (
+                  <>
+                    <Cloud className="w-3 h-3 mr-1" />
+                    <span>Armazenamento na nuvem</span>
+                  </>
+                ) : (
+                  <>
+                    <Database className="w-3 h-3 mr-1" />
+                    <span>Armazenamento local</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <input 
             id="dropzone-file" 

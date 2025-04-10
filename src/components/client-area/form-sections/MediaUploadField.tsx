@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   FormLabel,
   FormDescription,
@@ -7,6 +7,7 @@ import {
 import FileUpload from "@/components/FileUpload";
 import { isSupabaseConnected } from "@/services/supabaseService";
 import { useQuery } from "@tanstack/react-query";
+import { Wifi, WifiOff } from "lucide-react";
 
 interface MediaUploadFieldProps {
   onChange: (files: File[]) => void;
@@ -14,7 +15,7 @@ interface MediaUploadFieldProps {
 
 const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
   // Vérifier l'état de la connexion à Supabase
-  const { data: supabaseConnected } = useQuery({
+  const { data: supabaseConnected, isLoading } = useQuery({
     queryKey: ['supabase-connection'],
     queryFn: async () => {
       return await isSupabaseConnected();
@@ -25,7 +26,26 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
   return (
     <div className="space-y-2">
       <div className="mb-2">
-        <FormLabel className="text-base">Adicionar média</FormLabel>
+        <div className="flex items-center justify-between">
+          <FormLabel className="text-base">Adicionar média</FormLabel>
+          
+          <div className="flex items-center text-sm">
+            {isLoading ? (
+              <span className="text-gray-500">Verificando conexão...</span>
+            ) : supabaseConnected ? (
+              <div className="flex items-center text-green-600">
+                <Wifi className="h-4 w-4 mr-1" />
+                <span>Conectado</span>
+              </div>
+            ) : (
+              <div className="flex items-center text-amber-600">
+                <WifiOff className="h-4 w-4 mr-1" />
+                <span>Modo offline</span>
+              </div>
+            )}
+          </div>
+        </div>
+        
         <FormDescription>
           Pode adicionar fotos ou vídeos para ajudar a descrever o problema (opcional).
           {supabaseConnected === false && (
@@ -39,6 +59,7 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
         onChange={onChange} 
         maxFiles={5} 
         accept="image/*,video/*" 
+        supabaseConnected={supabaseConnected}
       />
     </div>
   );
