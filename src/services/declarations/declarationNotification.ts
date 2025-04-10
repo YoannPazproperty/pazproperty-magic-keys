@@ -21,9 +21,15 @@ export const notifyStatusChange = async (declaration: Declaration): Promise<bool
     
     // Log notification in Supabase if connected
     const supabase = getSupabase();
-    const isConnected = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true })
-      .then(() => true)
-      .catch(() => false);
+    let isConnected = false;
+    
+    try {
+      isConnected = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true })
+        .then(() => true)
+        .catch(() => false);
+    } catch (err) {
+      isConnected = false;
+    }
     
     if (isConnected) {
       // Store notification record in Supabase
@@ -60,9 +66,15 @@ export const notifyNewDeclaration = async (declaration: Declaration): Promise<bo
     
     // Log notification in Supabase if connected
     const supabase = getSupabase();
-    const isConnected = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true })
-      .then(() => true)
-      .catch(() => false);
+    let isConnected = false;
+    
+    try {
+      isConnected = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true })
+        .then(() => true)
+        .catch(() => false);
+    } catch (err) {
+      isConnected = false;
+    }
     
     if (isConnected) {
       // Store notification record in Supabase
@@ -114,23 +126,34 @@ export const updateStatusAndNotify = async (id: string, status: Declaration["sta
 export const getDeclarationNotificationHistory = async (declarationId: string): Promise<any[]> => {
   try {
     const supabase = getSupabase();
-    const isConnected = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true })
-      .then(() => true)
-      .catch(() => false);
+    let isConnected = false;
+    
+    try {
+      isConnected = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true })
+        .then(() => true)
+        .catch(() => false);
+    } catch (err) {
+      isConnected = false;
+    }
     
     if (isConnected) {
-      const { data, error } = await supabase
-        .from(NOTIFICATIONS_TABLE)
-        .select('*')
-        .eq('declaration_id', declarationId)
-        .order('sent_at', { ascending: false });
-      
-      if (error) {
+      try {
+        const { data, error } = await supabase
+          .from(NOTIFICATIONS_TABLE)
+          .select('*')
+          .eq('declaration_id', declarationId)
+          .order('sent_at', { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching notification history:", error);
+          return [];
+        }
+        
+        return data || [];
+      } catch (error) {
         console.error("Error fetching notification history:", error);
         return [];
       }
-      
-      return data || [];
     }
     
     return [];
