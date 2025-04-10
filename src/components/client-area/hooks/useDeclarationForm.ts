@@ -4,6 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { FormValues, mapIssueTypeToMondayFormat } from "../schema";
 import { addWithMedia, sendToExternalService } from "@/services/declarationService";
+import { isSupabaseConnected } from "@/services/supabaseService";
 
 interface UseDeclarationFormProps {
   form: UseFormReturn<FormValues>;
@@ -13,6 +14,17 @@ interface UseDeclarationFormProps {
 export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [supabaseStatus, setSupabaseStatus] = useState<boolean | null>(null);
+
+  // Vérifier l'état de la connexion Supabase au chargement
+  useState(() => {
+    const checkSupabaseConnection = async () => {
+      const connected = await isSupabaseConnected();
+      setSupabaseStatus(connected);
+    };
+    
+    checkSupabaseConnection();
+  });
 
   const handleFileChange = (files: File[]) => {
     setMediaFiles(files);
@@ -41,7 +53,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         postalCode: values.postalCode,
         issueType: issueType,
         description: values.description,
-        urgency: values.urgency, // Utiliser la valeur du formulaire
+        urgency: values.urgency,
         nif: values.nif,
       };
       
@@ -50,12 +62,18 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       
       // Add declaration to local storage with any attached media files
       const newDeclaration = await addWithMedia(declarationData, mediaFiles);
-      console.log("Declaration saved locally:", newDeclaration);
+      console.log("Declaration saved:", newDeclaration);
       
-      // Create a success toast for local storage
-      toast.success("Declaração salva localmente", {
-        description: "Sua declaração foi registrada em nosso sistema."
-      });
+      // Create a success toast based on where it was saved
+      if (supabaseStatus) {
+        toast.success("Declaração salva com sucesso", {
+          description: "Sua declaração foi registrada em nosso sistema."
+        });
+      } else {
+        toast.success("Declaração salva localmente", {
+          description: "Sua declaração foi registrada localmente. Será sincronizada quando a conexão estiver disponível."
+        });
+      }
       
       // Send to Monday.com with improved error handling
       try {
@@ -69,14 +87,14 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
           console.log("Successfully sent to Monday.com with ID:", mondayResult);
         } else {
           toast.warning("Declaração não enviada para Monday.com", {
-            description: "Sua declaração foi salva localmente, mas não foi enviada para Monday.com. Nossa equipe irá processá-la manualmente."
+            description: "Sua declaração foi salva, mas não foi enviada para Monday.com. Nossa equipe irá processá-la manualmente."
           });
           console.error("Failed to send to Monday.com");
         }
       } catch (mondayError) {
         console.error("Error sending to Monday.com:", mondayError);
         toast.warning("Erro ao enviar para Monday.com", {
-          description: "Sua declaração foi salva localmente, mas houve um erro ao enviá-la para Monday.com. Nossa equipe irá processá-la manualmente."
+          description: "Sua declaração foi salva, mas houve um erro ao enviá-la para Monday.com. Nossa equipe irá processá-la manualmente."
         });
       }
       
@@ -107,6 +125,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
     isSubmitting,
     mediaFiles,
     handleFileChange,
-    handleSubmit
+    handleSubmit,
+    supabaseStatus
   };
 };

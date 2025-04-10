@@ -32,100 +32,99 @@ export const storeFile = async (file: File): Promise<string> => {
     
     // Essayer de stocker dans Supabase Storage
     const supabase = getSupabase();
+    if (!supabase) {
+      console.log("Supabase client not available, falling back to localStorage");
+      return storeFileLocally(file, fileId);
+    }
+    
     const bucketName = 'declaration-media';
     
-    // Vérifier si le bucket existe, sinon créer un fallback
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-    
-    if (bucketExists || await createBucketIfNotExists(bucketName)) {
+    try {
+      // Vérifier si le bucket existe, sinon le créer
+      console.log(`Checking if bucket '${bucketName}' exists...`);
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+      
+      if (!bucketExists) {
+        console.log(`Creating bucket '${bucketName}'...`);
+        const { error: createError } = await supabase.storage.createBucket(bucketName, {
+          public: true
+        });
+        
+        if (createError) {
+          console.error("Error creating bucket:", createError);
+          return storeFileLocally(file, fileId);
+        }
+        console.log(`Bucket '${bucketName}' created successfully`);
+      } else {
+        console.log(`Bucket '${bucketName}' already exists`);
+      }
+      
+      // Télécharger le fichier
       const filePath = `${fileId}-${file.name.replace(/\s+/g, '_')}`;
-      const { data, error } = await supabase.storage
+      console.log(`Uploading file to path: ${filePath}...`);
+      
+      const { data, error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         });
         
-      if (!error) {
-        console.log("File uploaded to Supabase Storage:", data);
-        
-        // Générer une URL publique pour le fichier
-        const { data: publicURL } = await supabase.storage
-          .from(bucketName)
-          .getPublicUrl(filePath);
-          
-        console.log("Generated Supabase public URL:", publicURL);
-        return publicURL.publicUrl;
-      } else {
-        console.error("Error uploading to Supabase Storage:", error);
-        // Fallback au localStorage
+      if (uploadError) {
+        console.error("Error uploading to Supabase Storage:", uploadError);
+        return storeFileLocally(file, fileId);
       }
-    } else {
-      console.log("Bucket doesn't exist and couldn't be created, falling back to localStorage");
+      
+      console.log("File uploaded to Supabase Storage:", data);
+      
+      // Générer une URL publique pour le fichier
+      const { data: publicURL } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+        
+      console.log("Generated Supabase public URL:", publicURL);
+      return publicURL.publicUrl;
+    } catch (supabaseError) {
+      console.error("Supabase storage error:", supabaseError);
+      return storeFileLocally(file, fileId);
     }
-    
-    // Fallback: Stocker dans localStorage
-    console.log("Falling back to localStorage storage");
-    const base64Data = await fileToBase64(file);
-    console.log("File converted to base64 successfully");
-    
-    // Créer l'objet fichier à stocker
-    const storedFile: StoredFile = {
-      id: fileId,
-      name: file.name,
-      type: file.type,
-      data: base64Data,
-      createdAt: new Date().toISOString()
-    };
-    
-    // Récupérer les fichiers existants
-    const existingFiles = getStoredFiles();
-    console.log("Existing files count:", existingFiles.length);
-    
-    // Ajouter le nouveau fichier
-    existingFiles.push(storedFile);
-    
-    // Sauvegarder dans le localStorage
-    localStorage.setItem('storedFiles', JSON.stringify(existingFiles));
-    console.log("File saved to localStorage successfully");
-    
-    // Retourner l'URL du fichier
-    const fileUrl = `/api/files/${fileId}`;
-    console.log("Generated file URL:", fileUrl);
-    return fileUrl;
   } catch (error) {
     console.error('Error storing file:', error);
     throw error;
   }
 };
 
-// Créer un bucket dans Supabase Storage s'il n'existe pas
-const createBucketIfNotExists = async (bucketName: string): Promise<boolean> => {
-  try {
-    const supabase = getSupabase();
-    const { data: buckets } = await supabase.storage.listBuckets();
-    
-    if (!buckets?.some(bucket => bucket.name === bucketName)) {
-      const { error } = await supabase.storage.createBucket(bucketName, {
-        public: true
-      });
-      
-      if (error) {
-        console.error("Error creating bucket:", error);
-        return false;
-      }
-      
-      console.log(`Bucket '${bucketName}' created successfully`);
-      return true;
-    }
-    
-    console.log(`Bucket '${bucketName}' already exists`);
-    return true;
-  } catch (error) {
-    console.error("Error checking/creating bucket:", error);
-    return false;
-  }
+// Stocker un fichier localement (fallback)
+const storeFileLocally = async (file: File, fileId: string): Promise<string> => {
+  console.log("Falling back to localStorage storage for file:", file.name);
+  const base64Data = await fileToBase64(file);
+  console.log("File converted to base64 successfully");
+  
+  // Créer l'objet fichier à stocker
+  const storedFile: StoredFile = {
+    id: fileId,
+    name: file.name,
+    type: file.type,
+    data: base64Data,
+    createdAt: new Date().toISOString()
+  };
+  
+  // Récupérer les fichiers existants
+  const existingFiles = getStoredFiles();
+  console.log("Existing files count:", existingFiles.length);
+  
+  // Ajouter le nouveau fichier
+  existingFiles.push(storedFile);
+  
+  // Sauvegarder dans le localStorage
+  localStorage.setItem('storedFiles', JSON.stringify(existingFiles));
+  console.log("File saved to localStorage successfully");
+  
+  // Retourner l'URL du fichier
+  const fileUrl = `/api/files/${fileId}`;
+  console.log("Generated file URL:", fileUrl);
+  return fileUrl;
 };
 
 // Récupérer tous les fichiers stockés (pour le mode fallback)
@@ -141,23 +140,25 @@ export const getStoredFile = async (fileId: string): Promise<StoredFile | string
   try {
     // Essayer d'abord Supabase
     const supabase = getSupabase();
-    const bucketName = 'declaration-media';
-    
-    // Liste les fichiers dans le bucket qui commencent par l'ID
-    const { data: files, error } = await supabase.storage
-      .from(bucketName)
-      .list('', {
-        search: fileId
-      });
+    if (supabase) {
+      const bucketName = 'declaration-media';
+      
+      // Liste les fichiers dans le bucket qui commencent par l'ID
+      const { data: files, error } = await supabase.storage
+        .from(bucketName)
+        .list('', {
+          search: fileId
+        });
 
-    if (!error && files && files.length > 0) {
-      const matchingFile = files.find(file => file.name.startsWith(fileId));
-      if (matchingFile) {
-        const { data } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(matchingFile.name);
-          
-        return data.publicUrl;
+      if (!error && files && files.length > 0) {
+        const matchingFile = files.find(file => file.name.startsWith(fileId));
+        if (matchingFile) {
+          const { data } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(matchingFile.name);
+            
+          return data.publicUrl;
+        }
       }
     }
     
@@ -179,25 +180,27 @@ export const deleteStoredFile = async (fileId: string): Promise<boolean> => {
     
     // Essayer d'abord de supprimer de Supabase
     const supabase = getSupabase();
-    const bucketName = 'declaration-media';
-    
-    // Liste les fichiers dans le bucket qui commencent par l'ID
-    const { data: files, error } = await supabase.storage
-      .from(bucketName)
-      .list('', {
-        search: fileId
-      });
+    if (supabase) {
+      const bucketName = 'declaration-media';
+      
+      // Liste les fichiers dans le bucket qui commencent par l'ID
+      const { data: files, error } = await supabase.storage
+        .from(bucketName)
+        .list('', {
+          search: fileId
+        });
 
-    if (!error && files && files.length > 0) {
-      const matchingFile = files.find(file => file.name.startsWith(fileId));
-      if (matchingFile) {
-        const { error } = await supabase.storage
-          .from(bucketName)
-          .remove([matchingFile.name]);
-          
-        if (!error) {
-          deleted = true;
-          console.log("File deleted from Supabase Storage:", fileId);
+      if (!error && files && files.length > 0) {
+        const matchingFile = files.find(file => file.name.startsWith(fileId));
+        if (matchingFile) {
+          const { error } = await supabase.storage
+            .from(bucketName)
+            .remove([matchingFile.name]);
+            
+          if (!error) {
+            deleted = true;
+            console.log("File deleted from Supabase Storage:", fileId);
+          }
         }
       }
     }
