@@ -11,15 +11,8 @@ interface MediaUploadFieldProps {
 }
 
 const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
-  return (
-    <div className="space-y-2">
-      <FormLabel>Fotos ou Vídeos do Problema</FormLabel>
-      <FormDescription>
-        Adicione até 4 arquivos (fotos ou vídeos) que mostrem o problema. Isso ajudará nossa equipe a entender melhor a situação.
-      </FormDescription>
-      <FileUpload onChange={onChange} maxFiles={4} accept="image/*,video/*" />
-    </div>
-  );
-};
+  // Nous cachons complètement ce composant en retournant null
+  return null;
+}
 
 export default MediaUploadField;

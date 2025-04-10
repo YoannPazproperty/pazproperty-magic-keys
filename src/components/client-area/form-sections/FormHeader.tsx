@@ -1,19 +1,17 @@
 
 import React from "react";
-import { AlertCircle } from "lucide-react";
 
 const FormHeader = () => {
+  // Remplaçons le contenu par quelque chose de plus générique pour la présentation de services
   return (
     <>
-      <h2 className="text-2xl font-bold mb-6">Formulário de Declaração de Ocorrência</h2>
+      <h2 className="text-2xl font-bold mb-6">Nos Services</h2>
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
         <div className="flex items-start">
-          <AlertCircle className="h-6 w-6 text-blue-600 mr-3 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-blue-700">Importante</h3>
+            <h3 className="font-semibold text-blue-700">Pazproperty</h3>
             <p className="text-blue-700 text-sm">
-              Para emergências que exigem atenão imediata (como vazamentos graves ou falta de energia), 
-              por favor ligue para +351 912 345 678 além de preencher este formulário.
+              Découvrez notre gamme complète de services immobiliers pour les propriétaires et investisseurs à Lisbonne.
             </p>
           </div>
         </div>
