@@ -3,20 +3,19 @@ import { toast } from "sonner";
 import { Declaration } from "../types";
 import { sendNotificationEmail } from "../notificationService";
 import { updateDeclaration } from "./declarationStorage";
-import { getSupabase } from "../supabaseService";
 
-// Table name for notifications in Supabase
-const NOTIFICATIONS_TABLE = 'notifications';
+// Table name for notifications in localStorage
+const NOTIFICATIONS_STORAGE_KEY = 'notifications';
 
-// Function to log notification to local storage when Supabase is unavailable
+// Function to log notification to local storage
 const logNotificationLocally = (notificationData: any) => {
-  const storedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+  const storedNotifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) || '[]');
   storedNotifications.push({
     ...notificationData,
     id: Date.now().toString(),
     sent_at: new Date().toISOString()
   });
-  localStorage.setItem('notifications', JSON.stringify(storedNotifications));
+  localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(storedNotifications));
   console.log("Notification stored locally:", notificationData);
 };
 
@@ -31,52 +30,13 @@ export const notifyStatusChange = async (declaration: Declaration): Promise<bool
       declaration
     );
     
-    // Log notification in Supabase if connected
-    const supabase = getSupabase();
-    let isConnected = false;
-    
-    // Check connection differently
-    if (supabase) {
-      try {
-        const { error } = await supabase.from('declarations').select('count', { count: 'exact', head: true });
-        isConnected = !error;
-      } catch (err) {
-        isConnected = false;
-      }
-    }
-    
-    if (isConnected && supabase) {
-      try {
-        // Store notification record in Supabase
-        await supabase.from(NOTIFICATIONS_TABLE).insert({
-          declaration_id: declaration.id,
-          email: declaration.email,
-          type: 'statusUpdate',
-          status: declaration.status,
-          sent_at: new Date().toISOString()
-        });
-        
-        console.log("Status update notification stored in Supabase");
-      } catch (error) {
-        console.error("Failed to store notification in Supabase:", error);
-        // Fallback to local storage
-        logNotificationLocally({
-          declaration_id: declaration.id,
-          email: declaration.email,
-          type: 'statusUpdate',
-          status: declaration.status
-        });
-      }
-    } else {
-      console.log("Supabase not connected, notification only sent via email");
-      // Store locally
-      logNotificationLocally({
-        declaration_id: declaration.id,
-        email: declaration.email,
-        type: 'statusUpdate',
-        status: declaration.status
-      });
-    }
+    // Store locally
+    logNotificationLocally({
+      declaration_id: declaration.id,
+      email: declaration.email,
+      type: 'statusUpdate',
+      status: declaration.status
+    });
     
     return true;
   } catch (error) {
@@ -96,52 +56,13 @@ export const notifyNewDeclaration = async (declaration: Declaration): Promise<bo
       declaration
     );
     
-    // Log notification in Supabase if connected
-    const supabase = getSupabase();
-    let isConnected = false;
-    
-    // Check connection differently
-    if (supabase) {
-      try {
-        const { error } = await supabase.from('declarations').select('count', { count: 'exact', head: true });
-        isConnected = !error;
-      } catch (err) {
-        isConnected = false;
-      }
-    }
-    
-    if (isConnected && supabase) {
-      try {
-        // Store notification record in Supabase
-        await supabase.from(NOTIFICATIONS_TABLE).insert({
-          declaration_id: declaration.id,
-          email: declaration.email,
-          type: 'declarationReceived',
-          status: declaration.status,
-          sent_at: new Date().toISOString()
-        });
-        
-        console.log("New declaration notification stored in Supabase");
-      } catch (error) {
-        console.error("Failed to store notification in Supabase:", error);
-        // Fallback to local storage
-        logNotificationLocally({
-          declaration_id: declaration.id,
-          email: declaration.email,
-          type: 'declarationReceived',
-          status: declaration.status
-        });
-      }
-    } else {
-      console.log("Supabase not connected, notification only sent via email");
-      // Store locally
-      logNotificationLocally({
-        declaration_id: declaration.id,
-        email: declaration.email,
-        type: 'declarationReceived',
-        status: declaration.status
-      });
-    }
+    // Store locally
+    logNotificationLocally({
+      declaration_id: declaration.id,
+      email: declaration.email,
+      type: 'declarationReceived',
+      status: declaration.status
+    });
     
     return true;
   } catch (error) {
@@ -174,65 +95,17 @@ export const updateStatusAndNotify = async (id: string, status: Declaration["sta
   }
 };
 
-// Function to get notification history from both Supabase and localStorage
+// Function to get notification history from localStorage
 export const getDeclarationNotificationHistory = async (declarationId: string): Promise<any[]> => {
   try {
-    const supabase = getSupabase();
-    let supabaseNotifications: any[] = [];
-    let isConnected = false;
-    
-    // Check if Supabase is available
-    if (supabase) {
-      try {
-        const { error } = await supabase.from('declarations').select('count', { count: 'exact', head: true });
-        isConnected = !error;
-      } catch (err) {
-        isConnected = false;
-      }
-      
-      if (isConnected) {
-        try {
-          const { data, error } = await supabase
-            .from(NOTIFICATIONS_TABLE)
-            .select('*')
-            .eq('declaration_id', declarationId)
-            .order('sent_at', { ascending: false });
-          
-          if (!error && data) {
-            supabaseNotifications = data;
-          }
-        } catch (error) {
-          console.error("Error fetching notification history from Supabase:", error);
-        }
-      }
-    }
-    
-    // Get notifications from localStorage as well
-    const localNotifications = JSON.parse(localStorage.getItem('notifications') || '[]')
-      .filter((n: any) => n.declaration_id === declarationId)
-      .sort((a: any, b: any) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime());
-    
-    // Combine both sources with Supabase taking precedence
-    const allNotifications = [...supabaseNotifications];
-    
-    // Add local notifications that don't exist in Supabase
-    localNotifications.forEach((localNote: any) => {
-      if (!supabaseNotifications.some(supNote => supNote.id === localNote.id)) {
-        allNotifications.push(localNote);
-      }
-    });
-    
-    return allNotifications.sort(
-      (a, b) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime()
-    );
-  } catch (error) {
-    console.error("Error fetching notification history:", error);
-    
-    // Fallback to local storage only
-    const localNotifications = JSON.parse(localStorage.getItem('notifications') || '[]')
+    // Get notifications from localStorage
+    const localNotifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) || '[]')
       .filter((n: any) => n.declaration_id === declarationId)
       .sort((a: any, b: any) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime());
     
     return localNotifications;
+  } catch (error) {
+    console.error("Error fetching notification history:", error);
+    return [];
   }
 };
