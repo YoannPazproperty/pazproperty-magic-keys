@@ -22,7 +22,7 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
       <FileUpload 
         onChange={onChange} 
         maxFiles={5} 
-        acceptedFileTypes={['image/*', 'video/*']} 
+        accept="image/*,video/*" 
       />
     </div>
   );

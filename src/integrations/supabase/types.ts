@@ -141,6 +141,41 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          declaration_id: string | null
+          email: string | null
+          id: string
+          sent_at: string
+          status: string | null
+          type: string
+        }
+        Insert: {
+          declaration_id?: string | null
+          email?: string | null
+          id?: string
+          sent_at?: string
+          status?: string | null
+          type: string
+        }
+        Update: {
+          declaration_id?: string | null
+          email?: string | null
+          id?: string
+          sent_at?: string
+          status?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_declaration_id_fkey"
+            columns: ["declaration_id"]
+            isOneToOne: false
+            referencedRelation: "declarations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       technician_reports: {
         Row: {
           address: string | null
