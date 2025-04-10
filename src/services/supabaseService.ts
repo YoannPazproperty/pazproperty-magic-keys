@@ -1,13 +1,20 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Declaration, NotificationPreference, TechnicianReport } from './types';
 
-// Tables dans Supabase
-const DECLARATIONS_TABLE = 'declarations';
-const NOTIFICATION_PREFS_TABLE = 'notification_preferences';
-const MONDAY_CONFIG_TABLE = 'monday_configs';
-const MEDIA_FILES_TABLE = 'media_files';
-const TECHNICIAN_REPORTS_TABLE = 'technician_reports';
+// Fonction pour initialiser le client Supabase
+export const initSupabase = () => {
+  try {
+    if (!supabase) {
+      console.error('Supabase n\'est pas initialisé.');
+      return null;
+    }
+    console.log('Supabase client initialisé');
+    return supabase;
+  } catch (err) {
+    console.error('Erreur lors de l\'initialisation de Supabase:', err);
+    return null;
+  }
+};
 
 // Fonction pour vérifier si la connexion à Supabase est établie
 export const isSupabaseConnected = async (): Promise<boolean> => {
@@ -18,7 +25,7 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
     
     // Faire une requête simple pour tester la connexion
     const { data, error } = await supabase
-      .from(DECLARATIONS_TABLE)
+      .from('declarations')
       .select('count()', { count: 'exact', head: true });
     
     if (error) {
@@ -32,6 +39,11 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
     console.error('Erreur lors de la vérification de la connexion à Supabase:', err);
     return false;
   }
+};
+
+// Fonction pour obtenir le client Supabase
+export const getSupabase = () => {
+  return supabase;
 };
 
 // Fonction pour initialiser la base de données

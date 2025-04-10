@@ -6,6 +6,24 @@ import { generateUniqueId } from "./declarationStorage";
 
 const DECLARATIONS_TABLE = 'declarations';
 
+// Helper function to convert our app's Declaration to Supabase format
+const convertToSupabaseFormat = (declaration: Declaration) => {
+  return {
+    ...declaration,
+    // Convert mediaFiles array to string for Supabase
+    mediaFiles: declaration.mediaFiles ? JSON.stringify(declaration.mediaFiles) : null
+  };
+};
+
+// Helper function to convert Supabase format back to our app's Declaration
+const convertFromSupabaseFormat = (record: any): Declaration => {
+  return {
+    ...record,
+    // Parse mediaFiles string back to array
+    mediaFiles: record.mediaFiles ? JSON.parse(record.mediaFiles) : []
+  };
+};
+
 // Fonction pour migrer les déclarations de localStorage vers Supabase
 export const migrateDeclarationsToSupabase = async (): Promise<boolean> => {
   try {
@@ -24,17 +42,13 @@ export const migrateDeclarationsToSupabase = async (): Promise<boolean> => {
     
     console.log(`Migration de ${localDeclarations.length} déclarations vers Supabase`);
     
+    // Convert declarations to Supabase format before inserting
+    const supabaseFormattedDeclarations = localDeclarations.map(convertToSupabaseFormat);
+    
     // Insérer toutes les déclarations dans Supabase
     const { error } = await supabase
       .from(DECLARATIONS_TABLE)
-      .upsert(
-        localDeclarations.map(decl => ({
-          ...decl,
-          // Assurer que les champs sont correctement formatés pour Postgres
-          submittedAt: decl.submittedAt,
-        })),
-        { onConflict: 'id' }
-      );
+      .upsert(supabaseFormattedDeclarations, { onConflict: 'id' });
     
     if (error) {
       console.error('Erreur lors de la migration des déclarations vers Supabase:', error);
@@ -74,7 +88,8 @@ export const getSupabaseDeclarations = async (statusFilter: string | null = null
     }
     
     console.log('Déclarations récupérées depuis Supabase:', data);
-    return data as Declaration[];
+    // Convert from Supabase format to our app's format
+    return (data || []).map(convertFromSupabaseFormat);
   } catch (err) {
     console.error('Erreur lors de la récupération des déclarations:', err);
     // Fallback aux données locales
@@ -103,7 +118,8 @@ export const getSupabaseDeclarationById = async (id: string): Promise<Declaratio
       return loadDeclarations().find(d => d.id === id);
     }
     
-    return data as Declaration;
+    // Convert from Supabase format
+    return data ? convertFromSupabaseFormat(data) : undefined;
   } catch (err) {
     console.error(`Erreur lors de la récupération de la déclaration ${id}:`, err);
     // Fallback aux données locales
@@ -124,9 +140,13 @@ export const createSupabaseDeclaration = async (declaration: Declaration): Promi
     }
     
     console.log('Tentative de création de déclaration dans Supabase:', declaration);
+    
+    // Convert to Supabase format
+    const supabaseDeclaration = convertToSupabaseFormat(declaration);
+    
     const { data, error } = await supabase
       .from(DECLARATIONS_TABLE)
-      .insert(declaration)
+      .insert(supabaseDeclaration)
       .select()
       .single();
     
@@ -142,7 +162,8 @@ export const createSupabaseDeclaration = async (declaration: Declaration): Promi
     }
     
     console.log('Déclaration créée avec succès dans Supabase:', data);
-    return data as Declaration;
+    // Convert from Supabase format
+    return convertFromSupabaseFormat(data);
   } catch (err) {
     console.error('Erreur lors de la création de la déclaration:', err);
     
@@ -172,13 +193,17 @@ export const updateSupabaseDeclaration = async (id: string, updates: Partial<Dec
       return declarations[index];
     }
     
-    const updatedData = {
-      ...updates,
-    };
+    // Create a supabase-compatible update object
+    const supabaseUpdates: any = { ...updates };
+    
+    // If mediaFiles is included in the updates, convert it
+    if (updates.mediaFiles !== undefined) {
+      supabaseUpdates.mediaFiles = JSON.stringify(updates.mediaFiles);
+    }
     
     const { data, error } = await supabase
       .from(DECLARATIONS_TABLE)
-      .update(updatedData)
+      .update(supabaseUpdates)
       .eq('id', id)
       .select()
       .single();
@@ -198,7 +223,7 @@ export const updateSupabaseDeclaration = async (id: string, updates: Partial<Dec
       return declarations[index];
     }
     
-    return data as Declaration;
+    return convertFromSupabaseFormat(data);
   } catch (err) {
     console.error(`Erreur lors de la mise à jour de la déclaration ${id}:`, err);
     
