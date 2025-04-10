@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +16,7 @@ const Admin = () => {
   const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
   const [activeTab, setActiveTab] = useState("declarations");
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Récupérer les configurations Monday.com
   const { apiKey, boardId, techBoardId } = getMondayConfig();
@@ -40,18 +40,31 @@ const Admin = () => {
     }
   }, []);
 
-  const loadDeclarations = () => {
-    const allDeclarations = getDeclarations();
-    console.log("Loaded declarations:", allDeclarations);
-    setDeclarations(allDeclarations);
+  const loadDeclarations = async () => {
+    setIsLoading(true);
+    try {
+      const allDeclarations = await getDeclarations();
+      console.log("Loaded declarations:", allDeclarations);
+      setDeclarations(allDeclarations);
+    } catch (error) {
+      console.error("Error loading declarations:", error);
+      toast.error("Erreur lors du chargement des déclarations");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleStatusUpdate = (id: string, status: Declaration["status"]) => {
-    const updated = updateDeclarationStatus(id, status);
-    if (updated) {
-      loadDeclarations(); // Reload declarations to reflect changes
-      toast.success("Statut mis à jour");
-    } else {
+  const handleStatusUpdate = async (id: string, status: Declaration["status"]) => {
+    try {
+      const updated = await updateDeclarationStatus(id, status);
+      if (updated) {
+        await loadDeclarations(); // Reload declarations to reflect changes
+        toast.success("Statut mis à jour");
+      } else {
+        toast.error("Erreur lors de la mise à jour du statut");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
       toast.error("Erreur lors de la mise à jour du statut");
     }
   };
@@ -124,7 +137,8 @@ const Admin = () => {
         <TabsContent value="declarations" className="space-y-4">
           <DeclarationList 
             declarations={declarations} 
-            onStatusUpdate={handleStatusUpdate} 
+            onStatusUpdate={handleStatusUpdate}
+            isLoading={isLoading} 
           />
         </TabsContent>
         

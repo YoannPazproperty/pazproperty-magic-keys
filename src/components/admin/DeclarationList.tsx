@@ -16,9 +16,14 @@ import { translateStatus } from "@/utils/translationUtils";
 interface DeclarationListProps {
   declarations: Declaration[];
   onStatusUpdate: (id: string, status: Declaration["status"]) => void;
+  isLoading?: boolean;
 }
 
-export const DeclarationList = ({ declarations, onStatusUpdate }: DeclarationListProps) => {
+export const DeclarationList = ({ 
+  declarations, 
+  onStatusUpdate,
+  isLoading = false 
+}: DeclarationListProps) => {
   const [selectedDeclaration, setSelectedDeclaration] = useState<Declaration | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
 
@@ -51,7 +56,8 @@ export const DeclarationList = ({ declarations, onStatusUpdate }: DeclarationLis
         <CardContent>
           <DeclarationListTable 
             declarations={declarations} 
-            onViewDetails={viewDeclarationDetails} 
+            onViewDetails={viewDeclarationDetails}
+            isLoading={isLoading}
           />
         </CardContent>
       </Card>

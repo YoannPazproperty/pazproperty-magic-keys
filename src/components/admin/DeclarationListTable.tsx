@@ -23,12 +23,40 @@ import {
 interface DeclarationListTableProps {
   declarations: Declaration[];
   onViewDetails: (declaration: Declaration) => void;
+  isLoading?: boolean;
 }
 
 export const DeclarationListTable = ({ 
   declarations, 
-  onViewDetails 
+  onViewDetails,
+  isLoading = false
 }: DeclarationListTableProps) => {
+  if (isLoading) {
+    return (
+      <Table>
+        <TableCaption>Chargement des déclarations...</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Locataire</TableHead>
+            <TableHead>Propriété</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Urgence</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell colSpan={7} className="text-center py-4">
+              Chargement des données...
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    );
+  }
+
   return (
     <Table>
       <TableCaption>Liste des déclarations récentes</TableCaption>

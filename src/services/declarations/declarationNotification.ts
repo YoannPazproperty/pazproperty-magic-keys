@@ -37,15 +37,21 @@ export const notifyNewDeclaration = async (declaration: Declaration): Promise<bo
 };
 
 // Update status and notify
-export const updateStatusAndNotify = (id: string, status: Declaration["status"]): boolean => {
-  const updated = updateDeclaration(id, { status });
-  
-  if (updated) {
-    // Send notification for status change
-    notifyStatusChange(updated).catch(error => {
-      console.error("Error sending status update notification:", error);
-    });
+export const updateStatusAndNotify = async (id: string, status: Declaration["status"]): Promise<boolean> => {
+  try {
+    const updated = await updateDeclaration(id, { status });
+    
+    if (updated) {
+      // Send notification for status change
+      await notifyStatusChange(updated).catch(error => {
+        console.error("Error sending status update notification:", error);
+      });
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error("Error updating status and notifying:", error);
+    return false;
   }
-  
-  return updated !== null;
 };
