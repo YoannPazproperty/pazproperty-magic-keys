@@ -23,10 +23,10 @@ export const notifyStatusChange = async (declaration: Declaration): Promise<bool
     const supabase = getSupabase();
     let isConnected = false;
     
+    // Utiliser une approche différente pour vérifier la connexion
     try {
-      isConnected = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true })
-        .then(() => true)
-        .catch(() => false);
+      const result = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true });
+      isConnected = !result.error;
     } catch (err) {
       isConnected = false;
     }
@@ -68,10 +68,10 @@ export const notifyNewDeclaration = async (declaration: Declaration): Promise<bo
     const supabase = getSupabase();
     let isConnected = false;
     
+    // Utiliser une approche différente pour vérifier la connexion
     try {
-      isConnected = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true })
-        .then(() => true)
-        .catch(() => false);
+      const result = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true });
+      isConnected = !result.error;
     } catch (err) {
       isConnected = false;
     }
@@ -128,10 +128,10 @@ export const getDeclarationNotificationHistory = async (declarationId: string): 
     const supabase = getSupabase();
     let isConnected = false;
     
+    // Utiliser une approche différente pour vérifier la connexion
     try {
-      isConnected = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true })
-        .then(() => true)
-        .catch(() => false);
+      const result = await supabase.from(NOTIFICATIONS_TABLE).select('count', { count: 'exact', head: true });
+      isConnected = !result.error;
     } catch (err) {
       isConnected = false;
     }
