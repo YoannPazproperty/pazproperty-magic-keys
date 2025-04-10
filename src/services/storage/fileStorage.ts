@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 
 // Fonction pour convertir un fichier en base64
@@ -86,4 +87,4 @@ export const deleteStoredFile = (fileId: string): boolean => {
   localStorage.setItem('storedFiles', JSON.stringify(filteredFiles));
   console.log("Deleted file:", fileId);
   return true;
-}; 
+};
