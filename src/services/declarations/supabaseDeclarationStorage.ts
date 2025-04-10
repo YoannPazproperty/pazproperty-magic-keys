@@ -1,6 +1,6 @@
 
 import { Declaration } from "../types";
-import { getSupabase } from "../supabaseService";
+import { supabase } from "@/integrations/supabase/client";
 import { loadDeclarations, saveDeclarations } from "../storageService";
 import { generateUniqueId } from "./declarationStorage";
 
@@ -9,7 +9,6 @@ const DECLARATIONS_TABLE = 'declarations';
 // Fonction pour migrer les déclarations de localStorage vers Supabase
 export const migrateDeclarationsToSupabase = async (): Promise<boolean> => {
   try {
-    const supabase = getSupabase();
     // Si Supabase n'est pas disponible, on ne tente pas la migration
     if (!supabase) {
       console.log('Supabase non disponible, impossible de migrer les données');
@@ -32,8 +31,7 @@ export const migrateDeclarationsToSupabase = async (): Promise<boolean> => {
         localDeclarations.map(decl => ({
           ...decl,
           // Assurer que les champs sont correctement formatés pour Postgres
-          created_at: decl.submittedAt,
-          updated_at: new Date().toISOString(),
+          submittedAt: decl.submittedAt,
         })),
         { onConflict: 'id' }
       );
@@ -54,7 +52,6 @@ export const migrateDeclarationsToSupabase = async (): Promise<boolean> => {
 // Obtenir toutes les déclarations avec filtres optionnels
 export const getSupabaseDeclarations = async (statusFilter: string | null = null): Promise<Declaration[]> => {
   try {
-    const supabase = getSupabase();
     if (!supabase) {
       console.log('Supabase non disponible, utilisation des données locales');
       return loadDeclarations().filter(d => !statusFilter || d.status === statusFilter)
@@ -76,6 +73,7 @@ export const getSupabaseDeclarations = async (statusFilter: string | null = null
         .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
     }
     
+    console.log('Déclarations récupérées depuis Supabase:', data);
     return data as Declaration[];
   } catch (err) {
     console.error('Erreur lors de la récupération des déclarations:', err);
@@ -88,7 +86,6 @@ export const getSupabaseDeclarations = async (statusFilter: string | null = null
 // Obtenir une déclaration par ID
 export const getSupabaseDeclarationById = async (id: string): Promise<Declaration | undefined> => {
   try {
-    const supabase = getSupabase();
     if (!supabase) {
       console.log('Supabase non disponible, utilisation des données locales');
       return loadDeclarations().find(d => d.id === id);
@@ -114,10 +111,53 @@ export const getSupabaseDeclarationById = async (id: string): Promise<Declaratio
   }
 };
 
+// Créer une nouvelle déclaration dans Supabase
+export const createSupabaseDeclaration = async (declaration: Declaration): Promise<Declaration | null> => {
+  try {
+    if (!supabase) {
+      console.log('Supabase non disponible, utilisation des données locales');
+      // Fallback au stockage local
+      const declarations = loadDeclarations();
+      declarations.push(declaration);
+      saveDeclarations(declarations);
+      return declaration;
+    }
+    
+    console.log('Tentative de création de déclaration dans Supabase:', declaration);
+    const { data, error } = await supabase
+      .from(DECLARATIONS_TABLE)
+      .insert(declaration)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Erreur lors de la création de la déclaration dans Supabase:', error);
+      
+      // Fallback au stockage local
+      const declarations = loadDeclarations();
+      declarations.push(declaration);
+      saveDeclarations(declarations);
+      
+      return declaration;
+    }
+    
+    console.log('Déclaration créée avec succès dans Supabase:', data);
+    return data as Declaration;
+  } catch (err) {
+    console.error('Erreur lors de la création de la déclaration:', err);
+    
+    // Fallback au stockage local
+    const declarations = loadDeclarations();
+    declarations.push(declaration);
+    saveDeclarations(declarations);
+    
+    return declaration;
+  }
+};
+
 // Mettre à jour une déclaration existante
 export const updateSupabaseDeclaration = async (id: string, updates: Partial<Declaration>): Promise<Declaration | null> => {
   try {
-    const supabase = getSupabase();
     if (!supabase) {
       console.log('Supabase non disponible, utilisation des données locales');
       // Fallback à localStorage
@@ -134,7 +174,6 @@ export const updateSupabaseDeclaration = async (id: string, updates: Partial<Dec
     
     const updatedData = {
       ...updates,
-      updated_at: new Date().toISOString()
     };
     
     const { data, error } = await supabase
