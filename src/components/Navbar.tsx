@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ const Navbar = () => {
           <img 
             src="/lovable-uploads/06fe55de-48e0-480d-8f54-fcd0d442c857.png" 
             alt="Pazproperty Logo" 
-            className="h-16 w-auto mr-2" 
+            className="h-24 w-auto mr-2" 
           />
         </Link>
 
@@ -119,4 +118,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
