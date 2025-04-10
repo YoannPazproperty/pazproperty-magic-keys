@@ -87,7 +87,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       setTimeout(() => {
         onSuccess();
         console.log("Callback onSuccess exécuté");
-      }, 100);
+      }, 500); // Augmenter le délai à 500ms pour s'assurer que tout est bien traité
       
     } catch (error) {
       console.error("Error submitting form:", error);

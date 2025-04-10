@@ -13,6 +13,7 @@ import MediaUploadField from "./form-sections/MediaUploadField";
 import { formSchema, FormValues } from "./schema";
 import { useDeclarationForm } from "./hooks/useDeclarationForm";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 interface DeclarationFormProps {
   onSuccess: () => void;
@@ -67,10 +68,13 @@ const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
             <MediaUploadField onChange={handleFileChange} />
             
             {isSubmitting && (
-              <Alert variant="default" className="bg-blue-50 border-blue-200">
-                <AlertTitle className="text-blue-700">Enviando sua declaração...</AlertTitle>
+              <Alert variant="default" className="bg-blue-50 border-blue-200 animate-pulse">
+                <AlertTitle className="text-blue-700 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Enviando sua declaração...
+                </AlertTitle>
                 <AlertDescription className="text-blue-600">
-                  Por favor, aguarde enquanto processamos sua declaração.
+                  Por favor, aguarde enquanto processamos sua declaração. Este processo pode levar alguns segundos.
                 </AlertDescription>
               </Alert>
             )}
@@ -81,7 +85,14 @@ const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
                 className="bg-brand-blue hover:bg-primary/90"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Enviando..." : "Enviar Declaração"}
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Enviando...
+                  </span>
+                ) : (
+                  "Enviar Declaração"
+                )}
               </Button>
             </div>
           </form>
