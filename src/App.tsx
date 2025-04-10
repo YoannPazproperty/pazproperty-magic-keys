@@ -16,6 +16,7 @@ import ExtranetTechnique from "./pages/ExtranetTechnique";
 import NotFound from "./pages/NotFound";
 import { initSupabase, initializeDatabase } from "./services/supabaseService";
 import { migrateDeclarationsToSupabase } from "./services/declarations/supabaseDeclarationStorage";
+import { toast } from "sonner";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,9 @@ const App = () => {
       const supabase = initSupabase();
       if (!supabase) {
         console.error("Échec de l'initialisation de Supabase");
+        toast.error("Échec de connexion à Supabase", {
+          description: "Vérifiez la console pour plus d'informations."
+        });
         return;
       }
       
@@ -36,12 +40,21 @@ const App = () => {
       const initialized = await initializeDatabase();
       if (!initialized) {
         console.error("Échec de l'initialisation de la base de données");
+        toast.error("Échec de l'initialisation de la base de données", {
+          description: "Vérifiez la console pour plus d'informations."
+        });
         return;
       }
       
       // Migrer les données locales vers Supabase
       console.log("Migration des données locales vers Supabase...");
-      await migrateDeclarationsToSupabase();
+      const migrated = await migrateDeclarationsToSupabase();
+      
+      if (migrated) {
+        toast.success("Migration réussie", {
+          description: "Les données ont été migrées vers Supabase avec succès."
+        });
+      }
     };
     
     setupSupabase();
