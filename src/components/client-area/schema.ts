@@ -27,9 +27,6 @@ export const formSchema = z.object({
   city: z.string().min(1, {
     message: "Cidade é obrigatória.",
   }),
-  state: z.string().min(1, {
-    message: "Estado/Província/Região é obrigatório.",
-  }),
   postalCode: z.string().min(1, {
     message: "Código postal é obrigatório.",
   }),

@@ -58,19 +58,6 @@ const AddressFields = () => {
             </FormItem>
           )}
         />
-        
-        <FormField
-          control={control}
-          name="state"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input placeholder="State / Province / Region" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
       
       <div className="w-full md:w-1/2">
