@@ -21,12 +21,19 @@ const AreaCliente = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSuccessfulSubmission = () => {
+    console.log("handleSuccessfulSubmission appelé, passage à l'écran de succès");
     setIsSuccess(true);
   };
 
   const handleNewDeclaration = () => {
+    console.log("handleNewDeclaration appelé, retour au formulaire");
     setIsSuccess(false);
   };
+
+  // Log l'état initial et ses changements
+  useEffect(() => {
+    console.log("État actuel isSuccess:", isSuccess);
+  }, [isSuccess]);
 
   return (
     <div className="min-h-screen flex flex-col">

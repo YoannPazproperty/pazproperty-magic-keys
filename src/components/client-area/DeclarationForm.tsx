@@ -12,6 +12,7 @@ import DescriptionField from "./form-sections/DescriptionField";
 import MediaUploadField from "./form-sections/MediaUploadField";
 import { formSchema, FormValues } from "./schema";
 import { useDeclarationForm } from "./hooks/useDeclarationForm";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface DeclarationFormProps {
   onSuccess: () => void;
@@ -46,18 +47,33 @@ const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
     onSuccess 
   });
 
+  // Fonction pour gérer la soumission du formulaire
+  const onSubmit = async (values: FormValues) => {
+    console.log("Formulaire soumis, traitement en cours...");
+    await handleSubmit(values);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-8">
       <FormHeader />
       
       <FormProvider {...form}>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <PersonalInfoFields />
             <AddressFields />
             <ProblemTypeField />
             <DescriptionField />
             <MediaUploadField onChange={handleFileChange} />
+            
+            {isSubmitting && (
+              <Alert variant="default" className="bg-blue-50 border-blue-200">
+                <AlertTitle className="text-blue-700">Enviando sua declaração...</AlertTitle>
+                <AlertDescription className="text-blue-600">
+                  Por favor, aguarde enquanto processamos sua declaração.
+                </AlertDescription>
+              </Alert>
+            )}
             
             <div className="flex justify-end">
               <Button 

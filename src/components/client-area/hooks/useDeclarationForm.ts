@@ -20,6 +20,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
 
   const handleSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
+    console.log("Début de soumission du formulaire...");
     
     try {
       console.log("Form data:", values);
@@ -44,6 +45,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         nif: values.nif,
       };
       
+      console.log("Tentative d'enregistrement de la déclaration...");
       // Add declaration to local storage with any attached media files
       const newDeclaration = await addWithMedia(declarationData, mediaFiles);
       console.log("Declaration saved locally:", newDeclaration);
@@ -76,10 +78,16 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         });
       }
       
+      console.log("Formulaire soumis avec succès, appel de onSuccess...");
       // Even if Monday.com fails, we consider the form submission a success if the local storage worked
       form.reset();
       setMediaFiles([]);
-      onSuccess();
+      
+      // Assurez-vous que onSuccess est appelé après un court délai pour éviter tout problème de rendu
+      setTimeout(() => {
+        onSuccess();
+        console.log("Callback onSuccess exécuté");
+      }, 100);
       
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -88,6 +96,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       });
     } finally {
       setIsSubmitting(false);
+      console.log("État isSubmitting réinitialisé à false");
     }
   };
 
