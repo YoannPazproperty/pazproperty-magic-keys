@@ -32,7 +32,6 @@ const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
       addressLine1: "",
       addressLine2: "",
       city: "",
-      state: "",
       postalCode: "",
       problemType: "canalização",
       description: "",
