@@ -29,20 +29,16 @@ const App = () => {
       // Initialiser le client Supabase
       const supabase = initSupabase();
       if (!supabase) {
-        console.error("Échec de l'initialisation de Supabase");
-        toast.error("Échec de connexion à Supabase", {
-          description: "Vérifiez la console pour plus d'informations."
-        });
+        console.log("Mode fallback: Supabase n'est pas disponible, utilisation du stockage local uniquement");
+        // Ne pas afficher de toast d'erreur pour ne pas inquiéter l'utilisateur
+        // L'application continuera de fonctionner avec localStorage
         return;
       }
       
       // Initialiser la base de données
       const initialized = await initializeDatabase();
       if (!initialized) {
-        console.error("Échec de l'initialisation de la base de données");
-        toast.error("Échec de l'initialisation de la base de données", {
-          description: "Vérifiez la console pour plus d'informations."
-        });
+        console.log("Base de données Supabase non initialisée, utilisation du stockage local");
         return;
       }
       

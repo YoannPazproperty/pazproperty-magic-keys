@@ -41,11 +41,13 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         postalCode: values.postalCode,
         issueType: issueType,
         description: values.description,
-        urgency: "Média", // Value that matches Monday.com dropdown
+        urgency: values.urgency, // Utiliser la valeur du formulaire
         nif: values.nif,
       };
       
       console.log("Tentative d'enregistrement de la déclaration...");
+      console.log("Données à enregistrer:", declarationData);
+      
       // Add declaration to local storage with any attached media files
       const newDeclaration = await addWithMedia(declarationData, mediaFiles);
       console.log("Declaration saved locally:", newDeclaration);
@@ -78,25 +80,26 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         });
       }
       
-      console.log("Formulaire soumis avec succès, appel de onSuccess...");
-      // Even if Monday.com fails, we consider the form submission a success if the local storage worked
+      console.log("Formulaire soumis avec succès, préparation pour appel de onSuccess...");
+      
+      // Réinitialiser le formulaire
       form.reset();
       setMediaFiles([]);
       
-      // Assurez-vous que onSuccess est appelé après un court délai pour éviter tout problème de rendu
+      // Utiliser un délai pour s'assurer que les états sont bien mis à jour avant de déclencher onSuccess
+      console.log("Déclenchement de onSuccess avec un délai de 500ms...");
       setTimeout(() => {
+        setIsSubmitting(false); // S'assurer que isSubmitting est false avant d'appeler onSuccess
         onSuccess();
-        console.log("Callback onSuccess exécuté");
-      }, 500); // Augmenter le délai à 500ms pour s'assurer que tout est bien traité
+        console.log("onSuccess exécuté");
+      }, 500);
       
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error("Erro ao enviar", {
         description: "Ocorreu um erro ao enviar sua declaração. Por favor, tente novamente."
       });
-    } finally {
       setIsSubmitting(false);
-      console.log("État isSubmitting réinitialisé à false");
     }
   };
 

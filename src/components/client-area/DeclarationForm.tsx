@@ -36,6 +36,7 @@ const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
       postalCode: "",
       problemType: "canalização",
       description: "",
+      urgency: "medium",
     },
   });
 
@@ -50,7 +51,7 @@ const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
 
   // Fonction pour gérer la soumission du formulaire
   const onSubmit = async (values: FormValues) => {
-    console.log("Formulaire soumis, traitement en cours...");
+    console.log("Formulaire soumis, traitement en cours...", values);
     await handleSubmit(values);
   };
 

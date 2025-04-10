@@ -10,6 +10,12 @@ const DECLARATIONS_TABLE = 'declarations';
 export const migrateDeclarationsToSupabase = async (): Promise<boolean> => {
   try {
     const supabase = getSupabase();
+    // Si Supabase n'est pas disponible, on ne tente pas la migration
+    if (!supabase) {
+      console.log('Supabase non disponible, impossible de migrer les données');
+      return false;
+    }
+    
     const localDeclarations = loadDeclarations();
     
     if (localDeclarations.length === 0) {
@@ -49,6 +55,12 @@ export const migrateDeclarationsToSupabase = async (): Promise<boolean> => {
 export const getSupabaseDeclarations = async (statusFilter: string | null = null): Promise<Declaration[]> => {
   try {
     const supabase = getSupabase();
+    if (!supabase) {
+      console.log('Supabase non disponible, utilisation des données locales');
+      return loadDeclarations().filter(d => !statusFilter || d.status === statusFilter)
+        .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+    }
+    
     let query = supabase.from(DECLARATIONS_TABLE).select('*');
     
     if (statusFilter) {
@@ -77,6 +89,11 @@ export const getSupabaseDeclarations = async (statusFilter: string | null = null
 export const getSupabaseDeclarationById = async (id: string): Promise<Declaration | undefined> => {
   try {
     const supabase = getSupabase();
+    if (!supabase) {
+      console.log('Supabase non disponible, utilisation des données locales');
+      return loadDeclarations().find(d => d.id === id);
+    }
+    
     const { data, error } = await supabase
       .from(DECLARATIONS_TABLE)
       .select('*')
@@ -101,6 +118,19 @@ export const getSupabaseDeclarationById = async (id: string): Promise<Declaratio
 export const updateSupabaseDeclaration = async (id: string, updates: Partial<Declaration>): Promise<Declaration | null> => {
   try {
     const supabase = getSupabase();
+    if (!supabase) {
+      console.log('Supabase non disponible, utilisation des données locales');
+      // Fallback à localStorage
+      const declarations = loadDeclarations();
+      const index = declarations.findIndex(d => d.id === id);
+      
+      if (index === -1) return null;
+      
+      declarations[index] = { ...declarations[index], ...updates };
+      saveDeclarations(declarations);
+      
+      return declarations[index];
+    }
     
     const updatedData = {
       ...updates,
