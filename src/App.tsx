@@ -31,7 +31,6 @@ const App = () => {
       if (!supabase) {
         console.log("Mode fallback: Supabase n'est pas disponible, utilisation du stockage local uniquement");
         // Ne pas afficher de toast d'erreur pour ne pas inquiéter l'utilisateur
-        // L'application continuera de fonctionner avec localStorage
         return;
       }
       
@@ -39,8 +38,15 @@ const App = () => {
       const initialized = await initializeDatabase();
       if (!initialized) {
         console.log("Base de données Supabase non initialisée, utilisation du stockage local");
+        toast.error("Connexion à Supabase échouée", {
+          description: "L'application fonctionnera en mode local uniquement."
+        });
         return;
       }
+      
+      toast.success("Connexion à Supabase établie", {
+        description: "Les données seront synchronisées avec Supabase."
+      });
       
       // Migrer les données locales vers Supabase
       console.log("Migration des données locales vers Supabase...");

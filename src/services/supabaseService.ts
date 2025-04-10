@@ -23,17 +23,15 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Vérification de la connexion à Supabase...');
     
-    // Faire une requête simple pour tester la connexion
-    const { data, error } = await supabase
-      .from('declarations')
-      .select('count()', { count: 'exact', head: true });
+    // Tester avec une requête simple pour vérifier la connexion
+    const { data, error } = await supabase.rpc('version');
     
     if (error) {
       console.error('Erreur lors de la vérification de la connexion à Supabase:', error);
       return false;
     }
     
-    console.log('Connexion à Supabase établie avec succès');
+    console.log('Connexion à Supabase établie avec succès. Version:', data);
     return true;
   } catch (err) {
     console.error('Erreur lors de la vérification de la connexion à Supabase:', err);

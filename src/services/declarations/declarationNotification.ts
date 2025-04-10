@@ -3,6 +3,8 @@ import { toast } from "sonner";
 import { Declaration } from "../types";
 import { sendNotificationEmail } from "../notificationService";
 import { updateDeclaration } from "./declarationStorage";
+import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseConnected } from "../supabaseService";
 
 // Table name for notifications in localStorage
 const NOTIFICATIONS_STORAGE_KEY = 'notifications';
@@ -19,6 +21,60 @@ const logNotificationLocally = (notificationData: any) => {
   console.log("Notification stored locally:", notificationData);
 };
 
+// Function to log notification to Supabase
+const logNotificationToSupabase = async (notificationData: any): Promise<boolean> => {
+  try {
+    if (!supabase) {
+      console.error("Supabase n'est pas disponible");
+      return false;
+    }
+    
+    const isConnected = await isSupabaseConnected();
+    if (!isConnected) {
+      console.error("Supabase n'est pas connecté");
+      return false;
+    }
+    
+    // Tenter d'insérer dans la table notifications
+    console.log("Tentative d'insertion dans Supabase:", notificationData);
+    
+    // Transformer les données pour correspondre au schéma Supabase
+    const supabaseData = {
+      declaration_id: notificationData.declaration_id,
+      email: notificationData.email,
+      type: notificationData.type, 
+      status: notificationData.status
+      // sent_at sera ajouté automatiquement par défaut
+    };
+    
+    const { error } = await supabase
+      .from('notifications')
+      .insert(supabaseData);
+    
+    if (error) {
+      console.error("Erreur lors de l'insertion dans Supabase:", error);
+      return false;
+    }
+    
+    console.log("Notification enregistrée dans Supabase avec succès");
+    return true;
+  } catch (err) {
+    console.error("Erreur lors de l'enregistrement de la notification dans Supabase:", err);
+    return false;
+  }
+};
+
+// Function to log notification (tries Supabase first, then falls back to localStorage)
+const logNotification = async (notificationData: any): Promise<boolean> => {
+  // Tenter d'abord d'enregistrer dans Supabase
+  const supabaseSuccess = await logNotificationToSupabase(notificationData);
+  
+  // Toujours enregistrer localement comme sauvegarde
+  logNotificationLocally(notificationData);
+  
+  return true;
+};
+
 // Send notification when a declaration status changes
 export const notifyStatusChange = async (declaration: Declaration): Promise<boolean> => {
   try {
@@ -30,8 +86,8 @@ export const notifyStatusChange = async (declaration: Declaration): Promise<bool
       declaration
     );
     
-    // Store locally
-    logNotificationLocally({
+    // Store notification
+    await logNotification({
       declaration_id: declaration.id,
       email: declaration.email,
       type: 'statusUpdate',
@@ -56,8 +112,8 @@ export const notifyNewDeclaration = async (declaration: Declaration): Promise<bo
       declaration
     );
     
-    // Store locally
-    logNotificationLocally({
+    // Store notification
+    await logNotification({
       declaration_id: declaration.id,
       email: declaration.email,
       type: 'declarationReceived',
@@ -95,15 +151,50 @@ export const updateStatusAndNotify = async (id: string, status: Declaration["sta
   }
 };
 
-// Function to get notification history from localStorage
+// Function to get notification history from localStorage and Supabase
 export const getDeclarationNotificationHistory = async (declarationId: string): Promise<any[]> => {
   try {
-    // Get notifications from localStorage
+    let notifications = [];
+    
+    // Attempt to get notifications from Supabase first
+    if (supabase) {
+      try {
+        const isConnected = await isSupabaseConnected();
+        
+        if (isConnected) {
+          console.log("Tentative de récupération des notifications depuis Supabase");
+          
+          // Using type assertion to bypass TypeScript errors
+          // This is safe because we know the table exists in Supabase
+          const { data, error } = await (supabase as any)
+            .from('notifications')
+            .select('*')
+            .eq('declaration_id', declarationId)
+            .order('sent_at', { ascending: false });
+            
+          if (error) {
+            console.error("Erreur lors de la récupération des notifications depuis Supabase:", error);
+          } else if (data && data.length > 0) {
+            console.log("Notifications récupérées depuis Supabase:", data);
+            notifications = data;
+          }
+        }
+      } catch (supabaseError) {
+        console.error("Erreur lors de la récupération des notifications depuis Supabase:", supabaseError);
+      }
+    }
+    
+    // Always get notifications from localStorage as a backup
     const localNotifications = JSON.parse(localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) || '[]')
       .filter((n: any) => n.declaration_id === declarationId)
       .sort((a: any, b: any) => new Date(b.sent_at).getTime() - new Date(a.sent_at).getTime());
     
-    return localNotifications;
+    // If we didn't get any notifications from Supabase, use the local ones
+    if (notifications.length === 0) {
+      notifications = localNotifications;
+    }
+    
+    return notifications;
   } catch (error) {
     console.error("Error fetching notification history:", error);
     return [];
