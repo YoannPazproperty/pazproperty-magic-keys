@@ -11,14 +11,14 @@ const Navbar = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-1">
           <span className="text-xl font-bold text-primary hover:text-primary/90 transition-colors">
             PazProperty
           </span>
           <img 
             src="/lovable-uploads/5aa8e831-cbe3-43a2-b241-3cba982c898e.png" 
             alt="Pazproperty Logo" 
-            className="h-8 w-auto ml-2" 
+            className="h-10 w-auto ml-1" 
           />
         </Link>
 
