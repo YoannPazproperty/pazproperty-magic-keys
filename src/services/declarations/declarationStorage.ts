@@ -1,6 +1,13 @@
 
 import { Declaration } from "../types";
 import { loadDeclarations, saveDeclarations } from "../storageService";
+import { 
+  getSupabaseDeclarations,
+  getSupabaseDeclarationById, 
+  updateSupabaseDeclaration,
+  updateSupabaseDeclarationStatus
+} from "./supabaseDeclarationStorage";
+import { isSupabaseConnected } from "../supabaseService";
 
 // Generate unique ID for new declarations
 export const generateUniqueId = (): string => {
@@ -8,7 +15,20 @@ export const generateUniqueId = (): string => {
 };
 
 // Get all declarations with optional filters
-export const getDeclarations = (statusFilter: string | null = null): Declaration[] => {
+export const getDeclarations = async (statusFilter: string | null = null): Promise<Declaration[]> => {
+  // Vérifier si Supabase est connecté
+  const supabaseConnected = await isSupabaseConnected();
+  
+  if (supabaseConnected) {
+    try {
+      return await getSupabaseDeclarations(statusFilter);
+    } catch (err) {
+      console.error("Erreur lors de la récupération des déclarations depuis Supabase:", err);
+      // Fallback au localStorage en cas d'erreur
+    }
+  }
+  
+  // Utiliser localStorage si Supabase n'est pas disponible
   let declarations = loadDeclarations();
   
   if (statusFilter) {
@@ -22,13 +42,39 @@ export const getDeclarations = (statusFilter: string | null = null): Declaration
 };
 
 // Get a single declaration by ID
-export const getDeclarationById = (id: string): Declaration | undefined => {
+export const getDeclarationById = async (id: string): Promise<Declaration | undefined> => {
+  // Vérifier si Supabase est connecté
+  const supabaseConnected = await isSupabaseConnected();
+  
+  if (supabaseConnected) {
+    try {
+      return await getSupabaseDeclarationById(id);
+    } catch (err) {
+      console.error(`Erreur lors de la récupération de la déclaration ${id} depuis Supabase:`, err);
+      // Fallback au localStorage en cas d'erreur
+    }
+  }
+  
+  // Utiliser localStorage si Supabase n'est pas disponible
   const declarations = loadDeclarations();
   return declarations.find(decl => decl.id === id);
 };
 
 // Update an existing declaration
-export const updateDeclaration = (id: string, updates: Partial<Declaration>): Declaration | null => {
+export const updateDeclaration = async (id: string, updates: Partial<Declaration>): Promise<Declaration | null> => {
+  // Vérifier si Supabase est connecté
+  const supabaseConnected = await isSupabaseConnected();
+  
+  if (supabaseConnected) {
+    try {
+      return await updateSupabaseDeclaration(id, updates);
+    } catch (err) {
+      console.error(`Erreur lors de la mise à jour de la déclaration ${id} dans Supabase:`, err);
+      // Fallback au localStorage en cas d'erreur
+    }
+  }
+  
+  // Utiliser localStorage si Supabase n'est pas disponible
   const declarations = loadDeclarations();
   const index = declarations.findIndex(decl => decl.id === id);
   
@@ -46,7 +92,20 @@ export const updateDeclaration = (id: string, updates: Partial<Declaration>): De
 };
 
 // Update declaration status 
-export const updateDeclarationStatus = (id: string, status: Declaration["status"]): boolean => {
+export const updateDeclarationStatus = async (id: string, status: Declaration["status"]): Promise<boolean> => {
+  // Vérifier si Supabase est connecté
+  const supabaseConnected = await isSupabaseConnected();
+  
+  if (supabaseConnected) {
+    try {
+      return await updateSupabaseDeclarationStatus(id, status);
+    } catch (err) {
+      console.error(`Erreur lors de la mise à jour du statut de la déclaration ${id} dans Supabase:`, err);
+      // Fallback au localStorage en cas d'erreur
+    }
+  }
+  
+  // Utiliser localStorage si Supabase n'est pas disponible
   const result = updateDeclaration(id, { status });
   return result !== null;
 };
