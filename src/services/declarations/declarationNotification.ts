@@ -92,11 +92,15 @@ export const updateStatusAndNotify = async (id: string, status: Declaration["sta
     const updated = await updateDeclaration(id, { status });
     
     if (updated) {
-      // Send notification for status change
-      await notifyStatusChange(updated).catch(error => {
+      try {
+        // Send notification for status change
+        await notifyStatusChange(updated);
+        return true;
+      } catch (error) {
         console.error("Error sending status update notification:", error);
-      });
-      return true;
+        // Even if notification fails, return true as status was updated
+        return true;
+      }
     }
     
     return false;
