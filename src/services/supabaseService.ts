@@ -24,14 +24,18 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
     console.log('Vérification de la connexion à Supabase...');
     
     // Tester avec une requête simple pour vérifier la connexion
-    const { data, error } = await supabase.rpc('version');
+    // Use a simple select query instead of the RPC call that's causing the error
+    const { data, error } = await supabase
+      .from('declarations')
+      .select('count')
+      .limit(1);
     
     if (error) {
       console.error('Erreur lors de la vérification de la connexion à Supabase:', error);
       return false;
     }
     
-    console.log('Connexion à Supabase établie avec succès. Version:', data);
+    console.log('Connexion à Supabase établie avec succès.');
     return true;
   } catch (err) {
     console.error('Erreur lors de la vérification de la connexion à Supabase:', err);
