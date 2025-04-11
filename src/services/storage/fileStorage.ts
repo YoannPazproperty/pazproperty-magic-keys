@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { getSupabase, createBucketIfNotExists } from '../supabaseService';
 import { toast } from "sonner";
@@ -63,7 +64,7 @@ export const storeFile = async (file: File): Promise<string> => {
         
       if (uploadError) {
         console.error("fileStorage: Error uploading to Supabase Storage:", uploadError);
-        console.log("fileStorage: Error details:", uploadError.message, uploadError.details);
+        console.log("fileStorage: Error message:", uploadError.message);
         return storeFileLocally(file, fileId);
       }
       

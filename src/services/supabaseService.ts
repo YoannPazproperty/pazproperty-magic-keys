@@ -32,7 +32,7 @@ export const createBucketIfNotExists = async (bucketName: string) => {
     
     if (listError) {
       console.error('Error checking buckets:', listError);
-      console.log('Error details:', listError.message, listError.details, listError.hint);
+      console.log('Error message:', listError.message);
       return false;
     }
     
@@ -51,7 +51,7 @@ export const createBucketIfNotExists = async (bucketName: string) => {
     
     if (createError) {
       console.error(`Error creating bucket "${bucketName}":`, createError);
-      console.log('Error details:', createError.message, createError.details, createError.hint);
+      console.log('Error message:', createError.message);
       return false;
     }
     
@@ -82,7 +82,7 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
     
     if (error) {
       console.error('Error checking Supabase connection:', error);
-      console.log('Error details:', error.message, error.details, error.hint);
+      console.log('Error message:', error.message);
       return false;
     }
     
