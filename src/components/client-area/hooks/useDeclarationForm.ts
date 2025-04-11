@@ -4,7 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { FormValues, mapIssueTypeToMondayFormat } from "../schema";
 import { addWithMedia, sendToExternalService } from "@/services/declarationService";
-import { isSupabaseConnected, createBucketIfNotExists } from "@/services/supabaseService";
+import { isSupabaseConnected, isStorageConnected } from "@/services/supabaseService";
 
 interface UseDeclarationFormProps {
   form: UseFormReturn<FormValues>;
@@ -14,7 +14,10 @@ interface UseDeclarationFormProps {
 export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [supabaseStatus, setSupabaseStatus] = useState<boolean | null>(null);
+  const [supabaseStatus, setSupabaseStatus] = useState<{
+    database: boolean;
+    storage: boolean;
+  } | null>(null);
 
   // Check Supabase connection status on load
   useEffect(() => {
@@ -22,18 +25,26 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       try {
         console.log("useDeclarationForm: Checking Supabase connection on load...");
         
-        // Try to create the declaration-media bucket if it doesn't exist yet
-        console.log("useDeclarationForm: Creating bucket if it doesn't exist...");
-        await createBucketIfNotExists('declaration-media');
+        // Check database connection
+        const dbConnected = await isSupabaseConnected();
+        console.log("useDeclarationForm: Database connection status:", dbConnected);
         
-        // Check Supabase connection
-        const connected = await isSupabaseConnected();
-        console.log("useDeclarationForm: Supabase connection status:", connected);
-        setSupabaseStatus(connected);
+        // Check storage connection
+        const storageConnected = await isStorageConnected();
+        console.log("useDeclarationForm: Storage connection status:", storageConnected);
         
-        if (connected) {
+        setSupabaseStatus({
+          database: dbConnected,
+          storage: storageConnected
+        });
+        
+        if (dbConnected && storageConnected) {
           toast.success("Conectado ao Supabase", { 
-            description: "Seus dados serão salvos na nuvem."
+            description: "Banco de dados e armazenamento operacionais."
+          });
+        } else if (dbConnected) {
+          toast.info("Conectado parcialmente ao Supabase", { 
+            description: "Banco de dados conectado, armazenamento em modo local."
           });
         } else {
           toast.warning("Modo offline ativo", { 
@@ -42,7 +53,10 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
         }
       } catch (error) {
         console.error("useDeclarationForm: Error checking Supabase connection:", error);
-        setSupabaseStatus(false);
+        setSupabaseStatus({
+          database: false,
+          storage: false
+        });
         toast.error("Erro ao verificar conexão", { 
           description: "O aplicativo funcionará no modo offline."
         });
@@ -65,13 +79,17 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       console.log("useDeclarationForm: Form data:", values);
       console.log("useDeclarationForm: Media files:", mediaFiles);
       
-      // First, create/check bucket and verify connection before submission
-      console.log("useDeclarationForm: Ensuring bucket exists before submission...");
-      await createBucketIfNotExists('declaration-media');
+      // Check current Supabase connection status before submission
+      const dbConnected = await isSupabaseConnected();
+      const storageConnected = await isStorageConnected();
       
-      const currentSupabaseStatus = await isSupabaseConnected();
-      setSupabaseStatus(currentSupabaseStatus);
-      console.log("useDeclarationForm: Current Supabase connection before submission:", currentSupabaseStatus);
+      setSupabaseStatus({
+        database: dbConnected,
+        storage: storageConnected
+      });
+      
+      console.log("useDeclarationForm: Current connection status before submission:", 
+        { database: dbConnected, storage: storageConnected });
       
       // Prepare declaration data
       const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}`;

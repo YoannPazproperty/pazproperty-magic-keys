@@ -14,7 +14,7 @@ import AreaCliente from "./pages/AreaCliente";
 import Admin from "./pages/Admin";
 import ExtranetTechnique from "./pages/ExtranetTechnique";
 import NotFound from "./pages/NotFound";
-import { initSupabase, initializeDatabase, createBucketIfNotExists } from './services/supabaseService';
+import { initSupabase, initializeDatabase, isSupabaseConnected } from './services/supabaseService';
 import { migrateDeclarationsToSupabase } from "./services/declarations/supabaseDeclarationStorage";
 import { toast } from "sonner";
 
@@ -43,32 +43,19 @@ const App = () => {
         return;
       }
       
-      // Create declaration-media bucket if it doesn't exist
-      console.log("App: Creating declaration-media bucket if it doesn't exist...");
-      const bucketCreated = await createBucketIfNotExists('declaration-media');
-      
-      if (!bucketCreated) {
-        console.log("App: Failed to create declaration-media bucket");
-        toast.warning("Aviso de armazenamento", {
-          description: "Não foi possível criar o bucket para mídia. Os arquivos serão salvos localmente."
-        });
-      } else {
-        console.log("App: declaration-media bucket is ready");
+      // Check if Supabase is connected
+      const connected = await isSupabaseConnected();
+      if (!connected) {
+        console.log("App: Could not establish full Supabase connection - limited functionality");
+        return;
       }
       
       // Initialize the database
       const initialized = await initializeDatabase();
       if (!initialized) {
         console.log("App: Supabase database not initialized, using local storage");
-        toast.error("Erro de conexão com Supabase", {
-          description: "O aplicativo funcionará apenas no modo local."
-        });
         return;
       }
-      
-      toast.success("Conexão com Supabase estabelecida", {
-        description: "Os dados serão sincronizados com Supabase."
-      });
       
       // Migrate local data to Supabase
       console.log("App: Migrating local data to Supabase...");

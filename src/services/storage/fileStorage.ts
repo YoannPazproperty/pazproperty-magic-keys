@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { getSupabase, createBucketIfNotExists } from '../supabaseService';
+import { getSupabase, checkBucketExists } from '../supabaseService';
 import { toast } from "sonner";
 
 // Convert file to base64 (for local storage fallback)
@@ -31,12 +31,12 @@ export const storeFile = async (file: File): Promise<string> => {
     const fileId = uuidv4();
     console.log("fileStorage: Generated file ID:", fileId);
     
-    // First, ensure the bucket exists
-    console.log("fileStorage: Ensuring declaration-media bucket exists...");
-    const bucketCreated = await createBucketIfNotExists('declaration-media');
+    // First, check if the bucket exists
+    console.log("fileStorage: Checking if declaration-media bucket exists...");
+    const bucketExists = await checkBucketExists('declaration-media');
     
-    if (!bucketCreated) {
-      console.log("fileStorage: Failed to create or verify bucket, falling back to localStorage");
+    if (!bucketExists) {
+      console.log("fileStorage: Bucket doesn't exist, falling back to localStorage");
       return storeFileLocally(file, fileId);
     }
     
@@ -158,7 +158,7 @@ export const getStoredFile = async (fileId: string): Promise<StoredFile | string
       const bucketName = 'declaration-media';
       
       // Vérifier si le bucket existe
-      const bucketExists = await createBucketIfNotExists(bucketName);
+      const bucketExists = await checkBucketExists(bucketName);
       if (!bucketExists) {
         console.log("fileStorage: Bucket doesn't exist, falling back to localStorage for file retrieval");
         // Fallback au localStorage si le bucket n'existe pas
@@ -207,7 +207,7 @@ export const deleteStoredFile = async (fileId: string): Promise<boolean> => {
       const bucketName = 'declaration-media';
       
       // Vérifier si le bucket existe
-      const bucketExists = await createBucketIfNotExists(bucketName);
+      const bucketExists = await checkBucketExists(bucketName);
       if (bucketExists) {
         // Liste les fichiers dans le bucket qui commencent par l'ID
         const { data: files, error } = await supabase.storage

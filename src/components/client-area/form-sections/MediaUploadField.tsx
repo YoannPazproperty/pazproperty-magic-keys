@@ -5,9 +5,9 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import FileUpload from "@/components/FileUpload";
-import { isSupabaseConnected, createBucketIfNotExists } from "@/services/supabaseService";
+import { isSupabaseConnected, isStorageConnected } from "@/services/supabaseService";
 import { useQuery } from "@tanstack/react-query";
-import { Wifi, WifiOff } from "lucide-react";
+import { Wifi, WifiOff, CloudOff } from "lucide-react";
 import { toast } from "sonner";
 
 interface MediaUploadFieldProps {
@@ -16,23 +16,29 @@ interface MediaUploadFieldProps {
 
 const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
   // Check Supabase connection status
-  const { data: supabaseConnected, isLoading, refetch } = useQuery({
+  const { data: connectionStatus, isLoading, refetch } = useQuery({
     queryKey: ['supabase-connection'],
     queryFn: async () => {
-      console.log("MediaUploadField: Checking Supabase connection and bucket...");
+      console.log("MediaUploadField: Checking Supabase connection...");
       try {
-        // Try to create the bucket if it doesn't exist
-        const bucketCreated = await createBucketIfNotExists('declaration-media');
-        console.log("MediaUploadField: Bucket creation result:", bucketCreated);
+        // Check if database is available
+        const dbConnected = await isSupabaseConnected();
+        console.log("MediaUploadField: Database connection status:", dbConnected);
         
-        // Check if Supabase is connected
-        const connected = await isSupabaseConnected();
-        console.log("MediaUploadField: Supabase connection status:", connected);
+        // Check if storage is available
+        const storageConnected = await isStorageConnected();
+        console.log("MediaUploadField: Storage connection status:", storageConnected);
         
-        if (connected) {
+        if (dbConnected && storageConnected) {
           toast.success("Conectado ao Supabase", { 
             id: "supabase-connection",
             duration: 3000 
+          });
+        } else if (dbConnected) {
+          toast.info("Armazenamento limitado", { 
+            id: "supabase-connection",
+            description: "Banco de dados está conectado mas o armazenamento pode usar o modo local", 
+            duration: 5000 
           });
         } else {
           toast.warning("Modo offline - Os dados serão sincronizados mais tarde", { 
@@ -41,10 +47,16 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
           });
         }
         
-        return connected;
+        return {
+          database: dbConnected,
+          storage: storageConnected
+        };
       } catch (error) {
         console.error("MediaUploadField: Error checking connection:", error);
-        return false;
+        return {
+          database: false,
+          storage: false
+        };
       }
     },
     retry: 2,
@@ -65,10 +77,15 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
           <div className="flex items-center text-sm">
             {isLoading ? (
               <span className="text-gray-500">Verificando conexão...</span>
-            ) : supabaseConnected ? (
+            ) : connectionStatus?.database && connectionStatus?.storage ? (
               <div className="flex items-center text-green-600">
                 <Wifi className="h-4 w-4 mr-1" />
                 <span>Conectado</span>
+              </div>
+            ) : connectionStatus?.database ? (
+              <div className="flex items-center text-blue-600">
+                <CloudOff className="h-4 w-4 mr-1" />
+                <span>Armazenamento limitado</span>
               </div>
             ) : (
               <div className="flex items-center text-amber-600">
@@ -81,9 +98,14 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
         
         <FormDescription>
           Pode adicionar fotos ou vídeos para ajudar a descrever o problema (opcional).
-          {supabaseConnected === false && (
+          {connectionStatus?.database === false && (
             <span className="text-yellow-600 block mt-1">
               ⚠️ Modo offline: os ficheiros serão guardados localmente e sincronizados mais tarde.
+            </span>
+          )}
+          {connectionStatus?.database === true && connectionStatus?.storage === false && (
+            <span className="text-blue-600 block mt-1">
+              ℹ️ Armazenamento limitado: os ficheiros podem ser guardados localmente.
             </span>
           )}
         </FormDescription>
@@ -92,7 +114,7 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
         onChange={onChange} 
         maxFiles={5} 
         accept="image/*,video/*" 
-        supabaseConnected={supabaseConnected}
+        supabaseConnected={connectionStatus?.storage || false}
       />
     </div>
   );
