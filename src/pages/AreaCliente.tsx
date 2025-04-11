@@ -72,11 +72,11 @@ const AreaCliente = ({ connectionStatus = { initialized: false, database: false,
         const initialized = await initializeDatabase();
         
         // Set status based on initialization result
-        setDbStatus(prev => ({
-          ...prev,
+        setDbStatus({
           initialized: true,
-          database: database
-        }));
+          database: true,
+          storage: initialized
+        });
         
         console.log("AreaCliente: Initialization complete:", initialized);
       } catch (error) {

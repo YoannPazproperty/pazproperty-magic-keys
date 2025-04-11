@@ -149,7 +149,7 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Checking Supabase connection...');
     
-    // Test database connection - use a simpler query
+    // Test database connection using version RPC function
     const { data, error } = await supabase.rpc('version');
     
     if (error) {
@@ -184,7 +184,7 @@ export const initializeDatabase = async () => {
     
     console.log('Checking Supabase connection...');
     
-    // Check connection to database with a simpler query
+    // Check connection to database with version RPC function
     try {
       const { data, error } = await supabase.rpc('version');
       
