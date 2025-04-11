@@ -97,8 +97,8 @@ export const isDatabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Testing database connection...');
     
-    // Use a simpler query to check connection
-    const { data, error } = await supabase.rpc('version');
+    // Use a simpler query to check connection - Fix for TypeScript error on line 101
+    const { data, error } = await supabase.rpc('version', {});
     
     if (error) {
       console.error('Database connection failed:', error);
@@ -149,8 +149,8 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Checking Supabase connection...');
     
-    // Test database connection using version RPC function
-    const { data, error } = await supabase.rpc('version');
+    // Test database connection using version RPC function - Fix for TypeScript error on line 153
+    const { data, error } = await supabase.rpc('version', {});
     
     if (error) {
       console.error('Database connection failed:', error);
@@ -184,9 +184,9 @@ export const initializeDatabase = async () => {
     
     console.log('Checking Supabase connection...');
     
-    // Check connection to database with version RPC function
+    // Check connection to database with version RPC function - Fix for TypeScript error on line 189
     try {
-      const { data, error } = await supabase.rpc('version');
+      const { data, error } = await supabase.rpc('version', {});
       
       if (error) {
         console.error('Could not connect to Supabase database:', error);
