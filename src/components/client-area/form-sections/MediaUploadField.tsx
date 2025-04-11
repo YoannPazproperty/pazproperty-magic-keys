@@ -10,15 +10,34 @@ import { useQuery } from "@tanstack/react-query";
 import { Wifi, WifiOff, CloudOff } from "lucide-react";
 import { toast } from "sonner";
 
-interface MediaUploadFieldProps {
-  onChange: (files: File[]) => void;
+interface ConnectionStatus {
+  initialized: boolean;
+  database: boolean;
+  storage: boolean;
 }
 
-const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
-  // Check Supabase connection status
-  const { data: connectionStatus, isLoading, refetch } = useQuery({
+interface MediaUploadFieldProps {
+  onChange: (files: File[]) => void;
+  connectionStatus?: ConnectionStatus;
+}
+
+const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ 
+  onChange, 
+  connectionStatus 
+}) => {
+  // Check Supabase connection status if not provided via props
+  const { data: queryConnectionStatus, isLoading, refetch } = useQuery({
     queryKey: ['supabase-connection'],
     queryFn: async () => {
+      // Skip query if connection status is provided via props
+      if (connectionStatus) {
+        console.log("MediaUploadField: Using provided connection status:", connectionStatus);
+        return {
+          database: connectionStatus.database,
+          storage: connectionStatus.storage
+        };
+      }
+
       console.log("MediaUploadField: Checking Supabase connection...");
       try {
         // Check if database is available
@@ -59,14 +78,15 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
         };
       }
     },
-    retry: 2,
+    enabled: !connectionStatus, // Only run if connection status is not provided via props
+    retry: 1,
     staleTime: 30000, // 30 seconds
   });
   
-  // Refresh connection status when component mounts
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+  // Combine connection status from props or query
+  const finalConnectionStatus = connectionStatus 
+    ? { database: connectionStatus.database, storage: connectionStatus.storage }
+    : queryConnectionStatus;
 
   return (
     <div className="space-y-2">
@@ -75,14 +95,14 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
           <FormLabel className="text-base">Adicionar média</FormLabel>
           
           <div className="flex items-center text-sm">
-            {isLoading ? (
+            {!connectionStatus && isLoading ? (
               <span className="text-gray-500">Verificando conexão...</span>
-            ) : connectionStatus?.database && connectionStatus?.storage ? (
+            ) : finalConnectionStatus?.database && finalConnectionStatus?.storage ? (
               <div className="flex items-center text-green-600">
                 <Wifi className="h-4 w-4 mr-1" />
                 <span>Conectado</span>
               </div>
-            ) : connectionStatus?.database ? (
+            ) : finalConnectionStatus?.database ? (
               <div className="flex items-center text-blue-600">
                 <CloudOff className="h-4 w-4 mr-1" />
                 <span>Armazenamento limitado</span>
@@ -98,12 +118,12 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
         
         <FormDescription>
           Pode adicionar fotos ou vídeos para ajudar a descrever o problema (opcional).
-          {connectionStatus?.database === false && (
+          {finalConnectionStatus?.database === false && (
             <span className="text-yellow-600 block mt-1">
               ⚠️ Modo offline: os ficheiros serão guardados localmente e sincronizados mais tarde.
             </span>
           )}
-          {connectionStatus?.database === true && connectionStatus?.storage === false && (
+          {finalConnectionStatus?.database === true && finalConnectionStatus?.storage === false && (
             <span className="text-blue-600 block mt-1">
               ℹ️ Armazenamento limitado: os ficheiros podem ser guardados localmente.
             </span>
@@ -114,7 +134,7 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
         onChange={onChange} 
         maxFiles={5} 
         accept="image/*,video/*" 
-        supabaseConnected={connectionStatus?.storage || false}
+        supabaseConnected={finalConnectionStatus?.storage || false}
       />
     </div>
   );

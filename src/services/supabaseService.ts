@@ -32,19 +32,13 @@ export const checkBucketExists = async (bucketName: string): Promise<boolean> =>
     
     if (listError) {
       console.error('Error checking buckets:', listError);
-      console.log('Error message:', listError.message);
       return false;
     }
     
     const bucketExists = buckets.some(bucket => bucket.name === bucketName);
+    console.log(`Bucket "${bucketName}" exists: ${bucketExists}`);
+    return bucketExists;
     
-    if (bucketExists) {
-      console.log(`Bucket "${bucketName}" already exists.`);
-      return true;
-    }
-    
-    console.log(`Bucket "${bucketName}" does not exist.`);
-    return false;
   } catch (err) {
     console.error(`Error checking bucket "${bucketName}":`, err);
     return false;
@@ -56,6 +50,7 @@ export const createBucketIfNotExists = async (bucketName: string) => {
   // First check if it exists
   const exists = await checkBucketExists(bucketName);
   if (exists) {
+    console.log(`Bucket "${bucketName}" already exists, no need to create it.`);
     return true;
   }
   
@@ -73,7 +68,9 @@ export const createBucketIfNotExists = async (bucketName: string) => {
     
     if (createError) {
       console.error(`Error creating bucket "${bucketName}":`, createError);
-      console.log('Error message:', createError.message);
+      toast.error("Erro ao criar bucket de mídia", {
+        description: createError.message
+      });
       return false;
     }
     
@@ -81,6 +78,9 @@ export const createBucketIfNotExists = async (bucketName: string) => {
     return true;
   } catch (err) {
     console.error(`Error creating bucket "${bucketName}":`, err);
+    toast.error("Erro ao criar bucket de mídia", {
+      description: "Erro inesperado ao criar o bucket"
+    });
     return false;
   }
 };
@@ -94,18 +94,15 @@ export const isDatabaseConnected = async (): Promise<boolean> => {
   
   try {
     console.log('Testing database connection...');
-    const { data, error } = await supabase
-      .from('declarations')
-      .select('count')
-      .limit(1);
+    // Use a simpler query that doesn't depend on table structure
+    const { data, error } = await supabase.rpc('version');
     
     if (error) {
       console.error('Error checking database connection:', error);
-      console.log('Error message:', error.message);
       return false;
     }
     
-    console.log('Database connection successful, data:', data);
+    console.log('Database connection successful, version:', data);
     return true;
   } catch (err) {
     console.error('Error checking database connection:', err);
@@ -123,15 +120,15 @@ export const isStorageConnected = async (): Promise<boolean> => {
   try {
     console.log('Testing storage connection...');
     
-    // First check if the bucket exists
-    const bucketExists = await checkBucketExists('declaration-media');
+    // First check if we can list buckets
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
     
-    if (!bucketExists) {
-      console.error('Declaration-media bucket does not exist');
+    if (listError) {
+      console.error('Error listing buckets:', listError);
       return false;
     }
     
-    console.log('Storage connection successful');
+    console.log('Storage connection successful, buckets:', buckets);
     return true;
   } catch (err) {
     console.error('Error checking storage connection:', err);
@@ -149,21 +146,14 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Checking Supabase connection...');
     
-    // Test database connection
+    // Test database connection only
     const dbConnected = await isDatabaseConnected();
     if (!dbConnected) {
       console.error('Database connection failed');
       return false;
     }
     
-    // Test storage connection
-    const storageConnected = await isStorageConnected();
-    if (!storageConnected) {
-      console.error('Storage connection failed');
-      return false;
-    }
-    
-    console.log('Supabase connection established successfully (database and storage).');
+    console.log('Supabase database connection established successfully.');
     return true;
   } catch (err) {
     console.error('Error checking Supabase connection:', err);
@@ -200,7 +190,7 @@ export const initializeDatabase = async () => {
       return false;
     }
     
-    // Check connection to storage
+    // Check storage separately (but don't make it a requirement for success)
     const storageConnected = await isStorageConnected();
     if (!storageConnected) {
       console.warn('Could not connect to Supabase storage - file uploads will use localStorage');

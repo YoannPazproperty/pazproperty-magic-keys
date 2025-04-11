@@ -15,11 +15,21 @@ import { useDeclarationForm } from "./hooks/useDeclarationForm";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 
-interface DeclarationFormProps {
-  onSuccess: () => void;
+interface ConnectionStatus {
+  initialized: boolean;
+  database: boolean;
+  storage: boolean;
 }
 
-const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
+interface DeclarationFormProps {
+  onSuccess: () => void;
+  connectionStatus?: ConnectionStatus;
+}
+
+const DeclarationForm: React.FC<DeclarationFormProps> = ({ 
+  onSuccess, 
+  connectionStatus = { initialized: false, database: false, storage: false } 
+}) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,7 +55,8 @@ const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
     handleSubmit 
   } = useDeclarationForm({ 
     form, 
-    onSuccess 
+    onSuccess,
+    connectionStatus 
   });
 
   // Fonction pour gérer la soumission du formulaire
@@ -65,7 +76,10 @@ const DeclarationForm: React.FC<DeclarationFormProps> = ({ onSuccess }) => {
             <AddressFields />
             <ProblemTypeField />
             <DescriptionField />
-            <MediaUploadField onChange={handleFileChange} />
+            <MediaUploadField 
+              onChange={handleFileChange} 
+              connectionStatus={connectionStatus}
+            />
             
             {isSubmitting && (
               <Alert variant="default" className="bg-blue-50 border-blue-200 animate-pulse">

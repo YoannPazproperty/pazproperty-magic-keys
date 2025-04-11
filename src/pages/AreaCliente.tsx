@@ -17,7 +17,17 @@ import ContactInformation from "@/components/client-area/ContactInformation";
   }
 })();
 
-const AreaCliente = () => {
+interface ConnectionStatus {
+  initialized: boolean;
+  database: boolean;
+  storage: boolean;
+}
+
+interface AreaClienteProps {
+  connectionStatus?: ConnectionStatus;
+}
+
+const AreaCliente = ({ connectionStatus = { initialized: false, database: false, storage: false } }: AreaClienteProps) => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSuccessfulSubmission = () => {
@@ -33,7 +43,8 @@ const AreaCliente = () => {
   // Log l'état initial et ses changements
   useEffect(() => {
     console.log("État actuel isSuccess:", isSuccess);
-  }, [isSuccess]);
+    console.log("Connection status:", connectionStatus);
+  }, [isSuccess, connectionStatus]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -46,10 +57,23 @@ const AreaCliente = () => {
             Bem-vindo à sua área de cliente. Utilize o formulário abaixo para declarar qualquer problema ou necessidade relacionada ao seu imóvel.
           </p>
           
+          {connectionStatus.initialized && !connectionStatus.database && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mb-6">
+              <h3 className="font-semibold">Modo Offline Ativo</h3>
+              <p>
+                O aplicativo está operando em modo offline. Seus dados serão armazenados localmente 
+                e sincronizados quando a conexão for restabelecida.
+              </p>
+            </div>
+          )}
+          
           {isSuccess ? (
             <SuccessMessage onNewDeclaration={handleNewDeclaration} />
           ) : (
-            <DeclarationForm onSuccess={handleSuccessfulSubmission} />
+            <DeclarationForm 
+              onSuccess={handleSuccessfulSubmission} 
+              connectionStatus={connectionStatus}
+            />
           )}
           
           <ContactInformation />

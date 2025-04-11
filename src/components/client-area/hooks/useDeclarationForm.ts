@@ -6,65 +6,87 @@ import { FormValues, mapIssueTypeToMondayFormat } from "../schema";
 import { addWithMedia, sendToExternalService } from "@/services/declarationService";
 import { isSupabaseConnected, isStorageConnected } from "@/services/supabaseService";
 
+interface ConnectionStatus {
+  initialized: boolean;
+  database: boolean;
+  storage: boolean;
+}
+
 interface UseDeclarationFormProps {
   form: UseFormReturn<FormValues>;
   onSuccess: () => void;
+  connectionStatus?: ConnectionStatus;
 }
 
-export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps) => {
+export const useDeclarationForm = ({ form, onSuccess, connectionStatus }: UseDeclarationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [supabaseStatus, setSupabaseStatus] = useState<{
     database: boolean;
     storage: boolean;
-  } | null>(null);
+  } | null>(connectionStatus ? {
+    database: connectionStatus.database,
+    storage: connectionStatus.storage
+  } : null);
 
-  // Check Supabase connection status on load
+  // Update local state when connectionStatus changes
   useEffect(() => {
-    const checkSupabaseConnection = async () => {
-      try {
-        console.log("useDeclarationForm: Checking Supabase connection on load...");
-        
-        // Check database connection
-        const dbConnected = await isSupabaseConnected();
-        console.log("useDeclarationForm: Database connection status:", dbConnected);
-        
-        // Check storage connection
-        const storageConnected = await isStorageConnected();
-        console.log("useDeclarationForm: Storage connection status:", storageConnected);
-        
-        setSupabaseStatus({
-          database: dbConnected,
-          storage: storageConnected
-        });
-        
-        if (dbConnected && storageConnected) {
-          toast.success("Conectado ao Supabase", { 
-            description: "Banco de dados e armazenamento operacionais."
+    if (connectionStatus) {
+      setSupabaseStatus({
+        database: connectionStatus.database,
+        storage: connectionStatus.storage
+      });
+    }
+  }, [connectionStatus]);
+
+  // Check Supabase connection status on load if not provided
+  useEffect(() => {
+    if (!connectionStatus) {
+      const checkSupabaseConnection = async () => {
+        try {
+          console.log("useDeclarationForm: Checking Supabase connection on load...");
+          
+          // Check database connection
+          const dbConnected = await isSupabaseConnected();
+          console.log("useDeclarationForm: Database connection status:", dbConnected);
+          
+          // Check storage connection
+          const storageConnected = await isStorageConnected();
+          console.log("useDeclarationForm: Storage connection status:", storageConnected);
+          
+          setSupabaseStatus({
+            database: dbConnected,
+            storage: storageConnected
           });
-        } else if (dbConnected) {
-          toast.info("Conectado parcialmente ao Supabase", { 
-            description: "Banco de dados conectado, armazenamento em modo local."
+          
+          if (dbConnected && storageConnected) {
+            toast.success("Conectado ao Supabase", { 
+              description: "Banco de dados e armazenamento operacionais."
+            });
+          } else if (dbConnected) {
+            toast.info("Conectado parcialmente ao Supabase", { 
+              description: "Banco de dados conectado, armazenamento em modo local."
+            });
+          } else {
+            toast.warning("Modo offline ativo", { 
+              description: "Seus dados serão salvos localmente e sincronizados mais tarde."
+            });
+          }
+        } catch (error) {
+          console.error("useDeclarationForm: Error checking Supabase connection:", error);
+          setSupabaseStatus({
+            database: false,
+            storage: false
           });
-        } else {
-          toast.warning("Modo offline ativo", { 
-            description: "Seus dados serão salvos localmente e sincronizados mais tarde."
+          toast.error("Erro ao verificar conexão", { 
+            description: "O aplicativo funcionará no modo offline."
           });
         }
-      } catch (error) {
-        console.error("useDeclarationForm: Error checking Supabase connection:", error);
-        setSupabaseStatus({
-          database: false,
-          storage: false
-        });
-        toast.error("Erro ao verificar conexão", { 
-          description: "O aplicativo funcionará no modo offline."
-        });
-      }
-    };
-    
-    checkSupabaseConnection();
-  }, []);
+      };
+      
+      checkSupabaseConnection();
+    }
+  }, [connectionStatus]);
 
   const handleFileChange = (files: File[]) => {
     console.log("useDeclarationForm: Files changed:", files);
@@ -78,18 +100,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
     try {
       console.log("useDeclarationForm: Form data:", values);
       console.log("useDeclarationForm: Media files:", mediaFiles);
-      
-      // Check current Supabase connection status before submission
-      const dbConnected = await isSupabaseConnected();
-      const storageConnected = await isStorageConnected();
-      
-      setSupabaseStatus({
-        database: dbConnected,
-        storage: storageConnected
-      });
-      
-      console.log("useDeclarationForm: Current connection status before submission:", 
-        { database: dbConnected, storage: storageConnected });
+      console.log("useDeclarationForm: Supabase status:", supabaseStatus);
       
       // Prepare declaration data
       const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}`;

@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,7 +14,7 @@ import AreaCliente from "./pages/AreaCliente";
 import Admin from "./pages/Admin";
 import ExtranetTechnique from "./pages/ExtranetTechnique";
 import NotFound from "./pages/NotFound";
-import { initSupabase, initializeDatabase, isSupabaseConnected } from './services/supabaseService';
+import { initSupabase, isDatabaseConnected, initializeDatabase, isStorageConnected } from './services/supabaseService';
 import { migrateDeclarationsToSupabase } from "./services/declarations/supabaseDeclarationStorage";
 import { toast } from "sonner";
 
@@ -28,6 +28,12 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const [connectionStatus, setConnectionStatus] = useState({
+    initialized: false,
+    database: false,
+    storage: false
+  });
+
   // Initialize Supabase when the application loads
   useEffect(() => {
     const setupSupabase = async () => {
@@ -37,36 +43,83 @@ const App = () => {
       const supabase = initSupabase();
       if (!supabase) {
         console.log("App: Fallback mode: Supabase is not available, using local storage only");
-        toast.info("Modo local ativo", {
+        toast.info("Modo offline ativo", {
           description: "Usando armazenamento local para guardar seus dados."
         });
-        return;
-      }
-      
-      // Check if Supabase is connected
-      const connected = await isSupabaseConnected();
-      if (!connected) {
-        console.log("App: Could not establish full Supabase connection - limited functionality");
-        return;
-      }
-      
-      // Initialize the database
-      const initialized = await initializeDatabase();
-      if (!initialized) {
-        console.log("App: Supabase database not initialized, using local storage");
-        return;
-      }
-      
-      // Migrate local data to Supabase
-      console.log("App: Migrating local data to Supabase...");
-      const migrated = await migrateDeclarationsToSupabase();
-      
-      if (migrated) {
-        toast.success("Migração bem-sucedida", {
-          description: "Os dados foram migrados para Supabase com sucesso."
+        setConnectionStatus({
+          initialized: true,
+          database: false,
+          storage: false
         });
-      } else {
-        console.log("App: No data migrated or migration failed");
+        return;
+      }
+      
+      try {
+        // Check if database is connected
+        const dbConnected = await isDatabaseConnected();
+        console.log("App: Database connection status:", dbConnected);
+        
+        if (!dbConnected) {
+          console.log("App: Database connection failed, using local storage");
+          toast.error("Falha na conexão com Supabase", {
+            description: "O aplicativo funcionará no modo local."
+          });
+          setConnectionStatus({
+            initialized: true,
+            database: false,
+            storage: false
+          });
+          return;
+        }
+        
+        // Check storage separately
+        const storageConnected = await isStorageConnected();
+        console.log("App: Storage connection status:", storageConnected);
+        
+        // Initialize the database
+        const initialized = await initializeDatabase();
+        console.log("App: Database initialization status:", initialized);
+        
+        if (!initialized) {
+          console.log("App: Supabase database not initialized, using local storage");
+          setConnectionStatus({
+            initialized: true,
+            database: false,
+            storage: false
+          });
+          return;
+        }
+        
+        // Update connection status
+        setConnectionStatus({
+          initialized: true,
+          database: true,
+          storage: storageConnected
+        });
+        
+        // Migrate local data to Supabase
+        if (dbConnected) {
+          console.log("App: Migrating local data to Supabase...");
+          const migrated = await migrateDeclarationsToSupabase();
+          
+          if (migrated) {
+            toast.success("Migração bem-sucedida", {
+              description: "Os dados foram migrados para Supabase com sucesso."
+            });
+          } else {
+            console.log("App: No data migrated or migration failed");
+          }
+        }
+      } catch (error) {
+        console.error("App: Error setting up Supabase:", error);
+        toast.error("Erro de conexão com Supabase", {
+          description: "O aplicativo funcionará no modo offline."
+        });
+        setConnectionStatus({
+          initialized: true,
+          database: false,
+          storage: false
+        });
       }
     };
     
@@ -85,7 +138,7 @@ const App = () => {
             <Route path="/sobre" element={<Sobre />} />
             <Route path="/contacto" element={<Contacto />} />
             <Route path="/propriedades" element={<Propriedades />} />
-            <Route path="/area-cliente" element={<AreaCliente />} />
+            <Route path="/area-cliente" element={<AreaCliente connectionStatus={connectionStatus} />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/extranet-technique" element={<ExtranetTechnique />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
