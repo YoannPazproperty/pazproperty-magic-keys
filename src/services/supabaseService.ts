@@ -62,11 +62,10 @@ export const createBucketIfNotExists = async (bucketName: string) => {
   try {
     // Create the bucket if it doesn't exist
     console.log(`Creating bucket "${bucketName}"...`);
-    // Fix: Pass only the correct options that createBucket expects
+    
+    // Create bucket with minimal options to avoid type errors
     const { data, error: createError } = await supabase.storage.createBucket(bucketName, {
-      public: true,
-      fileSizeLimit: null,
-      allowedMimeTypes: ['image/*', 'video/*']
+      public: true
     });
     
     if (createError) {
@@ -98,19 +97,15 @@ export const isDatabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Testing database connection...');
     
-    // Use a simpler query that doesn't rely on custom functions
-    // This checks if we can query public schema
-    const { data, error } = await supabase
-      .from('declarations')
-      .select('id')
-      .limit(1);
+    // Test with a very simple query that should always work if connected
+    const { data, error } = await supabase.from('declarations').select('count()', { count: 'exact', head: true });
     
     if (error) {
       console.error('Error checking database connection:', error);
       return false;
     }
     
-    console.log('Database connection successful, was able to query declarations table');
+    console.log('Database connection successful');
     return true;
   } catch (err) {
     console.error('Error checking database connection:', err);

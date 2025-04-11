@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import SuccessMessage from "@/components/client-area/SuccessMessage";
 import DeclarationForm from "@/components/client-area/DeclarationForm";
 import ContactInformation from "@/components/client-area/ContactInformation";
+import { initializeDatabase, isStorageConnected, isSupabaseConnected, createBucketIfNotExists } from "@/services/supabaseService";
 
 // Ensure we have a default Monday configuration for testing
 // This is just for development - in production this would be set in the admin panel
@@ -29,6 +30,49 @@ interface AreaClienteProps {
 
 const AreaCliente = ({ connectionStatus = { initialized: false, database: false, storage: false } }: AreaClienteProps) => {
   const [isSuccess, setIsSuccess] = useState(false);
+  const [dbStatus, setDbStatus] = useState<ConnectionStatus>({
+    initialized: false,
+    database: false,
+    storage: false
+  });
+
+  // Initialize database and check connection status
+  useEffect(() => {
+    const checkConnection = async () => {
+      console.log("Checking Supabase connection status...");
+      
+      // Initialize database connection
+      const initialized = await initializeDatabase();
+      
+      if (initialized) {
+        // Check database and storage connection
+        const database = await isSupabaseConnected();
+        const storage = await isStorageConnected();
+        
+        // If storage is available, ensure the declaration-media bucket exists
+        if (storage) {
+          await createBucketIfNotExists('declaration-media');
+        }
+        
+        setDbStatus({
+          initialized: true,
+          database,
+          storage
+        });
+        
+        console.log("Connection status updated:", { initialized, database, storage });
+      } else {
+        setDbStatus({
+          initialized: true,
+          database: false,
+          storage: false
+        });
+        console.log("Failed to initialize database connection");
+      }
+    };
+    
+    checkConnection();
+  }, []);
 
   const handleSuccessfulSubmission = () => {
     console.log("handleSuccessfulSubmission appelé, passage à l'écran de succès");
@@ -43,8 +87,11 @@ const AreaCliente = ({ connectionStatus = { initialized: false, database: false,
   // Log l'état initial et ses changements
   useEffect(() => {
     console.log("État actuel isSuccess:", isSuccess);
-    console.log("Connection status:", connectionStatus);
-  }, [isSuccess, connectionStatus]);
+    console.log("Connection status:", dbStatus);
+  }, [isSuccess, dbStatus]);
+
+  // Use provided connectionStatus or the one we determined
+  const finalConnectionStatus = connectionStatus.initialized ? connectionStatus : dbStatus;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -57,7 +104,7 @@ const AreaCliente = ({ connectionStatus = { initialized: false, database: false,
             Bem-vindo à sua área de cliente. Utilize o formulário abaixo para declarar qualquer problema ou necessidade relacionada ao seu imóvel.
           </p>
           
-          {connectionStatus.initialized && !connectionStatus.database && (
+          {finalConnectionStatus.initialized && !finalConnectionStatus.database && (
             <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mb-6">
               <h3 className="font-semibold">Modo Offline Ativo</h3>
               <p>
@@ -72,7 +119,7 @@ const AreaCliente = ({ connectionStatus = { initialized: false, database: false,
           ) : (
             <DeclarationForm 
               onSuccess={handleSuccessfulSubmission} 
-              connectionStatus={connectionStatus}
+              connectionStatus={finalConnectionStatus}
             />
           )}
           
