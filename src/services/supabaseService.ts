@@ -33,7 +33,7 @@ export const checkBucketExists = async (bucketName: string): Promise<boolean> =>
     if (listError) {
       console.error('[BUCKET DEBUG] Error checking buckets:', listError);
       console.error('[BUCKET DEBUG] Error message:', listError.message);
-      console.error('[BUCKET DEBUG] Error details:', listError.details);
+      // Remove accessing details property which doesn't exist on StorageError
       return false;
     }
     
@@ -74,9 +74,9 @@ export const createBucketIfNotExists = async (bucketName: string) => {
     
     if (createError) {
       console.error(`[BUCKET DEBUG] Error creating bucket "${bucketName}":`, createError);
-      console.error('[BUCKET DEBUG] Error code:', createError.code);
+      // Remove accessing code property which doesn't exist on StorageError
       console.error('[BUCKET DEBUG] Error message:', createError.message);
-      console.error('[BUCKET DEBUG] Error details:', createError.details);
+      // Remove accessing details property which doesn't exist on StorageError
       
       toast.error("Erro ao criar bucket de mídia", {
         description: createError.message
@@ -110,7 +110,7 @@ export const isDatabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Testing database connection...');
     
-    // Use a simpler query to check connection - Fix for TypeScript error on line 101
+    // Use a simpler query to check connection
     const { data, error } = await supabase.rpc('version', {});
     
     if (error) {
@@ -142,7 +142,7 @@ export const isStorageConnected = async (): Promise<boolean> => {
     if (listError) {
       console.error('[STORAGE DEBUG] Error listing buckets:', listError);
       console.error('[STORAGE DEBUG] Error message:', listError.message);
-      console.error('[STORAGE DEBUG] Error details:', listError.details);
+      // Remove accessing details property which doesn't exist on StorageError
       return false;
     }
     
@@ -173,7 +173,7 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Checking Supabase connection...');
     
-    // Test database connection using version RPC function - Fix for TypeScript error on line 153
+    // Test database connection using version RPC function
     const { data, error } = await supabase.rpc('version', {});
     
     if (error) {
@@ -208,7 +208,7 @@ export const initializeDatabase = async () => {
     
     console.log('Checking Supabase connection...');
     
-    // Check connection to database with version RPC function - Fix for TypeScript error on line 189
+    // Check connection to database with version RPC function
     try {
       const { data, error } = await supabase.rpc('version', {});
       
