@@ -1,11 +1,11 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
   FormLabel,
   FormDescription,
 } from "@/components/ui/form";
 import FileUpload from "@/components/FileUpload";
-import { isSupabaseConnected } from "@/services/supabaseService";
+import { isSupabaseConnected, createBucketIfNotExists } from "@/services/supabaseService";
 import { useQuery } from "@tanstack/react-query";
 import { Wifi, WifiOff } from "lucide-react";
 
@@ -15,13 +15,20 @@ interface MediaUploadFieldProps {
 
 const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
   // Vérifier l'état de la connexion à Supabase
-  const { data: supabaseConnected, isLoading } = useQuery({
+  const { data: supabaseConnected, isLoading, refetch } = useQuery({
     queryKey: ['supabase-connection'],
     queryFn: async () => {
+      // Essayer de créer le bucket s'il n'existe pas
+      await createBucketIfNotExists('declaration-media');
       return await isSupabaseConnected();
     },
     staleTime: 30000, // 30 secondes
   });
+  
+  // Refresh connection status when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   return (
     <div className="space-y-2">

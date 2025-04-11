@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -14,7 +13,7 @@ import AreaCliente from "./pages/AreaCliente";
 import Admin from "./pages/Admin";
 import ExtranetTechnique from "./pages/ExtranetTechnique";
 import NotFound from "./pages/NotFound";
-import { initSupabase, initializeDatabase } from "./services/supabaseService";
+import { initSupabase, initializeDatabase, createBucketIfNotExists } from './services/supabaseService';
 import { migrateDeclarationsToSupabase } from "./services/declarations/supabaseDeclarationStorage";
 import { toast } from "sonner";
 

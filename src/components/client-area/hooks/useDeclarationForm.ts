@@ -4,7 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { FormValues, mapIssueTypeToMondayFormat } from "../schema";
 import { addWithMedia, sendToExternalService } from "@/services/declarationService";
-import { isSupabaseConnected } from "@/services/supabaseService";
+import { isSupabaseConnected, createBucketIfNotExists } from "@/services/supabaseService";
 
 interface UseDeclarationFormProps {
   form: UseFormReturn<FormValues>;
@@ -21,6 +21,10 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
     const checkSupabaseConnection = async () => {
       try {
         console.log("Vérification de la connexion Supabase au chargement...");
+        // Essayer de créer le bucket declaration-media s'il n'existe pas encore
+        await createBucketIfNotExists('declaration-media');
+        
+        // Vérifier la connexion à Supabase
         const connected = await isSupabaseConnected();
         console.log("État de la connexion Supabase:", connected);
         setSupabaseStatus(connected);
@@ -68,6 +72,10 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       console.log("Données à enregistrer:", declarationData);
       
       // Vérifier à nouveau l'état de connexion Supabase avant d'envoyer
+      // et s'assurer que le bucket est disponible
+      console.log("Vérification de l'existence du bucket declaration-media avant soumission...");
+      await createBucketIfNotExists('declaration-media');
+      
       const currentSupabaseStatus = await isSupabaseConnected();
       setSupabaseStatus(currentSupabaseStatus);
       console.log("État de connexion Supabase avant l'envoi:", currentSupabaseStatus);

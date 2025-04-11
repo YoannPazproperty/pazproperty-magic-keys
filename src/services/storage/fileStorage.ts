@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { getSupabase } from '../supabaseService';
+import { getSupabase, createBucketIfNotExists } from '../supabaseService';
 
 // Fonction pour convertir un fichier en base64 (pour le fallback localStorage)
 const fileToBase64 = (file: File): Promise<string> => {
@@ -38,6 +38,13 @@ export const storeFile = async (file: File): Promise<string> => {
     }
     
     const bucketName = 'declaration-media';
+    
+    // Essayer de créer le bucket s'il n'existe pas
+    const bucketCreated = await createBucketIfNotExists(bucketName);
+    if (!bucketCreated) {
+      console.log("Failed to create or verify bucket, falling back to localStorage");
+      return storeFileLocally(file, fileId);
+    }
     
     try {
       // Télécharger le fichier
@@ -123,6 +130,15 @@ export const getStoredFile = async (fileId: string): Promise<StoredFile | string
     if (supabase) {
       const bucketName = 'declaration-media';
       
+      // Vérifier si le bucket existe
+      const bucketExists = await createBucketIfNotExists(bucketName);
+      if (!bucketExists) {
+        console.log("Bucket doesn't exist, falling back to localStorage for file retrieval");
+        // Fallback au localStorage si le bucket n'existe pas
+        const localFiles = getStoredFiles();
+        return localFiles.find(file => file.id === fileId) || null;
+      }
+      
       // Liste les fichiers dans le bucket qui commencent par l'ID
       const { data: files, error } = await supabase.storage
         .from(bucketName)
@@ -163,23 +179,27 @@ export const deleteStoredFile = async (fileId: string): Promise<boolean> => {
     if (supabase) {
       const bucketName = 'declaration-media';
       
-      // Liste les fichiers dans le bucket qui commencent par l'ID
-      const { data: files, error } = await supabase.storage
-        .from(bucketName)
-        .list('', {
-          search: fileId
-        });
+      // Vérifier si le bucket existe
+      const bucketExists = await createBucketIfNotExists(bucketName);
+      if (bucketExists) {
+        // Liste les fichiers dans le bucket qui commencent par l'ID
+        const { data: files, error } = await supabase.storage
+          .from(bucketName)
+          .list('', {
+            search: fileId
+          });
 
-      if (!error && files && files.length > 0) {
-        const matchingFile = files.find(file => file.name.startsWith(fileId));
-        if (matchingFile) {
-          const { error } = await supabase.storage
-            .from(bucketName)
-            .remove([matchingFile.name]);
-            
-          if (!error) {
-            deleted = true;
-            console.log("File deleted from Supabase Storage:", fileId);
+        if (!error && files && files.length > 0) {
+          const matchingFile = files.find(file => file.name.startsWith(fileId));
+          if (matchingFile) {
+            const { error } = await supabase.storage
+              .from(bucketName)
+              .remove([matchingFile.name]);
+              
+            if (!error) {
+              deleted = true;
+              console.log("File deleted from Supabase Storage:", fileId);
+            }
           }
         }
       }
