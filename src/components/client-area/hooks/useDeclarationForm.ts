@@ -70,6 +70,7 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       // Vérifier à nouveau l'état de connexion Supabase avant d'envoyer
       const currentSupabaseStatus = await isSupabaseConnected();
       setSupabaseStatus(currentSupabaseStatus);
+      console.log("État de connexion Supabase avant l'envoi:", currentSupabaseStatus);
       
       // Add declaration to local storage with any attached media files
       const newDeclaration = await addWithMedia(declarationData, mediaFiles);
