@@ -62,8 +62,11 @@ export const createBucketIfNotExists = async (bucketName: string) => {
   try {
     // Create the bucket if it doesn't exist
     console.log(`Creating bucket "${bucketName}"...`);
+    // Fix: Pass the correct options type that createBucket expects
     const { data, error: createError } = await supabase.storage.createBucket(bucketName, {
-      public: true
+      public: true,
+      fileSizeLimit: null,
+      downloadExpiration: null
     });
     
     if (createError) {
