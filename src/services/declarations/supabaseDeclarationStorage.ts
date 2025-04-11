@@ -11,7 +11,9 @@ const convertToSupabaseFormat = (declaration: Declaration) => {
   return {
     ...declaration,
     // Convert mediaFiles array to string for Supabase
-    mediaFiles: declaration.mediaFiles ? JSON.stringify(declaration.mediaFiles) : null
+    mediaFiles: declaration.mediaFiles && declaration.mediaFiles.length > 0 
+      ? JSON.stringify(declaration.mediaFiles) 
+      : null
   };
 };
 
@@ -144,6 +146,8 @@ export const createSupabaseDeclaration = async (declaration: Declaration): Promi
     // Convert to Supabase format
     const supabaseDeclaration = convertToSupabaseFormat(declaration);
     
+    console.log('Format Supabase de la déclaration:', supabaseDeclaration);
+    
     const { data, error } = await supabase
       .from(DECLARATIONS_TABLE)
       .insert(supabaseDeclaration)
@@ -152,6 +156,7 @@ export const createSupabaseDeclaration = async (declaration: Declaration): Promi
     
     if (error) {
       console.error('Erreur lors de la création de la déclaration dans Supabase:', error);
+      console.error('Détails de la déclaration qui a échoué:', supabaseDeclaration);
       
       // Fallback au stockage local
       const declarations = loadDeclarations();
@@ -198,7 +203,9 @@ export const updateSupabaseDeclaration = async (id: string, updates: Partial<Dec
     
     // If mediaFiles is included in the updates, convert it
     if (updates.mediaFiles !== undefined) {
-      supabaseUpdates.mediaFiles = JSON.stringify(updates.mediaFiles);
+      supabaseUpdates.mediaFiles = updates.mediaFiles && updates.mediaFiles.length > 0 
+        ? JSON.stringify(updates.mediaFiles) 
+        : null;
     }
     
     const { data, error } = await supabase

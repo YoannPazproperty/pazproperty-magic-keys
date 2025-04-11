@@ -23,16 +23,6 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Vérification de la connexion à Supabase...');
     
-    // Vérifier si le bucket declaration-media existe
-    const { data: buckets, error: bucketsError } = await supabase.storage.getBucket('declaration-media');
-    
-    if (bucketsError) {
-      console.error('Erreur lors de la vérification du bucket:', bucketsError);
-      return false;
-    }
-    
-    console.log('Bucket trouvé:', buckets);
-    
     // Tester avec une requête simple pour vérifier la connexion à la DB
     const { data, error } = await supabase
       .from('declarations')
@@ -41,6 +31,21 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
     
     if (error) {
       console.error('Erreur lors de la vérification de la connexion à Supabase:', error);
+      return false;
+    }
+    
+    // Vérifier si le bucket declaration-media existe
+    try {
+      const { data: bucket, error: bucketError } = await supabase.storage.getBucket('declaration-media');
+      
+      if (bucketError) {
+        console.error('Erreur lors de la vérification du bucket:', bucketError);
+        return false;
+      }
+      
+      console.log('Bucket trouvé:', bucket);
+    } catch (bucketError) {
+      console.error('Erreur lors de la vérification du bucket:', bucketError);
       return false;
     }
     

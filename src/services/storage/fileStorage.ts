@@ -40,26 +40,6 @@ export const storeFile = async (file: File): Promise<string> => {
     const bucketName = 'declaration-media';
     
     try {
-      // Vérifier si le bucket existe, sinon le créer
-      console.log(`Checking if bucket '${bucketName}' exists...`);
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
-      
-      if (!bucketExists) {
-        console.log(`Creating bucket '${bucketName}'...`);
-        const { error: createError } = await supabase.storage.createBucket(bucketName, {
-          public: true
-        });
-        
-        if (createError) {
-          console.error("Error creating bucket:", createError);
-          return storeFileLocally(file, fileId);
-        }
-        console.log(`Bucket '${bucketName}' created successfully`);
-      } else {
-        console.log(`Bucket '${bucketName}' already exists`);
-      }
-      
       // Télécharger le fichier
       const filePath = `${fileId}-${file.name.replace(/\s+/g, '_')}`;
       console.log(`Uploading file to path: ${filePath}...`);

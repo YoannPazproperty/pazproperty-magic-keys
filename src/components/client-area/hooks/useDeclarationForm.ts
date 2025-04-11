@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { FormValues, mapIssueTypeToMondayFormat } from "../schema";
@@ -17,14 +17,21 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
   const [supabaseStatus, setSupabaseStatus] = useState<boolean | null>(null);
 
   // Vérifier l'état de la connexion Supabase au chargement
-  useState(() => {
+  useEffect(() => {
     const checkSupabaseConnection = async () => {
-      const connected = await isSupabaseConnected();
-      setSupabaseStatus(connected);
+      try {
+        console.log("Vérification de la connexion Supabase au chargement...");
+        const connected = await isSupabaseConnected();
+        console.log("État de la connexion Supabase:", connected);
+        setSupabaseStatus(connected);
+      } catch (error) {
+        console.error("Erreur lors de la vérification de la connexion Supabase:", error);
+        setSupabaseStatus(false);
+      }
     };
     
     checkSupabaseConnection();
-  });
+  }, []);
 
   const handleFileChange = (files: File[]) => {
     setMediaFiles(files);
@@ -60,12 +67,16 @@ export const useDeclarationForm = ({ form, onSuccess }: UseDeclarationFormProps)
       console.log("Tentative d'enregistrement de la déclaration...");
       console.log("Données à enregistrer:", declarationData);
       
+      // Vérifier à nouveau l'état de connexion Supabase avant d'envoyer
+      const currentSupabaseStatus = await isSupabaseConnected();
+      setSupabaseStatus(currentSupabaseStatus);
+      
       // Add declaration to local storage with any attached media files
       const newDeclaration = await addWithMedia(declarationData, mediaFiles);
       console.log("Declaration saved:", newDeclaration);
       
       // Create a success toast based on where it was saved
-      if (supabaseStatus) {
+      if (currentSupabaseStatus) {
         toast.success("Declaração salva com sucesso", {
           description: "Sua declaração foi registrada em nosso sistema."
         });
