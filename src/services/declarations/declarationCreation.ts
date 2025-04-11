@@ -5,7 +5,8 @@ import { generateUniqueId } from "./declarationStorage";
 import { notifyNewDeclaration } from "./declarationNotification";
 import { storeFile } from "../storage/fileStorage";
 import { createSupabaseDeclaration } from "./supabaseDeclarationStorage";
-import { isSupabaseConnected, getSupabase } from "../supabaseService";
+import { isSupabaseConnected, createBucketIfNotExists } from "../supabaseService";
+import { toast } from "sonner";
 
 // Create a new declaration with media files
 export const addWithMedia = async (
@@ -13,17 +14,30 @@ export const addWithMedia = async (
   mediaFiles: File[]
 ): Promise<Declaration> => {
   try {
-    // Vérifier si Supabase est connecté
+    // First, make sure the bucket exists
+    console.log("declarationCreation: Ensuring bucket exists before proceeding...");
+    await createBucketIfNotExists('declaration-media');
+    
+    // Check if Supabase is connected
+    console.log("declarationCreation: Checking Supabase connection status...");
     const supabaseConnected = await isSupabaseConnected();
-    console.log("État de la connexion Supabase:", supabaseConnected);
+    console.log("declarationCreation: Supabase connection status:", supabaseConnected);
     
-    // Stocker les fichiers et obtenir leurs URLs
-    console.log(`Début du stockage de ${mediaFiles.length} fichiers...`);
+    // Store files and get their URLs
+    console.log(`declarationCreation: Starting storage of ${mediaFiles.length} files...`);
+    
     const mediaUrls = await Promise.all(
-      mediaFiles.map(file => storeFile(file))
+      mediaFiles.map(async (file) => {
+        console.log(`declarationCreation: Storing file: ${file.name}`);
+        const url = await storeFile(file);
+        console.log(`declarationCreation: File stored with URL: ${url}`);
+        return url;
+      })
     );
-    console.log("URLs des fichiers stockés:", mediaUrls);
     
+    console.log("declarationCreation: All files stored, URLs:", mediaUrls);
+    
+    // Create new declaration object
     const newDeclaration: Declaration = {
       ...declarationData,
       id: generateUniqueId(),
@@ -32,34 +46,52 @@ export const addWithMedia = async (
       mediaFiles: mediaUrls
     };
     
-    console.log("Nouvelle déclaration à enregistrer:", newDeclaration);
+    console.log("declarationCreation: New declaration created:", newDeclaration);
+    console.log("declarationCreation: Media files in declaration:", newDeclaration.mediaFiles);
     
     if (supabaseConnected) {
-      console.log('Supabase est connecté, tentative d\'enregistrement dans Supabase');
+      console.log("declarationCreation: Supabase is connected, saving to Supabase...");
       try {
+        // Create declaration in Supabase
         const result = await createSupabaseDeclaration(newDeclaration);
-        console.log('Résultat de l\'enregistrement dans Supabase:', result);
+        console.log("declarationCreation: Result from Supabase save:", result);
         
         if (!result) {
-          console.warn('Aucun résultat retourné par Supabase, sauvegarde dans localStorage');
-          // En cas d'échec, sauvegarder en local
+          console.warn("declarationCreation: No result from Supabase, saving to localStorage as fallback");
+          // If failed, save to localStorage as fallback
           const declarations = loadDeclarations();
           declarations.push(newDeclaration);
           saveDeclarations(declarations);
+          
+          toast.warning("Declaração salva localmente", {
+            description: "Não foi possível salvar no Supabase. Os dados serão sincronizados mais tarde."
+          });
+        } else {
+          toast.success("Declaração salva com sucesso", {
+            description: "Sua declaração foi registrada no Supabase."
+          });
         }
       } catch (supabaseError) {
-        console.error('Erreur lors de l\'enregistrement dans Supabase:', supabaseError);
-        // En cas d'erreur, sauvegarder en local
+        console.error("declarationCreation: Error saving to Supabase:", supabaseError);
+        // In case of error, save locally
         const declarations = loadDeclarations();
         declarations.push(newDeclaration);
         saveDeclarations(declarations);
+        
+        toast.warning("Erro ao salvar no Supabase", {
+          description: "Declaração salva localmente. Será sincronizada mais tarde."
+        });
       }
     } else {
-      console.log('Supabase n\'est pas connecté, sauvegarde dans localStorage');
-      // Si Supabase n'est pas connecté, utiliser localStorage
+      console.log("declarationCreation: Supabase is not connected, saving to localStorage");
+      // If Supabase is not connected, use localStorage
       const declarations = loadDeclarations();
       declarations.push(newDeclaration);
       saveDeclarations(declarations);
+      
+      toast.info("Salvo no modo offline", {
+        description: "Declaração salva localmente. Será sincronizada quando houver conexão."
+      });
     }
     
     // Send notification
@@ -67,7 +99,10 @@ export const addWithMedia = async (
     
     return newDeclaration;
   } catch (error) {
-    console.error("Error creating declaration with media:", error);
+    console.error("declarationCreation: Error creating declaration with media:", error);
+    toast.error("Erro ao criar declaração", {
+      description: "Ocorreu um erro inesperado ao processar sua declaração."
+    });
     throw error;
   }
 };

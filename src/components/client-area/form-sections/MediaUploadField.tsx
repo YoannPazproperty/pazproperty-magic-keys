@@ -8,21 +8,47 @@ import FileUpload from "@/components/FileUpload";
 import { isSupabaseConnected, createBucketIfNotExists } from "@/services/supabaseService";
 import { useQuery } from "@tanstack/react-query";
 import { Wifi, WifiOff } from "lucide-react";
+import { toast } from "sonner";
 
 interface MediaUploadFieldProps {
   onChange: (files: File[]) => void;
 }
 
 const MediaUploadField: React.FC<MediaUploadFieldProps> = ({ onChange }) => {
-  // Vérifier l'état de la connexion à Supabase
+  // Check Supabase connection status
   const { data: supabaseConnected, isLoading, refetch } = useQuery({
     queryKey: ['supabase-connection'],
     queryFn: async () => {
-      // Essayer de créer le bucket s'il n'existe pas
-      await createBucketIfNotExists('declaration-media');
-      return await isSupabaseConnected();
+      console.log("MediaUploadField: Checking Supabase connection and bucket...");
+      try {
+        // Try to create the bucket if it doesn't exist
+        const bucketCreated = await createBucketIfNotExists('declaration-media');
+        console.log("MediaUploadField: Bucket creation result:", bucketCreated);
+        
+        // Check if Supabase is connected
+        const connected = await isSupabaseConnected();
+        console.log("MediaUploadField: Supabase connection status:", connected);
+        
+        if (connected) {
+          toast.success("Conectado ao Supabase", { 
+            id: "supabase-connection",
+            duration: 3000 
+          });
+        } else {
+          toast.warning("Modo offline - Os dados serão sincronizados mais tarde", { 
+            id: "supabase-connection",
+            duration: 5000 
+          });
+        }
+        
+        return connected;
+      } catch (error) {
+        console.error("MediaUploadField: Error checking connection:", error);
+        return false;
+      }
     },
-    staleTime: 30000, // 30 secondes
+    retry: 2,
+    staleTime: 30000, // 30 seconds
   });
   
   // Refresh connection status when component mounts

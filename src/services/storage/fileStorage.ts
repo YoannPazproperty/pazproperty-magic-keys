@@ -1,8 +1,8 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { getSupabase, createBucketIfNotExists } from '../supabaseService';
+import { toast } from "sonner";
 
-// Fonction pour convertir un fichier en base64 (pour le fallback localStorage)
+// Convert file to base64 (for local storage fallback)
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -12,7 +12,7 @@ const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-// Interface pour les fichiers stockés
+// Interface for stored files
 interface StoredFile {
   id: string;
   name: string;
@@ -21,36 +21,39 @@ interface StoredFile {
   createdAt: string;
 }
 
-// Stocker un fichier (priorité à Supabase Storage, fallback à localStorage)
+// Store a file (prioritize Supabase Storage, fallback to localStorage)
 export const storeFile = async (file: File): Promise<string> => {
   try {
-    console.log("Starting file storage process for:", file.name);
+    console.log("fileStorage: Starting file storage process for:", file.name);
     
-    // Générer un ID unique pour le fichier
+    // Generate unique ID for file
     const fileId = uuidv4();
-    console.log("Generated file ID:", fileId);
+    console.log("fileStorage: Generated file ID:", fileId);
     
-    // Essayer de stocker dans Supabase Storage
-    const supabase = getSupabase();
-    if (!supabase) {
-      console.log("Supabase client not available, falling back to localStorage");
+    // First, ensure the bucket exists
+    console.log("fileStorage: Ensuring declaration-media bucket exists...");
+    const bucketCreated = await createBucketIfNotExists('declaration-media');
+    
+    if (!bucketCreated) {
+      console.log("fileStorage: Failed to create or verify bucket, falling back to localStorage");
       return storeFileLocally(file, fileId);
     }
+    
+    // Try to store in Supabase Storage
+    const supabase = getSupabase();
+    if (!supabase) {
+      console.log("fileStorage: Supabase client not available, falling back to localStorage");
+      return storeFileLocally(file, fileId);
+    }
+    
+    // Prepare safe filename
+    const filePath = `${fileId}-${file.name.replace(/\s+/g, '_')}`;
+    console.log(`fileStorage: Uploading file to path: ${filePath}...`);
     
     const bucketName = 'declaration-media';
     
-    // Essayer de créer le bucket s'il n'existe pas
-    const bucketCreated = await createBucketIfNotExists(bucketName);
-    if (!bucketCreated) {
-      console.log("Failed to create or verify bucket, falling back to localStorage");
-      return storeFileLocally(file, fileId);
-    }
-    
     try {
-      // Télécharger le fichier
-      const filePath = `${fileId}-${file.name.replace(/\s+/g, '_')}`;
-      console.log(`Uploading file to path: ${filePath}...`);
-      
+      // Upload file
       const { data, error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(filePath, file, {
@@ -59,66 +62,89 @@ export const storeFile = async (file: File): Promise<string> => {
         });
         
       if (uploadError) {
-        console.error("Error uploading to Supabase Storage:", uploadError);
+        console.error("fileStorage: Error uploading to Supabase Storage:", uploadError);
+        console.log("fileStorage: Error details:", uploadError.message, uploadError.details);
         return storeFileLocally(file, fileId);
       }
       
-      console.log("File uploaded to Supabase Storage:", data);
+      console.log("fileStorage: File uploaded to Supabase Storage:", data);
       
-      // Générer une URL publique pour le fichier
+      // Generate public URL for file
       const { data: publicURL } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
         
-      console.log("Generated Supabase public URL:", publicURL);
+      console.log("fileStorage: Generated Supabase public URL:", publicURL);
+      toast.success("Arquivo carregado", {
+        description: "Mídia salva no Supabase com sucesso"
+      });
       return publicURL.publicUrl;
     } catch (supabaseError) {
-      console.error("Supabase storage error:", supabaseError);
+      console.error("fileStorage: Supabase storage error:", supabaseError);
       return storeFileLocally(file, fileId);
     }
   } catch (error) {
-    console.error('Error storing file:', error);
+    console.error('fileStorage: Error storing file:', error);
+    toast.error("Erro ao salvar arquivo", {
+      description: "Salvando localmente como backup"
+    });
+    
+    // Generate unique ID for error fallback
+    const errorFileId = uuidv4();
+    return storeFileLocally(file, errorFileId);
+  }
+};
+
+// Store file locally (fallback)
+const storeFileLocally = async (file: File, fileId: string): Promise<string> => {
+  console.log("fileStorage: Falling back to localStorage storage for file:", file.name);
+  
+  try {
+    const base64Data = await fileToBase64(file);
+    console.log("fileStorage: File converted to base64 successfully");
+    
+    // Create file object to store
+    const storedFile: StoredFile = {
+      id: fileId,
+      name: file.name,
+      type: file.type,
+      data: base64Data,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Get existing files
+    const existingFiles = getStoredFiles();
+    console.log("fileStorage: Existing files count:", existingFiles.length);
+    
+    // Add new file
+    existingFiles.push(storedFile);
+    
+    // Save to localStorage
+    localStorage.setItem('storedFiles', JSON.stringify(existingFiles));
+    console.log("fileStorage: File saved to localStorage successfully");
+    
+    toast.info("Arquivo salvo localmente", {
+      description: "Será enviado para o servidor quando houver conexão"
+    });
+    
+    // Return file URL
+    const fileUrl = `/api/files/${fileId}`;
+    console.log("fileStorage: Generated local file URL:", fileUrl);
+    return fileUrl;
+  } catch (error) {
+    console.error("fileStorage: Error storing file locally:", error);
+    toast.error("Erro ao salvar arquivo localmente", {
+      description: "Não foi possível salvar o arquivo"
+    });
     throw error;
   }
 };
 
-// Stocker un fichier localement (fallback)
-const storeFileLocally = async (file: File, fileId: string): Promise<string> => {
-  console.log("Falling back to localStorage storage for file:", file.name);
-  const base64Data = await fileToBase64(file);
-  console.log("File converted to base64 successfully");
-  
-  // Créer l'objet fichier à stocker
-  const storedFile: StoredFile = {
-    id: fileId,
-    name: file.name,
-    type: file.type,
-    data: base64Data,
-    createdAt: new Date().toISOString()
-  };
-  
-  // Récupérer les fichiers existants
-  const existingFiles = getStoredFiles();
-  console.log("Existing files count:", existingFiles.length);
-  
-  // Ajouter le nouveau fichier
-  existingFiles.push(storedFile);
-  
-  // Sauvegarder dans le localStorage
-  localStorage.setItem('storedFiles', JSON.stringify(existingFiles));
-  console.log("File saved to localStorage successfully");
-  
-  // Retourner l'URL du fichier
-  const fileUrl = `/api/files/${fileId}`;
-  console.log("Generated file URL:", fileUrl);
-  return fileUrl;
-};
-
-// Récupérer tous les fichiers stockés (pour le mode fallback)
+// Get all stored files (for fallback mode)
 export const getStoredFiles = (): StoredFile[] => {
   const stored = localStorage.getItem('storedFiles');
   const files = stored ? JSON.parse(stored) : [];
-  console.log("Retrieved stored files count:", files.length);
+  console.log("fileStorage: Retrieved stored files count:", files.length);
   return files;
 };
 
@@ -133,7 +159,7 @@ export const getStoredFile = async (fileId: string): Promise<StoredFile | string
       // Vérifier si le bucket existe
       const bucketExists = await createBucketIfNotExists(bucketName);
       if (!bucketExists) {
-        console.log("Bucket doesn't exist, falling back to localStorage for file retrieval");
+        console.log("fileStorage: Bucket doesn't exist, falling back to localStorage for file retrieval");
         // Fallback au localStorage si le bucket n'existe pas
         const localFiles = getStoredFiles();
         return localFiles.find(file => file.id === fileId) || null;
@@ -161,10 +187,10 @@ export const getStoredFile = async (fileId: string): Promise<StoredFile | string
     // Fallback au localStorage
     const localFiles = getStoredFiles();
     const file = localFiles.find(file => file.id === fileId) || null;
-    console.log("Retrieved file by ID:", fileId, file ? "Found" : "Not found");
+    console.log("fileStorage: Retrieved file by ID:", fileId, file ? "Found" : "Not found");
     return file;
   } catch (error) {
-    console.error("Error retrieving file:", error);
+    console.error("fileStorage: Error retrieving file:", error);
     return null;
   }
 };
@@ -198,7 +224,7 @@ export const deleteStoredFile = async (fileId: string): Promise<boolean> => {
               
             if (!error) {
               deleted = true;
-              console.log("File deleted from Supabase Storage:", fileId);
+              console.log("fileStorage: File deleted from Supabase Storage:", fileId);
             }
           }
         }
@@ -209,11 +235,11 @@ export const deleteStoredFile = async (fileId: string): Promise<boolean> => {
     const localFiles = getStoredFiles();
     const filteredFiles = localFiles.filter(file => file.id !== fileId);
     localStorage.setItem('storedFiles', JSON.stringify(filteredFiles));
-    console.log("File removed from localStorage:", fileId);
+    console.log("fileStorage: File removed from localStorage:", fileId);
     
     return deleted || localFiles.length !== filteredFiles.length;
   } catch (error) {
-    console.error("Error deleting file:", error);
+    console.error("fileStorage: Error deleting file:", error);
     return false;
   }
 };

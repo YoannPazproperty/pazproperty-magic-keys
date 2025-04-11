@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,44 +18,68 @@ import { initSupabase, initializeDatabase, createBucketIfNotExists } from './ser
 import { migrateDeclarationsToSupabase } from "./services/declarations/supabaseDeclarationStorage";
 import { toast } from "sonner";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30000
+    }
+  }
+});
 
 const App = () => {
-  // Initialiser Supabase au chargement de l'application
+  // Initialize Supabase when the application loads
   useEffect(() => {
     const setupSupabase = async () => {
-      console.log("Initialisation de Supabase...");
+      console.log("App: Initializing Supabase...");
       
-      // Initialiser le client Supabase
+      // Initialize Supabase client
       const supabase = initSupabase();
       if (!supabase) {
-        console.log("Mode fallback: Supabase n'est pas disponible, utilisation du stockage local uniquement");
-        // Ne pas afficher de toast d'erreur pour ne pas inquiéter l'utilisateur
-        return;
-      }
-      
-      // Initialiser la base de données
-      const initialized = await initializeDatabase();
-      if (!initialized) {
-        console.log("Base de données Supabase non initialisée, utilisation du stockage local");
-        toast.error("Connexion à Supabase échouée", {
-          description: "L'application fonctionnera en mode local uniquement."
+        console.log("App: Fallback mode: Supabase is not available, using local storage only");
+        toast.info("Modo local ativo", {
+          description: "Usando armazenamento local para guardar seus dados."
         });
         return;
       }
       
-      toast.success("Connexion à Supabase établie", {
-        description: "Les données seront synchronisées avec Supabase."
+      // Create declaration-media bucket if it doesn't exist
+      console.log("App: Creating declaration-media bucket if it doesn't exist...");
+      const bucketCreated = await createBucketIfNotExists('declaration-media');
+      
+      if (!bucketCreated) {
+        console.log("App: Failed to create declaration-media bucket");
+        toast.warning("Aviso de armazenamento", {
+          description: "Não foi possível criar o bucket para mídia. Os arquivos serão salvos localmente."
+        });
+      } else {
+        console.log("App: declaration-media bucket is ready");
+      }
+      
+      // Initialize the database
+      const initialized = await initializeDatabase();
+      if (!initialized) {
+        console.log("App: Supabase database not initialized, using local storage");
+        toast.error("Erro de conexão com Supabase", {
+          description: "O aplicativo funcionará apenas no modo local."
+        });
+        return;
+      }
+      
+      toast.success("Conexão com Supabase estabelecida", {
+        description: "Os dados serão sincronizados com Supabase."
       });
       
-      // Migrer les données locales vers Supabase
-      console.log("Migration des données locales vers Supabase...");
+      // Migrate local data to Supabase
+      console.log("App: Migrating local data to Supabase...");
       const migrated = await migrateDeclarationsToSupabase();
       
       if (migrated) {
-        toast.success("Migration réussie", {
-          description: "Les données ont été migrées vers Supabase avec succès."
+        toast.success("Migração bem-sucedida", {
+          description: "Os dados foram migrados para Supabase com sucesso."
         });
+      } else {
+        console.log("App: No data migrated or migration failed");
       }
     };
     

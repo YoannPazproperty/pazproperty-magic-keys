@@ -1,123 +1,159 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-// Fonction pour initialiser le client Supabase
+// Initialize Supabase client
 export const initSupabase = () => {
   try {
     if (!supabase) {
-      console.error('Supabase n\'est pas initialisé.');
+      console.error('Supabase client is not initialized.');
       return null;
     }
-    console.log('Supabase client initialisé');
+    console.log('Supabase client initialized successfully');
     return supabase;
   } catch (err) {
-    console.error('Erreur lors de l\'initialisation de Supabase:', err);
+    console.error('Error initializing Supabase:', err);
     return null;
   }
 };
 
-// Fonction pour créer un bucket s'il n'existe pas
+// Create bucket if it doesn't exist
 export const createBucketIfNotExists = async (bucketName: string) => {
-  if (!supabase) return false;
+  if (!supabase) {
+    console.error('Supabase client is not available');
+    return false;
+  }
   
   try {
-    console.log(`Vérification de l'existence du bucket "${bucketName}"...`);
+    console.log(`Checking if bucket "${bucketName}" exists...`);
     
-    // Vérifier si le bucket existe déjà
-    const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
+    // Check if the bucket exists
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
     
     if (listError) {
-      console.error('Erreur lors de la vérification des buckets:', listError);
+      console.error('Error checking buckets:', listError);
+      console.log('Error details:', listError.message, listError.details, listError.hint);
       return false;
     }
     
-    const bucketExists = existingBuckets.some(bucket => bucket.name === bucketName);
+    const bucketExists = buckets.some(bucket => bucket.name === bucketName);
     
     if (bucketExists) {
-      console.log(`Le bucket "${bucketName}" existe déjà.`);
+      console.log(`Bucket "${bucketName}" already exists.`);
       return true;
     }
     
-    // Créer le bucket s'il n'existe pas
-    console.log(`Création du bucket "${bucketName}"...`);
-    const { error: createError } = await supabase.storage.createBucket(bucketName, {
+    // Create the bucket if it doesn't exist
+    console.log(`Creating bucket "${bucketName}"...`);
+    const { data, error: createError } = await supabase.storage.createBucket(bucketName, {
       public: true
     });
     
     if (createError) {
-      console.error(`Erreur lors de la création du bucket "${bucketName}":`, createError);
+      console.error(`Error creating bucket "${bucketName}":`, createError);
+      console.log('Error details:', createError.message, createError.details, createError.hint);
       return false;
     }
     
-    console.log(`Bucket "${bucketName}" créé avec succès.`);
+    console.log(`Bucket "${bucketName}" created successfully.`, data);
     return true;
   } catch (err) {
-    console.error(`Erreur lors de la création du bucket "${bucketName}":`, err);
+    console.error(`Error creating bucket "${bucketName}":`, err);
     return false;
   }
 };
 
-// Fonction pour vérifier si la connexion à Supabase est établie
+// Check if Supabase is connected
 export const isSupabaseConnected = async (): Promise<boolean> => {
-  if (!supabase) return false;
+  if (!supabase) {
+    console.error('Supabase client is not available');
+    return false;
+  }
   
   try {
-    console.log('Vérification de la connexion à Supabase...');
+    console.log('Checking Supabase connection...');
     
-    // Tester avec une requête simple pour vérifier la connexion à la DB
+    // Test with a simple query to check database connection
+    console.log('Testing database connection...');
     const { data, error } = await supabase
       .from('declarations')
       .select('count')
       .limit(1);
     
     if (error) {
-      console.error('Erreur lors de la vérification de la connexion à Supabase:', error);
+      console.error('Error checking Supabase connection:', error);
+      console.log('Error details:', error.message, error.details, error.hint);
       return false;
     }
     
-    // Essayer de créer le bucket declaration-media s'il n'existe pas
-    const bucketName = 'declaration-media';
-    const bucketCreated = await createBucketIfNotExists(bucketName);
+    console.log('Database connection successful, data:', data);
+    
+    // Check if storage is working by trying to create the declaration-media bucket
+    console.log('Testing storage connection by checking declaration-media bucket...');
+    const bucketCreated = await createBucketIfNotExists('declaration-media');
     
     if (!bucketCreated) {
-      console.error(`Impossible de créer ou vérifier le bucket "${bucketName}"`);
+      console.error('Could not create or verify declaration-media bucket');
       return false;
     }
     
-    console.log('Connexion à Supabase établie avec succès.');
+    console.log('Supabase connection established successfully (database and storage).');
     return true;
   } catch (err) {
-    console.error('Erreur lors de la vérification de la connexion à Supabase:', err);
+    console.error('Error checking Supabase connection:', err);
     return false;
   }
 };
 
-// Fonction pour obtenir le client Supabase
+// Get Supabase client
 export const getSupabase = () => {
   return supabase;
 };
 
-// Fonction pour initialiser la base de données
+// Initialize database
 export const initializeDatabase = async () => {
   try {
-    // Vérifier si Supabase est disponible
+    // Check if Supabase is available
     if (!supabase) {
-      console.log('Supabase n\'est pas disponible - utilisation du localStorage uniquement');
+      console.error('Supabase is not available - using localStorage only');
+      toast.error("Não foi possível conectar ao Supabase", {
+        description: "O aplicativo funcionará apenas no modo local."
+      });
       return false;
     }
     
-    console.log('Vérification de la connexion à Supabase...');
+    console.log('Checking Supabase connection...');
+    
+    // Try to create the declaration-media bucket
+    const bucketCreated = await createBucketIfNotExists('declaration-media');
+    if (!bucketCreated) {
+      console.error('Could not create declaration-media bucket');
+      toast.error("Erro ao criar bucket de mídia", {
+        description: "Não foi possível configurar o armazenamento de arquivos."
+      });
+    }
+    
+    // Check connection to Supabase
     const isConnected = await isSupabaseConnected();
     
     if (isConnected) {
-      console.log('Connexion à Supabase établie avec succès');
+      console.log('Supabase connection established successfully');
+      toast.success("Conexão com Supabase estabelecida", {
+        description: "Os dados serão sincronizados com Supabase."
+      });
       return true;
     } else {
-      console.log('Impossible de se connecter à Supabase - utilisation du localStorage uniquement');
+      console.error('Could not connect to Supabase - using localStorage only');
+      toast.error("Falha na conexão com Supabase", {
+        description: "O aplicativo funcionará apenas no modo local."
+      });
       return false;
     }
   } catch (err) {
-    console.error('Erreur lors de l\'initialisation de la base de données:', err);
+    console.error('Error initializing database:', err);
+    toast.error("Erro ao inicializar o banco de dados", {
+      description: "Ocorreu um erro inesperado."
+    });
     return false;
   }
 };
