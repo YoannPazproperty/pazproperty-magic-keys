@@ -63,7 +63,7 @@ export const createBucketIfNotExists = async (bucketName: string) => {
     // Create the bucket if it doesn't exist
     console.log(`Creating bucket "${bucketName}"...`);
     
-    // Create bucket with minimal options to avoid type errors
+    // Create bucket with simple options
     const { data, error: createError } = await supabase.storage.createBucket(bucketName, {
       public: true
     });
@@ -97,15 +97,15 @@ export const isDatabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Testing database connection...');
     
-    // Test with a very simple query that should always work if connected
-    const { data, error } = await supabase.from('declarations').select('count()', { count: 'exact', head: true });
+    // Use a simpler query to check connection
+    const { data, error } = await supabase.rpc('version');
     
     if (error) {
-      console.error('Error checking database connection:', error);
+      console.error('Database connection failed:', error);
       return false;
     }
     
-    console.log('Database connection successful');
+    console.log('Database connection successful, version:', data);
     return true;
   } catch (err) {
     console.error('Error checking database connection:', err);
@@ -149,10 +149,11 @@ export const isSupabaseConnected = async (): Promise<boolean> => {
   try {
     console.log('Checking Supabase connection...');
     
-    // Test database connection only
-    const dbConnected = await isDatabaseConnected();
-    if (!dbConnected) {
-      console.error('Database connection failed');
+    // Test database connection - use a simpler query
+    const { data, error } = await supabase.rpc('version');
+    
+    if (error) {
+      console.error('Database connection failed:', error);
       return false;
     }
     
@@ -183,33 +184,46 @@ export const initializeDatabase = async () => {
     
     console.log('Checking Supabase connection...');
     
-    // Check connection to database first
-    const dbConnected = await isDatabaseConnected();
-    if (!dbConnected) {
-      console.error('Could not connect to Supabase database - using localStorage only');
-      toast.error("Falha na conexão com banco de dados Supabase", {
+    // Check connection to database with a simpler query
+    try {
+      const { data, error } = await supabase.rpc('version');
+      
+      if (error) {
+        console.error('Could not connect to Supabase database:', error);
+        toast.error("Falha na conexão com banco de dados Supabase", {
+          description: "O aplicativo funcionará apenas no modo local."
+        });
+        return false;
+      }
+      
+      console.log('Supabase database connection established successfully, version:', data);
+      
+      // Check storage separately
+      const storageConnected = await isStorageConnected();
+      if (!storageConnected) {
+        console.warn('Could not connect to Supabase storage - file uploads will use localStorage');
+        toast.warning("Armazenamento Supabase indisponível", {
+          description: "Os arquivos serão salvos localmente."
+        });
+      } else {
+        // Create the declarations media bucket if it doesn't exist
+        await createBucketIfNotExists('declaration-media');
+      }
+      
+      toast.success("Conexão com Supabase estabelecida", {
+        description: storageConnected
+          ? "Banco de dados e armazenamento funcionando corretamente."
+          : "Banco de dados conectado, mas armazenamento pode estar limitado."
+      });
+      
+      return true;
+    } catch (connectionErr) {
+      console.error('Error connecting to Supabase:', connectionErr);
+      toast.error("Erro ao conectar ao Supabase", {
         description: "O aplicativo funcionará apenas no modo local."
       });
       return false;
     }
-    
-    // Check storage separately (but don't make it a requirement for success)
-    const storageConnected = await isStorageConnected();
-    if (!storageConnected) {
-      console.warn('Could not connect to Supabase storage - file uploads will use localStorage');
-      toast.warning("Armazenamento Supabase indisponível", {
-        description: "Os arquivos serão salvos localmente."
-      });
-    }
-    
-    // Overall connection status depends on database, storage is optional
-    console.log('Supabase database connection established successfully');
-    toast.success("Conexão com Supabase estabelecida", {
-      description: storageConnected
-        ? "Banco de dados e armazenamento funcionando corretamente."
-        : "Banco de dados conectado, mas armazenamento pode estar limitado."
-    });
-    return true;
   } catch (err) {
     console.error('Error initializing database:', err);
     toast.error("Erro ao inicializar o banco de dados", {

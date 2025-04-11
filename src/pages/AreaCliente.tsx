@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import SuccessMessage from "@/components/client-area/SuccessMessage";
 import DeclarationForm from "@/components/client-area/DeclarationForm";
 import ContactInformation from "@/components/client-area/ContactInformation";
-import { initializeDatabase, isStorageConnected, isSupabaseConnected, createBucketIfNotExists } from "@/services/supabaseService";
+import { initSupabase, initializeDatabase, isSupabaseConnected } from "@/services/supabaseService";
 
 // Ensure we have a default Monday configuration for testing
 // This is just for development - in production this would be set in the admin panel
@@ -39,40 +39,61 @@ const AreaCliente = ({ connectionStatus = { initialized: false, database: false,
   // Initialize database and check connection status
   useEffect(() => {
     const checkConnection = async () => {
-      console.log("Checking Supabase connection status...");
+      console.log("AreaCliente: Checking Supabase connection...");
       
-      // Initialize database connection
-      const initialized = await initializeDatabase();
-      
-      if (initialized) {
-        // Check database and storage connection
-        const database = await isSupabaseConnected();
-        const storage = await isStorageConnected();
-        
-        // If storage is available, ensure the declaration-media bucket exists
-        if (storage) {
-          await createBucketIfNotExists('declaration-media');
-        }
-        
-        setDbStatus({
-          initialized: true,
-          database,
-          storage
-        });
-        
-        console.log("Connection status updated:", { initialized, database, storage });
-      } else {
+      // First initialize Supabase client
+      const client = initSupabase();
+      if (!client) {
+        console.error("AreaCliente: Failed to initialize Supabase client");
         setDbStatus({
           initialized: true,
           database: false,
           storage: false
         });
-        console.log("Failed to initialize database connection");
+        return;
+      }
+      
+      try {
+        // Test database connection
+        const database = await isSupabaseConnected();
+        console.log("AreaCliente: Database connection status:", database);
+        
+        if (!database) {
+          setDbStatus({
+            initialized: true,
+            database: false,
+            storage: false
+          });
+          console.log("AreaCliente: Database connection failed");
+          return;
+        }
+        
+        // Initialize database fully (includes storage check)
+        const initialized = await initializeDatabase();
+        
+        // Set status based on initialization result
+        setDbStatus(prev => ({
+          ...prev,
+          initialized: true,
+          database: database
+        }));
+        
+        console.log("AreaCliente: Initialization complete:", initialized);
+      } catch (error) {
+        console.error("AreaCliente: Connection error:", error);
+        setDbStatus({
+          initialized: true,
+          database: false,
+          storage: false
+        });
       }
     };
     
-    checkConnection();
-  }, []);
+    // Only check if the connection status wasn't provided as a prop
+    if (!connectionStatus.initialized) {
+      checkConnection();
+    }
+  }, [connectionStatus.initialized]);
 
   const handleSuccessfulSubmission = () => {
     console.log("handleSuccessfulSubmission appelé, passage à l'écran de succès");
