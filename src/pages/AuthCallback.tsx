@@ -22,21 +22,29 @@ const AuthCallback = () => {
         console.log("URL actuelle:", window.location.href);
         
         // Vérifier si c'est un flux de réinitialisation de mot de passe
-        const searchParams = new URLSearchParams(window.location.search);
-        const isReset = searchParams.get("reset") === "true";
-        const type = searchParams.get("type");
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
         
-        if (isReset || type === "recovery") {
+        const isReset = urlSearchParams.get("reset") === "true";
+        const type = urlSearchParams.get("type") || hashParams.get("type");
+        const accessToken = hashParams.get("access_token");
+        
+        console.log("Debug URL params:", { 
+          isReset, 
+          type, 
+          accessToken: accessToken ? "présent" : "absent",
+          hash: window.location.hash,
+          search: window.location.search
+        });
+        
+        // Si c'est un reset de mot de passe OU si on a un token dans le hash
+        if (isReset || type === "recovery" || accessToken) {
           console.log("Détection d'un flux de réinitialisation de mot de passe");
           setIsPasswordReset(true);
           return; // Attendre que l'utilisateur entre un nouveau mot de passe
         }
         
-        // Extraire le hash de l'URL s'il existe
-        const hashParams = window.location.hash 
-          ? new URLSearchParams(window.location.hash.substring(1))
-          : null;
-        
+        // Extraire le hash de l'URL s'il existe pour capturer les erreurs
         if (hashParams && hashParams.get("error_description")) {
           const errorDescription = hashParams.get("error_description");
           console.error("Erreur dans les paramètres de l'URL:", errorDescription);
@@ -49,8 +57,7 @@ const AuthCallback = () => {
         }
         
         // Essayer d'échanger le code d'autorisation contre des jetons si présent dans l'URL
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get("code");
+        const code = urlSearchParams.get("code");
         
         if (code) {
           console.log("Code d'autorisation trouvé, tentative d'échange");
@@ -130,10 +137,22 @@ const AuthCallback = () => {
     try {
       console.log("Tentative de réinitialisation du mot de passe");
       
-      // Récupère le token de réinitialisation et de type depuis l'URL
+      // Récupération plus robuste du token depuis l'URL (hash ou query params)
       const hash = window.location.hash.substring(1);
-      const searchParams = new URLSearchParams(hash || window.location.search);
-      const token = searchParams.get("token") || searchParams.get("access_token");
+      const hashParams = new URLSearchParams(hash);
+      const queryParams = new URLSearchParams(window.location.search);
+      
+      // Chercher le token dans différents endroits possibles
+      const token = 
+        hashParams.get("access_token") || 
+        queryParams.get("token") || 
+        hashParams.get("token");
+      
+      console.log("Paramètres d'URL analysés:", {
+        hashPresent: hash.length > 0,
+        accessTokenInHash: !!hashParams.get("access_token"),
+        tokenInQuery: !!queryParams.get("token")
+      });
       
       if (!token) {
         console.error("Aucun token de réinitialisation trouvé dans l'URL");
@@ -144,8 +163,19 @@ const AuthCallback = () => {
       }
       
       console.log("Token trouvé, mise à jour du mot de passe...");
+      
+      // Si nous avons un token d'accès dans le hash, configuration explicite
+      if (hashParams.get("access_token")) {
+        // Mettre à jour explicitement la session Supabase avec le token
+        await supabase.auth.setSession({
+          access_token: token,
+          refresh_token: hashParams.get("refresh_token") || "",
+        });
+      }
+      
+      // Mise à jour du mot de passe
       const { error } = await supabase.auth.updateUser({ 
-        password: newPassword
+        password: newPassword 
       });
       
       if (error) {

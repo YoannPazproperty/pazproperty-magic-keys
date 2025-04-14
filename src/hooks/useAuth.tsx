@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
@@ -60,7 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (error) {
           console.error("Erreur lors de la récupération de la session initiale:", error);
-          // Ne pas afficher de toast ici pour éviter les notifications inutiles au chargement
         }
         
         setSession(data.session);
@@ -154,14 +152,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      // CORRECTION : Utiliser une URL de redirection complète et correcte
+      // Construction précise de l'URL de redirection complète
       const origin = window.location.origin;
-      const redirectTo = `${origin}/auth/callback`;
-      console.log(`URL de redirection pour la réinitialisation : ${redirectTo}`);
+      const redirectURL = new URL("/auth/callback", origin);
+      console.log(`URL de redirection pour la réinitialisation : ${redirectURL.toString()}`);
 
-      // Effectuer la demande de réinitialisation avec plus d'options explicites
+      // Effectuer la demande de réinitialisation avec toutes les options nécessaires
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectTo,
+        redirectTo: redirectURL.toString(),
       });
 
       if (error) {
@@ -184,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return { 
             error, 
             success: false,
-            message: "Erreur de communication avec le serveur d'authentification. Vérifiez la configuration de Supabase."
+            message: "Erreur de communication avec le serveur d'authentification. Vérifiez la configuration des URL dans Supabase."
           };
         }
         
