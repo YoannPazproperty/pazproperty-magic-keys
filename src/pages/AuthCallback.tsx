@@ -129,7 +129,24 @@ const AuthCallback = () => {
     
     try {
       console.log("Tentative de réinitialisation du mot de passe");
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      
+      // Récupère le token de réinitialisation et de type depuis l'URL
+      const hash = window.location.hash.substring(1);
+      const searchParams = new URLSearchParams(hash || window.location.search);
+      const token = searchParams.get("token") || searchParams.get("access_token");
+      
+      if (!token) {
+        console.error("Aucun token de réinitialisation trouvé dans l'URL");
+        setPasswordError("Le lien de réinitialisation est invalide ou a expiré. Veuillez réessayer.");
+        toast.error("Lien de réinitialisation invalide");
+        setLoading(false);
+        return;
+      }
+      
+      console.log("Token trouvé, mise à jour du mot de passe...");
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword
+      });
       
       if (error) {
         console.error("Erreur lors de la réinitialisation du mot de passe:", error);

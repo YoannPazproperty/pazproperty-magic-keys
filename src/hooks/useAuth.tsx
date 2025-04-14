@@ -154,9 +154,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
+      // CORRECTION : Utiliser une URL de redirection complète et correcte
+      const origin = window.location.origin;
+      const redirectTo = `${origin}/auth/callback`;
+      console.log(`URL de redirection pour la réinitialisation : ${redirectTo}`);
+
       // Effectuer la demande de réinitialisation avec plus d'options explicites
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?reset=true`,
+        redirectTo: redirectTo,
       });
 
       if (error) {

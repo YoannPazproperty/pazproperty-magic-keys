@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import { FcGoogle } from "react-icons/fc";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Info } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -115,10 +113,11 @@ const Auth = () => {
   };
 
   const handleForgotPassword = async (values: ForgotPasswordValues) => {
+    console.log("Demande de réinitialisation pour:", values.email);
     setLoading(true);
     setResetError(null);
+    
     try {
-      // Appel correct à la fonction resetPassword du hook useAuth
       const { error, success, message } = await resetPassword(values.email);
       
       if (error) {
