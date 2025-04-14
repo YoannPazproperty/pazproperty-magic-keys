@@ -15,7 +15,6 @@ import Admin from "./pages/Admin";
 import ExtranetTechnique from "./pages/ExtranetTechnique";
 import NotFound from "./pages/NotFound";
 import { initSupabase, isDatabaseConnected, initializeDatabase, isStorageConnected } from './services/supabaseService';
-import { migrateDeclarationsToSupabase } from "./services/declarations/supabaseDeclarationStorage";
 import { toast } from "sonner";
 
 const queryClient = new QueryClient({
@@ -96,20 +95,6 @@ const App = () => {
           database: true,
           storage: storageConnected
         });
-        
-        // Migrate local data to Supabase
-        if (dbConnected) {
-          console.log("App: Migrating local data to Supabase...");
-          const migrated = await migrateDeclarationsToSupabase();
-          
-          if (migrated) {
-            toast.success("Migração bem-sucedida", {
-              description: "Os dados foram migrados para Supabase com sucesso."
-            });
-          } else {
-            console.log("App: No data migrated or migration failed");
-          }
-        }
       } catch (error) {
         console.error("App: Error setting up Supabase:", error);
         toast.error("Erro de conexão com Supabase", {
