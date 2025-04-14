@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
@@ -77,10 +78,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       console.log("Tentative d'authentification avec Google");
+      // Utilisez l'URL de callback configurée dans Google Cloud Console
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          // Ne pas spécifier de redirectTo car nous utilisons déjà l'URL configurée dans Supabase
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
