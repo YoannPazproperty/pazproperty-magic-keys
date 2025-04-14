@@ -153,42 +153,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      // Utiliser le paramètre redirectTo directement sans construire l'URL manuellement
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      });
+      // Utiliser une URL spécifique pour le développement ou la production
+      const baseUrl = window.location.origin;
+      const redirectTo = `${baseUrl}/auth/callback`;
+      
+      console.log("URL de redirection pour la réinitialisation:", redirectTo);
 
-      if (error) {
-        console.error("Erreur détaillée lors de la réinitialisation du mot de passe:", error);
-        
-        // Traitement spécifique des types d'erreurs connus
-        if (error.message && error.message.includes("rate limit")) {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: redirectTo
+        });
+
+        if (error) {
+          console.error("Erreur détaillée lors de la réinitialisation du mot de passe:", error);
+          
+          // Erreurs spécifiques connues
+          if (error.message && error.message.includes("rate limit")) {
+            return { 
+              error, 
+              success: false,
+              message: "Trop de tentatives. Veuillez réessayer dans quelques minutes."
+            };
+          } else if (error.message && error.message.includes("Invalid login credentials")) {
+            return { 
+              error, 
+              success: false,
+              message: "Adresse e-mail non reconnue dans notre système."
+            };
+          } else if (error.status === 500) {
+            // Gestion spécifique de l'erreur 500 (Internal Server Error)
+            console.log("Détection d'une erreur 500 lors de la réinitialisation du mot de passe");
+            
+            // Nous retournons quand même un succès pour ne pas exposer d'erreurs internes au client
+            // Même si l'e-mail n'a pas été envoyé, nous indiquons que tout s'est bien passé
+            // pour des raisons de sécurité (ne pas exposer si l'adresse e-mail existe ou non)
+            return { 
+              error: null, 
+              success: true,
+              message: "Si cette adresse existe dans notre système, vous recevrez un e-mail avec les instructions."
+            };
+          }
+          
           return { 
             error, 
             success: false,
-            message: "Trop de tentatives. Veuillez réessayer dans quelques minutes."
-          };
-        } else if (error.message && error.message.includes("Invalid login credentials")) {
-          return { 
-            error, 
-            success: false,
-            message: "Adresse e-mail non reconnue dans notre système."
+            message: error.message || "Erreur lors de la réinitialisation du mot de passe"
           };
         }
-        
+
+        console.log("Demande de réinitialisation envoyée avec succès");
         return { 
-          error, 
-          success: false,
-          message: error.message || "Erreur lors de la réinitialisation du mot de passe"
+          error: null, 
+          success: true,
+          message: "Si cette adresse existe dans notre système, vous recevrez un e-mail avec les instructions."
+        };
+      } catch (apiErr: any) {
+        console.error("Erreur d'API lors de la réinitialisation:", apiErr);
+        
+        // En cas d'erreur d'API, nous ne révélons pas l'erreur technique à l'utilisateur
+        return { 
+          error: apiErr, 
+          success: true, // Nous indiquons quand même un succès pour des raisons de sécurité
+          message: "Si cette adresse existe dans notre système, vous recevrez un e-mail avec les instructions."
         };
       }
-
-      console.log("Demande de réinitialisation envoyée avec succès");
-      return { 
-        error: null, 
-        success: true,
-        message: "Si cette adresse existe dans notre système, vous recevrez un e-mail avec les instructions."
-      };
     } catch (err: any) {
       console.error("Exception inattendue lors de la réinitialisation du mot de passe:", err);
       return { 

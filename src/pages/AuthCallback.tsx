@@ -1,15 +1,17 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
@@ -119,6 +121,11 @@ const AuthCallback = () => {
       setPasswordError("Le mot de passe doit contenir au moins 8 caractères");
       return;
     }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Les mots de passe ne correspondent pas");
+      return;
+    }
     
     setLoading(true);
     
@@ -133,32 +140,45 @@ const AuthCallback = () => {
       if (!accessToken) {
         console.error("Aucun token d'accès trouvé");
         setPasswordError("Lien de réinitialisation invalide ou expiré");
+        setLoading(false);
         return;
       }
       
       // Définir la session avec les tokens extraits
       if (accessToken && refreshToken) {
-        await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
+        try {
+          await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+        } catch (sessionErr: any) {
+          console.error("Erreur lors de la définition de la session:", sessionErr);
+          setPasswordError("Erreur d'authentification: " + (sessionErr.message || "Session invalide"));
+          setLoading(false);
+          return;
+        }
       }
       
       // Mise à jour du mot de passe
-      const { error } = await supabase.auth.updateUser({ 
-        password: newPassword 
-      });
-      
-      if (error) {
-        console.error("Erreur lors de la réinitialisation:", error);
-        setPasswordError(error.message);
-        toast.error("Échec de la réinitialisation", {
-          description: error.message
+      try {
+        const { error } = await supabase.auth.updateUser({ 
+          password: newPassword 
         });
-      } else {
-        console.log("Mot de passe réinitialisé avec succès");
-        toast.success("Mot de passe mis à jour avec succès");
-        setTimeout(() => navigate("/admin"), 2000);
+        
+        if (error) {
+          console.error("Erreur lors de la réinitialisation:", error);
+          setPasswordError(error.message);
+          toast.error("Échec de la réinitialisation", {
+            description: error.message
+          });
+        } else {
+          console.log("Mot de passe réinitialisé avec succès");
+          toast.success("Mot de passe mis à jour avec succès");
+          setTimeout(() => navigate("/admin"), 2000);
+        }
+      } catch (updateErr: any) {
+        console.error("Exception lors de la mise à jour du mot de passe:", updateErr);
+        setPasswordError(updateErr.message || "Erreur lors de la mise à jour du mot de passe");
       }
     } catch (err: any) {
       console.error("Exception lors de la réinitialisation:", err);
@@ -186,6 +206,22 @@ const AuthCallback = () => {
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Minimum 8 caractères"
+                required
+                minLength={8}
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+                Confirmer le mot de passe
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Répétez votre mot de passe"
                 required
                 minLength={8}
               />
