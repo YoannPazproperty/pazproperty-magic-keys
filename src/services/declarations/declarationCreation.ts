@@ -1,12 +1,11 @@
 
 import { Declaration } from "../types";
-import { saveDeclarations, loadDeclarations } from "../storageService";
-import { generateUniqueId } from "./declarationStorage";
 import { notifyNewDeclaration } from "./declarationNotification";
 import { storeFile } from "../storage/fileStorage";
 import { createSupabaseDeclaration } from "./supabaseDeclarationStorage";
 import { isSupabaseConnected, createBucketIfNotExists } from "../supabaseService";
 import { toast } from "sonner";
+import { generateUniqueId } from "./declarationStorage";
 
 // Create a new declaration with media files
 export const addWithMedia = async (
@@ -22,6 +21,15 @@ export const addWithMedia = async (
     console.log("declarationCreation: Checking Supabase connection status...");
     const supabaseConnected = await isSupabaseConnected();
     console.log("declarationCreation: Supabase connection status:", supabaseConnected);
+    
+    // Si Supabase n'est pas connecté, renvoyer une erreur
+    if (!supabaseConnected) {
+      console.error("declarationCreation: Supabase is not connected, cannot create declaration");
+      toast.error("Erro de conexão", {
+        description: "Não foi possível conectar ao Supabase. Por favor, tente novamente mais tarde."
+      });
+      throw new Error("Cannot create declaration without Supabase connection");
+    }
     
     // Store files and get their URLs
     console.log(`declarationCreation: Starting storage of ${mediaFiles.length} files...`);
@@ -49,50 +57,21 @@ export const addWithMedia = async (
     console.log("declarationCreation: New declaration created:", newDeclaration);
     console.log("declarationCreation: Media files in declaration:", newDeclaration.mediaFiles);
     
-    if (supabaseConnected) {
-      console.log("declarationCreation: Supabase is connected, saving to Supabase...");
-      try {
-        // Create declaration in Supabase
-        const result = await createSupabaseDeclaration(newDeclaration);
-        console.log("declarationCreation: Result from Supabase save:", result);
-        
-        if (!result) {
-          console.warn("declarationCreation: No result from Supabase, saving to localStorage as fallback");
-          // If failed, save to localStorage as fallback
-          const declarations = loadDeclarations();
-          declarations.push(newDeclaration);
-          saveDeclarations(declarations);
-          
-          toast.warning("Declaração salva localmente", {
-            description: "Não foi possível salvar no Supabase. Os dados serão sincronizados mais tarde."
-          });
-        } else {
-          toast.success("Declaração salva com sucesso", {
-            description: "Sua declaração foi registrada no Supabase."
-          });
-        }
-      } catch (supabaseError) {
-        console.error("declarationCreation: Error saving to Supabase:", supabaseError);
-        // In case of error, save locally
-        const declarations = loadDeclarations();
-        declarations.push(newDeclaration);
-        saveDeclarations(declarations);
-        
-        toast.warning("Erro ao salvar no Supabase", {
-          description: "Declaração salva localmente. Será sincronizada mais tarde."
-        });
-      }
-    } else {
-      console.log("declarationCreation: Supabase is not connected, saving to localStorage");
-      // If Supabase is not connected, use localStorage
-      const declarations = loadDeclarations();
-      declarations.push(newDeclaration);
-      saveDeclarations(declarations);
-      
-      toast.info("Salvo no modo offline", {
-        description: "Declaração salva localmente. Será sincronizada quando houver conexão."
+    // Create declaration in Supabase
+    const result = await createSupabaseDeclaration(newDeclaration);
+    console.log("declarationCreation: Result from Supabase save:", result);
+    
+    if (!result) {
+      console.error("declarationCreation: Failed to save to Supabase");
+      toast.error("Erro ao salvar declaração", {
+        description: "Não foi possível salvar sua declaração. Por favor, tente novamente."
       });
-    }
+      throw new Error("Failed to save declaration to Supabase");
+    } 
+    
+    toast.success("Declaração salva com sucesso", {
+      description: "Sua declaração foi registrada no Supabase."
+    });
     
     // Send notification
     await notifyNewDeclaration(newDeclaration);

@@ -65,11 +65,11 @@ export const useDeclarationForm = ({ form, onSuccess, connectionStatus }: UseDec
             });
           } else if (dbConnected) {
             toast.info("Conectado parcialmente ao Supabase", { 
-              description: "Banco de dados conectado, armazenamento em modo local."
+              description: "Banco de dados conectado, armazenamento pode estar limitado."
             });
           } else {
-            toast.warning("Modo offline ativo", { 
-              description: "Seus dados serão salvos localmente e sincronizados mais tarde."
+            toast.error("Erro de conexão", { 
+              description: "Não é possível usar o aplicativo sem conexão ao Supabase."
             });
           }
         } catch (error) {
@@ -79,7 +79,7 @@ export const useDeclarationForm = ({ form, onSuccess, connectionStatus }: UseDec
             storage: false
           });
           toast.error("Erro ao verificar conexão", { 
-            description: "O aplicativo funcionará no modo offline."
+            description: "Não é possível usar o aplicativo sem conexão ao Supabase."
           });
         }
       };
@@ -98,6 +98,15 @@ export const useDeclarationForm = ({ form, onSuccess, connectionStatus }: UseDec
     setIsSubmitting(true);
     
     try {
+      // Vérifier si Supabase est connecté avant de soumettre
+      if (!supabaseStatus?.database || !supabaseStatus?.storage) {
+        toast.error("Sem conexão ao Supabase", { 
+          description: "Não é possível enviar o formulário sem conexão ao Supabase."
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       console.log("useDeclarationForm: Form data:", values);
       console.log("useDeclarationForm: Media files:", mediaFiles);
       console.log("useDeclarationForm: Supabase status:", supabaseStatus);
@@ -121,45 +130,49 @@ export const useDeclarationForm = ({ form, onSuccess, connectionStatus }: UseDec
       
       console.log("useDeclarationForm: Submitting declaration data:", declarationData);
       
-      // Add declaration with media files
-      const newDeclaration = await addWithMedia(declarationData, mediaFiles);
-      console.log("useDeclarationForm: Declaration saved:", newDeclaration);
-      
-      // Send to Monday.com with improved error handling
       try {
-        console.log("useDeclarationForm: Sending to Monday.com:", newDeclaration);
-        const mondayResult = await sendToExternalService(newDeclaration);
+        // Add declaration with media files
+        const newDeclaration = await addWithMedia(declarationData, mediaFiles);
+        console.log("useDeclarationForm: Declaration saved:", newDeclaration);
         
-        if (mondayResult) {
-          toast.success("Enviado para Monday.com", {
-            description: `ID: ${mondayResult}`
-          });
-          console.log("useDeclarationForm: Successfully sent to Monday.com with ID:", mondayResult);
-        } else {
-          toast.warning("Não enviado para Monday.com", {
+        // Send to Monday.com with improved error handling
+        try {
+          console.log("useDeclarationForm: Sending to Monday.com:", newDeclaration);
+          const mondayResult = await sendToExternalService(newDeclaration);
+          
+          if (mondayResult) {
+            toast.success("Enviado para Monday.com", {
+              description: `ID: ${mondayResult}`
+            });
+            console.log("useDeclarationForm: Successfully sent to Monday.com with ID:", mondayResult);
+          } else {
+            toast.warning("Não enviado para Monday.com", {
+              description: "Será processado manualmente pela equipe."
+            });
+            console.error("useDeclarationForm: Failed to send to Monday.com");
+          }
+        } catch (mondayError) {
+          console.error("useDeclarationForm: Error sending to Monday.com:", mondayError);
+          toast.warning("Erro ao enviar para Monday.com", {
             description: "Será processado manualmente pela equipe."
           });
-          console.error("useDeclarationForm: Failed to send to Monday.com");
         }
-      } catch (mondayError) {
-        console.error("useDeclarationForm: Error sending to Monday.com:", mondayError);
-        toast.warning("Erro ao enviar para Monday.com", {
-          description: "Será processado manualmente pela equipe."
-        });
-      }
-      
-      // Reset form and media files
-      form.reset();
-      setMediaFiles([]);
-      
-      // Trigger success callback with delay to ensure states are updated
-      console.log("useDeclarationForm: Triggering onSuccess with 500ms delay...");
-      setTimeout(() => {
+        
+        // Reset form and media files
+        form.reset();
+        setMediaFiles([]);
+        
+        // Trigger success callback with delay to ensure states are updated
+        console.log("useDeclarationForm: Triggering onSuccess with 500ms delay...");
+        setTimeout(() => {
+          setIsSubmitting(false);
+          onSuccess();
+          console.log("useDeclarationForm: onSuccess executed");
+        }, 500);
+      } catch (declarationError) {
+        console.error("useDeclarationForm: Error creating declaration:", declarationError);
         setIsSubmitting(false);
-        onSuccess();
-        console.log("useDeclarationForm: onSuccess executed");
-      }, 500);
-      
+      }
     } catch (error) {
       console.error("useDeclarationForm: Error submitting form:", error);
       toast.error("Erro ao enviar", {

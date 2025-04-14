@@ -1,6 +1,6 @@
+
 import { Declaration } from "../types";
 import { supabase } from "@/integrations/supabase/client";
-import { loadDeclarations, saveDeclarations } from "../storageService";
 import { generateUniqueId } from "./declarationStorage";
 import { toast } from "sonner";
 
@@ -47,54 +47,15 @@ const convertFromSupabaseFormat = (record: any): Declaration => {
   };
 };
 
-// Migrate declarations from localStorage to Supabase
-export const migrateDeclarationsToSupabase = async (): Promise<boolean> => {
-  try {
-    // If Supabase is not available, don't attempt migration
-    if (!supabase) {
-      console.log('supabaseDeclarationStorage: Supabase not available, cannot migrate data');
-      return false;
-    }
-    
-    const localDeclarations = loadDeclarations();
-    
-    if (localDeclarations.length === 0) {
-      console.log('supabaseDeclarationStorage: No local declarations to migrate');
-      return true;
-    }
-    
-    console.log(`supabaseDeclarationStorage: Migrating ${localDeclarations.length} declarations to Supabase`);
-    
-    // Convert declarations to Supabase format before inserting
-    const supabaseFormattedDeclarations = localDeclarations.map(convertToSupabaseFormat);
-    console.log('supabaseDeclarationStorage: Formatted declarations for migration:', supabaseFormattedDeclarations);
-    
-    // Insert all declarations into Supabase
-    const { error } = await supabase
-      .from(DECLARATIONS_TABLE)
-      .upsert(supabaseFormattedDeclarations, { onConflict: 'id' });
-    
-    if (error) {
-      console.error('supabaseDeclarationStorage: Error migrating declarations to Supabase:', error);
-      console.log('supabaseDeclarationStorage: Error details:', error.message, error.details);
-      return false;
-    }
-    
-    console.log('supabaseDeclarationStorage: Declaration migration completed successfully');
-    return true;
-  } catch (err) {
-    console.error('supabaseDeclarationStorage: Error during declaration migration:', err);
-    return false;
-  }
-};
-
 // Get all declarations with optional filters
 export const getSupabaseDeclarations = async (statusFilter: string | null = null): Promise<Declaration[]> => {
   try {
     if (!supabase) {
-      console.log('Supabase non disponible, utilisation des données locales');
-      return loadDeclarations().filter(d => !statusFilter || d.status === statusFilter)
-        .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      console.error('Supabase non disponible');
+      toast.error("Erro de conexão", {
+        description: "Não foi possível conectar ao Supabase para obter declarações."
+      });
+      return [];
     }
     
     let query = supabase.from(DECLARATIONS_TABLE).select('*');
@@ -107,9 +68,10 @@ export const getSupabaseDeclarations = async (statusFilter: string | null = null
     
     if (error) {
       console.error('Erreur lors de la récupération des déclarations:', error);
-      // Fallback aux données locales si Supabase échoue
-      return loadDeclarations().filter(d => !statusFilter || d.status === statusFilter)
-        .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+      toast.error("Erro ao obter declarações", {
+        description: error.message
+      });
+      return [];
     }
     
     console.log('Déclarations récupérées depuis Supabase:', data);
@@ -117,9 +79,10 @@ export const getSupabaseDeclarations = async (statusFilter: string | null = null
     return (data || []).map(convertFromSupabaseFormat);
   } catch (err) {
     console.error('Erreur lors de la récupération des déclarations:', err);
-    // Fallback aux données locales
-    return loadDeclarations().filter(d => !statusFilter || d.status === statusFilter)
-      .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+    toast.error("Erro ao processar declarações", {
+      description: "Ocorreu um erro inesperado ao processar os dados."
+    });
+    return [];
   }
 };
 
@@ -127,28 +90,35 @@ export const getSupabaseDeclarations = async (statusFilter: string | null = null
 export const getSupabaseDeclarationById = async (id: string): Promise<Declaration | undefined> => {
   try {
     if (!supabase) {
-      console.log('Supabase non disponible, utilisation des données locales');
-      return loadDeclarations().find(d => d.id === id);
+      console.error('Supabase non disponible');
+      toast.error("Erro de conexão", {
+        description: "Não foi possível conectar ao Supabase para obter a declaração."
+      });
+      return undefined;
     }
     
     const { data, error } = await supabase
       .from(DECLARATIONS_TABLE)
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error(`Erreur lors de la récupération de la déclaration ${id}:`, error);
-      // Fallback aux données locales
-      return loadDeclarations().find(d => d.id === id);
+      toast.error("Erro ao obter declaração", {
+        description: error.message
+      });
+      return undefined;
     }
     
     // Convert from Supabase format
     return data ? convertFromSupabaseFormat(data) : undefined;
   } catch (err) {
     console.error(`Erreur lors de la récupération de la déclaration ${id}:`, err);
-    // Fallback aux données locales
-    return loadDeclarations().find(d => d.id === id);
+    toast.error("Erro ao processar declaração", {
+      description: "Ocorreu um erro inesperado ao processar os dados."
+    });
+    return undefined;
   }
 };
 
@@ -156,12 +126,11 @@ export const getSupabaseDeclarationById = async (id: string): Promise<Declaratio
 export const createSupabaseDeclaration = async (declaration: Declaration): Promise<Declaration | null> => {
   try {
     if (!supabase) {
-      console.log('Supabase non disponible, utilisation des données locales');
-      // Fallback au stockage local
-      const declarations = loadDeclarations();
-      declarations.push(declaration);
-      saveDeclarations(declarations);
-      return declaration;
+      console.error('Supabase non disponible');
+      toast.error("Erro de conexão", {
+        description: "Não foi possível conectar ao Supabase para criar a declaração."
+      });
+      throw new Error("Supabase client not available");
     }
     
     console.log('Tentative de création de déclaration dans Supabase:', declaration);
@@ -181,16 +150,11 @@ export const createSupabaseDeclaration = async (declaration: Declaration): Promi
       console.error('Erreur lors de la création de la déclaration dans Supabase:', error);
       console.error('Détails de la déclaration qui a échoué:', supabaseDeclaration);
       
-      // Fallback au stockage local
-      const declarations = loadDeclarations();
-      declarations.push(declaration);
-      saveDeclarations(declarations);
-      
       toast.error("Erro ao salvar no Supabase", {
         description: error.message
       });
       
-      return declaration;
+      throw new Error(`Error creating declaration in Supabase: ${error.message}`);
     }
     
     console.log('Déclaration créée avec succès dans Supabase:', data);
@@ -199,16 +163,11 @@ export const createSupabaseDeclaration = async (declaration: Declaration): Promi
   } catch (err) {
     console.error('Erreur lors de la création de la déclaration:', err);
     
-    // Fallback au stockage local
-    const declarations = loadDeclarations();
-    declarations.push(declaration);
-    saveDeclarations(declarations);
-    
     toast.error("Erro inesperado", {
-      description: "Salvando localmente como backup"
+      description: "Não foi possível salvar a declaração no Supabase."
     });
     
-    return declaration;
+    throw err;
   }
 };
 
@@ -216,17 +175,11 @@ export const createSupabaseDeclaration = async (declaration: Declaration): Promi
 export const updateSupabaseDeclaration = async (id: string, updates: Partial<Declaration>): Promise<Declaration | null> => {
   try {
     if (!supabase) {
-      console.log('Supabase non disponible, utilisation des données locales');
-      // Fallback à localStorage
-      const declarations = loadDeclarations();
-      const index = declarations.findIndex(d => d.id === id);
-      
-      if (index === -1) return null;
-      
-      declarations[index] = { ...declarations[index], ...updates };
-      saveDeclarations(declarations);
-      
-      return declarations[index];
+      console.error('Supabase non disponible');
+      toast.error("Erro de conexão", {
+        description: "Não foi possível conectar ao Supabase para atualizar a declaração."
+      });
+      throw new Error("Supabase client not available");
     }
     
     // Create a supabase-compatible update object
@@ -249,37 +202,31 @@ export const updateSupabaseDeclaration = async (id: string, updates: Partial<Dec
     if (error) {
       console.error(`Erreur lors de la mise à jour de la déclaration ${id}:`, error);
       
-      // Fallback à localStorage
-      const declarations = loadDeclarations();
-      const index = declarations.findIndex(d => d.id === id);
+      toast.error("Erro ao atualizar declaração", {
+        description: error.message
+      });
       
-      if (index === -1) return null;
-      
-      declarations[index] = { ...declarations[index], ...updates };
-      saveDeclarations(declarations);
-      
-      return declarations[index];
+      throw new Error(`Error updating declaration: ${error.message}`);
     }
     
     return convertFromSupabaseFormat(data);
   } catch (err) {
     console.error(`Erreur lors de la mise à jour de la déclaration ${id}:`, err);
     
-    // Fallback à localStorage
-    const declarations = loadDeclarations();
-    const index = declarations.findIndex(d => d.id === id);
+    toast.error("Erro ao atualizar declaração", {
+      description: "Ocorreu um erro inesperado."
+    });
     
-    if (index === -1) return null;
-    
-    declarations[index] = { ...declarations[index], ...updates };
-    saveDeclarations(declarations);
-    
-    return declarations[index];
+    throw err;
   }
 };
 
 // Mettre à jour le statut d'une déclaration
 export const updateSupabaseDeclarationStatus = async (id: string, status: Declaration["status"]): Promise<boolean> => {
-  const result = await updateSupabaseDeclaration(id, { status });
-  return result !== null;
+  try {
+    const result = await updateSupabaseDeclaration(id, { status });
+    return result !== null;
+  } catch (error) {
+    return false;
+  }
 };

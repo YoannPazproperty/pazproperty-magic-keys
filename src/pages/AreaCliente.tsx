@@ -126,11 +126,11 @@ const AreaCliente = ({ connectionStatus = { initialized: false, database: false,
           </p>
           
           {finalConnectionStatus.initialized && !finalConnectionStatus.database && (
-            <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-4 mb-6">
-              <h3 className="font-semibold">Modo Offline Ativo</h3>
+            <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 mb-6">
+              <h3 className="font-semibold">Sem Conexão ao Supabase</h3>
               <p>
-                O aplicativo está operando em modo offline. Seus dados serão armazenados localmente 
-                e sincronizados quando a conexão for restabelecida.
+                Não é possível utilizar o formulário de declaração sem conexão ao Supabase.
+                Por favor, verifique sua conexão e tente novamente mais tarde.
               </p>
             </div>
           )}

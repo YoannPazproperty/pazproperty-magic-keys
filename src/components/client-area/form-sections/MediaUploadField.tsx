@@ -56,12 +56,13 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
         } else if (dbConnected) {
           toast.info("Armazenamento limitado", { 
             id: "supabase-connection",
-            description: "Banco de dados está conectado mas o armazenamento pode usar o modo local", 
+            description: "Banco de dados está conectado mas o armazenamento pode estar limitado", 
             duration: 5000 
           });
         } else {
-          toast.warning("Modo offline - Os dados serão sincronizados mais tarde", { 
+          toast.error("Sem conexão ao Supabase", { 
             id: "supabase-connection",
+            description: "Não é possível enviar declarações sem conexão",
             duration: 5000 
           });
         }
@@ -108,9 +109,9 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
                 <span>Armazenamento limitado</span>
               </div>
             ) : (
-              <div className="flex items-center text-amber-600">
+              <div className="flex items-center text-red-600">
                 <WifiOff className="h-4 w-4 mr-1" />
-                <span>Modo offline</span>
+                <span>Sem conexão</span>
               </div>
             )}
           </div>
@@ -119,13 +120,13 @@ const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
         <FormDescription>
           Pode adicionar fotos ou vídeos para ajudar a descrever o problema (opcional).
           {finalConnectionStatus?.database === false && (
-            <span className="text-yellow-600 block mt-1">
-              ⚠️ Modo offline: os ficheiros serão guardados localmente e sincronizados mais tarde.
+            <span className="text-red-600 block mt-1">
+              ⚠️ Sem conexão ao Supabase: não será possível enviar declarações.
             </span>
           )}
           {finalConnectionStatus?.database === true && finalConnectionStatus?.storage === false && (
-            <span className="text-blue-600 block mt-1">
-              ℹ️ Armazenamento limitado: os ficheiros podem ser guardados localmente.
+            <span className="text-yellow-600 block mt-1">
+              ⚠️ Armazenamento limitado: o upload de arquivos pode falhar.
             </span>
           )}
         </FormDescription>

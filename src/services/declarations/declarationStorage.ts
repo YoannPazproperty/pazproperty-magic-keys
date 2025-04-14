@@ -1,6 +1,5 @@
 
 import { Declaration } from "../types";
-import { loadDeclarations, saveDeclarations } from "../storageService";
 import { 
   getSupabaseDeclarations,
   getSupabaseDeclarationById, 
@@ -8,6 +7,7 @@ import {
   updateSupabaseDeclarationStatus
 } from "./supabaseDeclarationStorage";
 import { isSupabaseConnected } from "../supabaseService";
+import { toast } from "sonner";
 
 // Generate unique ID for new declarations
 export const generateUniqueId = (): string => {
@@ -19,26 +19,23 @@ export const getDeclarations = async (statusFilter: string | null = null): Promi
   // Vérifier si Supabase est connecté
   const supabaseConnected = await isSupabaseConnected();
   
-  if (supabaseConnected) {
-    try {
-      return await getSupabaseDeclarations(statusFilter);
-    } catch (err) {
-      console.error("Erreur lors de la récupération des déclarations depuis Supabase:", err);
-      // Fallback au localStorage en cas d'erreur
-    }
+  if (!supabaseConnected) {
+    console.error("declarationStorage: Supabase not connected, cannot get declarations");
+    toast.error("Erro de conexão", {
+      description: "Não foi possível conectar ao Supabase para obter declarações."
+    });
+    return [];
   }
   
-  // Utiliser localStorage si Supabase n'est pas disponible
-  let declarations = loadDeclarations();
-  
-  if (statusFilter) {
-    declarations = declarations.filter(decl => decl.status === statusFilter);
+  try {
+    return await getSupabaseDeclarations(statusFilter);
+  } catch (err) {
+    console.error("declarationStorage: Error getting declarations from Supabase:", err);
+    toast.error("Erro ao obter declarações", {
+      description: "Ocorreu um erro ao obter declarações."
+    });
+    return [];
   }
-  
-  // Sort by submission date, newest first
-  return declarations.sort((a, b) => 
-    new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-  );
 };
 
 // Get a single declaration by ID
@@ -46,18 +43,23 @@ export const getDeclarationById = async (id: string): Promise<Declaration | unde
   // Vérifier si Supabase est connecté
   const supabaseConnected = await isSupabaseConnected();
   
-  if (supabaseConnected) {
-    try {
-      return await getSupabaseDeclarationById(id);
-    } catch (err) {
-      console.error(`Erreur lors de la récupération de la déclaration ${id} depuis Supabase:`, err);
-      // Fallback au localStorage en cas d'erreur
-    }
+  if (!supabaseConnected) {
+    console.error("declarationStorage: Supabase not connected, cannot get declaration");
+    toast.error("Erro de conexão", {
+      description: "Não foi possível conectar ao Supabase para obter a declaração."
+    });
+    return undefined;
   }
   
-  // Utiliser localStorage si Supabase n'est pas disponible
-  const declarations = loadDeclarations();
-  return declarations.find(decl => decl.id === id);
+  try {
+    return await getSupabaseDeclarationById(id);
+  } catch (err) {
+    console.error(`declarationStorage: Error getting declaration ${id} from Supabase:`, err);
+    toast.error("Erro ao obter declaração", {
+      description: "Ocorreu um erro ao obter a declaração."
+    });
+    return undefined;
+  }
 };
 
 // Update an existing declaration
@@ -65,30 +67,23 @@ export const updateDeclaration = async (id: string, updates: Partial<Declaration
   // Vérifier si Supabase est connecté
   const supabaseConnected = await isSupabaseConnected();
   
-  if (supabaseConnected) {
-    try {
-      return await updateSupabaseDeclaration(id, updates);
-    } catch (err) {
-      console.error(`Erreur lors de la mise à jour de la déclaration ${id} dans Supabase:`, err);
-      // Fallback au localStorage en cas d'erreur
-    }
+  if (!supabaseConnected) {
+    console.error("declarationStorage: Supabase not connected, cannot update declaration");
+    toast.error("Erro de conexão", {
+      description: "Não foi possível conectar ao Supabase para atualizar a declaração."
+    });
+    return null;
   }
   
-  // Utiliser localStorage si Supabase n'est pas disponible
-  const declarations = loadDeclarations();
-  const index = declarations.findIndex(decl => decl.id === id);
-  
-  if (index === -1) return null;
-  
-  // Update the declaration
-  declarations[index] = {
-    ...declarations[index],
-    ...updates,
-  };
-  
-  saveDeclarations(declarations);
-  
-  return declarations[index];
+  try {
+    return await updateSupabaseDeclaration(id, updates);
+  } catch (err) {
+    console.error(`declarationStorage: Error updating declaration ${id} in Supabase:`, err);
+    toast.error("Erro ao atualizar declaração", {
+      description: "Ocorreu um erro ao atualizar a declaração."
+    });
+    return null;
+  }
 };
 
 // Update declaration status 
@@ -96,16 +91,21 @@ export const updateDeclarationStatus = async (id: string, status: Declaration["s
   // Vérifier si Supabase est connecté
   const supabaseConnected = await isSupabaseConnected();
   
-  if (supabaseConnected) {
-    try {
-      return await updateSupabaseDeclarationStatus(id, status);
-    } catch (err) {
-      console.error(`Erreur lors de la mise à jour du statut de la déclaration ${id} dans Supabase:`, err);
-      // Fallback au localStorage en cas d'erreur
-    }
+  if (!supabaseConnected) {
+    console.error("declarationStorage: Supabase not connected, cannot update declaration status");
+    toast.error("Erro de conexão", {
+      description: "Não foi possível conectar ao Supabase para atualizar o status da declaração."
+    });
+    return false;
   }
   
-  // Utiliser localStorage si Supabase n'est pas disponible
-  const result = updateDeclaration(id, { status });
-  return result !== null;
+  try {
+    return await updateSupabaseDeclarationStatus(id, status);
+  } catch (err) {
+    console.error(`declarationStorage: Error updating declaration status ${id} in Supabase:`, err);
+    toast.error("Erro ao atualizar status", {
+      description: "Ocorreu um erro ao atualizar o status da declaração."
+    });
+    return false;
+  }
 };

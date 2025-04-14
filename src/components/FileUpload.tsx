@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Upload, X, ImageIcon, VideoIcon, FileIcon, Cloud, Database } from 'lucide-react';
+import { Upload, X, ImageIcon, VideoIcon, FileIcon, Cloud, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FileUploadProps {
@@ -21,6 +21,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
+    
+    // Ne pas permettre l'upload de fichiers si Supabase n'est pas connecté
+    if (supabaseConnected === false) {
+      alert("Não é possível fazer upload de arquivos sem conexão ao Supabase.");
+      return;
+    }
     
     const newFiles = Array.from(e.target.files);
     const totalFiles = [...files, ...newFiles];
@@ -72,36 +78,45 @@ const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-center w-full">
-        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 border-gray-300">
+        <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer ${supabaseConnected === false ? 'bg-gray-100 opacity-50' : 'bg-gray-50 hover:bg-gray-100'} border-gray-300`}>
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
-            <Upload className="w-8 h-8 mb-2 text-gray-500" />
-            <p className="mb-2 text-sm text-gray-500">
-              <span className="font-semibold">Clique para upload</span> ou arraste e solte
-            </p>
-            <p className="text-xs text-gray-500">
-              {accept.includes('image') && accept.includes('video') 
-                ? 'Fotos e vídeos' 
-                : accept.includes('image') 
-                  ? 'Fotos' 
-                  : accept.includes('video') 
-                    ? 'Vídeos' 
-                    : 'Arquivos'} (MAX. {maxFiles} arquivos)
-            </p>
-            
-            {supabaseConnected !== null && (
-              <div className={`flex items-center text-xs mt-1 ${supabaseConnected ? 'text-green-600' : 'text-amber-600'}`}>
-                {supabaseConnected ? (
-                  <>
-                    <Cloud className="w-3 h-3 mr-1" />
-                    <span>Armazenamento na nuvem</span>
-                  </>
-                ) : (
-                  <>
-                    <Database className="w-3 h-3 mr-1" />
-                    <span>Armazenamento local</span>
-                  </>
-                )}
-              </div>
+            {supabaseConnected === false ? (
+              <>
+                <AlertCircle className="w-8 h-8 mb-2 text-red-500" />
+                <p className="mb-2 text-sm text-gray-500">
+                  Upload indisponível sem conexão ao Supabase
+                </p>
+              </>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 mb-2 text-gray-500" />
+                <p className="mb-2 text-sm text-gray-500">
+                  <span className="font-semibold">Clique para upload</span> ou arraste e solte
+                </p>
+                <p className="text-xs text-gray-500">
+                  {accept.includes('image') && accept.includes('video') 
+                    ? 'Fotos e vídeos' 
+                    : accept.includes('image') 
+                      ? 'Fotos' 
+                      : accept.includes('video') 
+                        ? 'Vídeos' 
+                        : 'Arquivos'} (MAX. {maxFiles} arquivos)
+                </p>
+              
+                <div className={`flex items-center text-xs mt-1 ${supabaseConnected ? 'text-green-600' : 'text-yellow-600'}`}>
+                  {supabaseConnected ? (
+                    <>
+                      <Cloud className="w-3 h-3 mr-1" />
+                      <span>Armazenamento na nuvem</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-3 h-3 mr-1" />
+                      <span>Verifique sua conexão</span>
+                    </>
+                  )}
+                </div>
+              </>
             )}
           </div>
           <input 
@@ -111,6 +126,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             onChange={handleFileChange} 
             multiple
             accept={accept}
+            disabled={supabaseConnected === false}
           />
         </label>
       </div>
