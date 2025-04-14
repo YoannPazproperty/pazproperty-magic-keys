@@ -2,19 +2,22 @@
 import React, { useState } from 'react';
 import { Upload, X, ImageIcon, VideoIcon, FileIcon, Cloud, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface FileUploadProps {
   onChange: (files: File[]) => void;
   maxFiles?: number;
   accept?: string;
   supabaseConnected?: boolean | null;
+  maxFileSize?: number; // Nouveau prop pour la taille maximale (en Mo)
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({
   onChange,
   maxFiles = 4,
   accept = "image/*,video/*",
-  supabaseConnected = null
+  supabaseConnected = null,
+  maxFileSize = 10 // Limite par défaut à 10 Mo
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -24,20 +27,29 @@ const FileUpload: React.FC<FileUploadProps> = ({
     
     // Ne pas permettre l'upload de fichiers si Supabase n'est pas connecté
     if (supabaseConnected === false) {
-      alert("Não é possível fazer upload de arquivos sem conexão ao Supabase.");
+      toast.error("Não é possível fazer upload de arquivos sem conexão ao Supabase.");
       return;
     }
     
     const newFiles = Array.from(e.target.files);
     const totalFiles = [...files, ...newFiles];
     
-    // Limit to maxFiles
+    // Vérifier la limite de nombre de fichiers
     if (totalFiles.length > maxFiles) {
-      alert(`Você pode fazer upload de no máximo ${maxFiles} arquivos.`);
+      toast.warning(`Você pode fazer upload de no máximo ${maxFiles} arquivos.`);
       return;
     }
     
-    // Generate previews
+    // Vérifier la taille des fichiers
+    const oversizedFiles = newFiles.filter(file => file.size > (maxFileSize * 1024 * 1024));
+    if (oversizedFiles.length > 0) {
+      toast.error(`Arquivos muito grandes. Limite máximo é ${maxFileSize} MB por arquivo.`, {
+        description: "Reduza o tamanho do arquivo ou escolha um arquivo menor."
+      });
+      return;
+    }
+    
+    // Générer les aperçus
     newFiles.forEach(file => {
       const fileReader = new FileReader();
       fileReader.onload = () => {
@@ -47,12 +59,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
       fileReader.readAsDataURL(file);
     });
     
-    // Update files
+    // Mettre à jour les fichiers
     const updatedFiles = [...files, ...newFiles];
     setFiles(updatedFiles);
     onChange(updatedFiles);
   };
   
+  // ... reste du code existant (méthodes removeFile, getFileIcon, etc.)
   const removeFile = (index: number) => {
     const updatedFiles = [...files];
     updatedFiles.splice(index, 1);
@@ -100,7 +113,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                       ? 'Fotos' 
                       : accept.includes('video') 
                         ? 'Vídeos' 
-                        : 'Arquivos'} (MAX. {maxFiles} arquivos)
+                        : 'Arquivos'} (MAX. {maxFiles} arquivos, {maxFileSize} MB por arquivo)
                 </p>
               
                 <div className={`flex items-center text-xs mt-1 ${supabaseConnected ? 'text-green-600' : 'text-yellow-600'}`}>
