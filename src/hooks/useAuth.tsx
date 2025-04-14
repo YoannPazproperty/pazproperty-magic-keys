@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // D'abord configurer l'écouteur d'événements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log("Auth state changed:", event, session);
@@ -39,11 +40,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Ensuite récupérer la session existante
+    const getInitialSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Erreur lors de la récupération de la session initiale:", error);
+        }
+        
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        setLoading(false);
+      } catch (err) {
+        console.error("Erreur inattendue lors de la récupération de la session:", err);
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
 
     return () => {
       subscription.unsubscribe();
@@ -52,6 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Tentative de connexion avec:", email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -59,18 +76,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error("Erreur de connexion:", error);
-        toast.error("Échec de connexion", {
-          description: error.message,
-        });
+        
+        // Message d'erreur plus convivial basé sur le type d'erreur
+        if (error.message.includes("Database error querying schema")) {
+          toast.error("Problème de connexion à la base de données", {
+            description: "Veuillez réessayer dans quelques instants ou contacter l'administrateur.",
+          });
+        } else if (error.message.includes("Invalid login credentials")) {
+          toast.error("Identifiants invalides", {
+            description: "Vérifiez votre adresse e-mail et votre mot de passe.",
+          });
+        } else {
+          toast.error("Échec de connexion", {
+            description: error.message,
+          });
+        }
+        
         return { error, success: false };
       }
 
+      console.log("Connexion réussie, redirection vers /admin");
       toast.success("Connexion réussie");
-      navigate("/admin");
       return { error: null, success: true };
     } catch (err) {
       console.error("Erreur inattendue:", err);
-      toast.error("Erreur de connexion");
+      toast.error("Erreur de connexion", {
+        description: "Une erreur inattendue s'est produite. Veuillez réessayer.",
+      });
       return { error: err, success: false };
     }
   };
@@ -86,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             prompt: 'consent',
           },
           scopes: 'email profile',
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
@@ -96,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     } catch (err) {
-      console.error("Erreur inattendue:", err);
+      console.error("Erreur inattendue lors de l'authentification Google:", err);
       toast.error("Erreur de connexion Google");
     }
   };
@@ -115,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         navigate("/auth");
       }
     } catch (err) {
-      console.error("Erreur inattendue:", err);
+      console.error("Erreur inattendue lors de la déconnexion:", err);
       toast.error("Erreur de déconnexion");
     }
   };
@@ -137,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       return data?.role as "admin" | "manager" | "user" || null;
     } catch (err) {
-      console.error("Erreur inattendue:", err);
+      console.error("Erreur inattendue lors de la récupération du rôle:", err);
       return null;
     }
   };

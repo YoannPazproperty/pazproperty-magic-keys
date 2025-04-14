@@ -14,6 +14,21 @@ const AuthCallback = () => {
         console.log("Traitement du callback d'authentification");
         console.log("URL actuelle:", window.location.href);
         
+        // Extraire le hash de l'URL s'il existe
+        const hashParams = window.location.hash 
+          ? new URLSearchParams(window.location.hash.substring(1))
+          : null;
+        
+        if (hashParams && hashParams.get("error_description")) {
+          const errorDescription = hashParams.get("error_description");
+          console.error("Erreur dans les paramètres de l'URL:", errorDescription);
+          toast.error("Échec de l'authentification", {
+            description: errorDescription
+          });
+          navigate("/auth");
+          return;
+        }
+        
         // Récupérer la session actuelle
         const { data, error } = await supabase.auth.getSession();
         
@@ -30,22 +45,37 @@ const AuthCallback = () => {
         } else {
           console.error("Pas de session trouvée dans le callback");
           
-          // Essayer de traiter l'URL manuellement si nécessaire
-          const fragment = window.location.hash;
-          console.log("Fragment d'URL:", fragment);
+          // Essayer d'échanger le code d'autorisation contre des jetons si présent dans l'URL
+          const params = new URLSearchParams(window.location.search);
+          const code = params.get("code");
           
-          if (fragment && fragment.includes("access_token")) {
-            console.log("Token trouvé dans l'URL, tentative de traitement manuel");
-            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-            
-            if (sessionError || !sessionData.session) {
-              console.error("Échec du traitement manuel:", sessionError);
+          if (code) {
+            console.log("Code d'autorisation trouvé, tentative d'échange");
+            try {
+              const { data: exchangeData, error: exchangeError } = 
+                await supabase.auth.exchangeCodeForSession(code);
+                
+              if (exchangeError) {
+                console.error("Erreur lors de l'échange du code:", exchangeError);
+                toast.error("Erreur d'authentification");
+                navigate("/auth");
+              } else if (exchangeData.session) {
+                console.log("Session créée avec succès via échange de code");
+                toast.success("Connexion réussie");
+                navigate("/admin");
+              } else {
+                console.error("Aucune session retournée après l'échange de code");
+                toast.error("Impossible de finaliser la connexion");
+                navigate("/auth");
+              }
+            } catch (exchangeErr) {
+              console.error("Exception lors de l'échange du code:", exchangeErr);
+              toast.error("Erreur d'authentification");
               navigate("/auth");
-            } else {
-              console.log("Traitement manuel réussi");
-              navigate("/admin");
             }
           } else {
+            // Si pas de code et pas de session, rediriger vers l'authentification
+            console.log("Aucun code trouvé dans l'URL, redirection vers la page d'authentification");
             navigate("/auth");
           }
         }
