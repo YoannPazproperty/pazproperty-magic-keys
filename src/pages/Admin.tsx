@@ -1,18 +1,18 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DeclarationList } from "@/components/admin/DeclarationList";
 import { ApiSettings } from "@/components/admin/ApiSettings";
 import { NotificationSettings } from "@/components/admin/NotificationSettings";
-import { LoginForm } from "@/components/admin/LoginForm";
 import { toast } from "sonner";
 import { saveMondayConfig, validateMondayConfig, getMondayConfig } from "@/services/monday";
 import { getDeclarations, updateDeclarationStatus } from "@/services/declarationService";
+import { useAuth } from "@/hooks/useAuth";
 import type { Declaration } from "@/services/types";
 
 const Admin = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, signOut } = useAuth();
   const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
   const [activeTab, setActiveTab] = useState("declarations");
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
@@ -20,24 +20,17 @@ const Admin = () => {
   
   // Récupérer les configurations Monday.com
   const { apiKey, boardId, techBoardId } = getMondayConfig();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if admin is logged in
-    const adminLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
-    setIsLoggedIn(adminLoggedIn);
-    
     // Check API configuration status
     const checkApiStatus = async () => {
       const validation = await validateMondayConfig();
       setApiStatus(validation);
     };
     
-    if (adminLoggedIn) {
-      checkApiStatus();
-      // Load declarations
-      loadDeclarations();
-    }
+    checkApiStatus();
+    // Load declarations
+    loadDeclarations();
   }, []);
 
   const loadDeclarations = async () => {
@@ -69,30 +62,8 @@ const Admin = () => {
     }
   };
 
-  const handleLogin = (username: string, password: string): boolean => {
-    // Simple hard-coded authentication for demonstration
-    if (username === 'admin' && password === 'password') {
-      localStorage.setItem('adminLoggedIn', 'true');
-      setIsLoggedIn(true);
-      toast.success("Connexion réussie");
-      
-      // Check API configuration status after login
-      validateMondayConfig().then(validation => {
-        setApiStatus(validation);
-      });
-      
-      // Load declarations after login
-      loadDeclarations();
-      
-      return true;
-    }
-    return false;
-  };
-
   const handleLogout = () => {
-    localStorage.removeItem('adminLoggedIn');
-    setIsLoggedIn(false);
-    toast.info("Vous avez été déconnecté");
+    signOut();
   };
 
   const handleTabChange = (value: string) => {
@@ -108,24 +79,13 @@ const Admin = () => {
     });
   };
 
-  // If not logged in, show login form
-  if (!isLoggedIn) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-        <div className="w-full max-w-md p-8 space-y-8">
-          <h1 className="text-2xl font-bold text-center">Admin Login</h1>
-          <LoginForm onLogin={handleLogin} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <AdminLayout 
       activeTab={activeTab} 
       onTabChange={handleTabChange}
       onLogout={handleLogout}
       apiConnected={apiStatus.valid}
+      user={user}
     >
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8">
