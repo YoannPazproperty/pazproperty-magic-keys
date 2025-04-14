@@ -11,6 +11,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoCircle } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -37,6 +39,7 @@ const Auth = () => {
   const { signIn, signInWithGoogle } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const navigate = useNavigate();
+  const [googleAuthConfigured, setGoogleAuthConfigured] = useState(false);
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -134,14 +137,22 @@ const Auth = () => {
                   </div>
                 </div>
                 
+                <Alert className="mt-4 bg-amber-50 border-amber-200 text-amber-800">
+                  <InfoCircle className="h-4 w-4 mr-2" />
+                  <AlertDescription>
+                    L'authentification Google n'est pas encore configurée. Veuillez configurer le fournisseur Google dans le tableau de bord Supabase.
+                  </AlertDescription>
+                </Alert>
+                
                 <Button 
                   variant="outline" 
                   type="button" 
                   className="w-full mt-4"
                   onClick={() => signInWithGoogle()}
+                  disabled={!googleAuthConfigured}
                 >
                   <FcGoogle className="mr-2 h-6 w-6" />
-                  Google
+                  Google (non configuré)
                 </Button>
               </TabsContent>
               
