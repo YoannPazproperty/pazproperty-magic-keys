@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -10,17 +11,28 @@ const AuthCallback = () => {
     // Traiter le callback d'authentification
     const handleAuthCallback = async () => {
       try {
-        // Use the current method to handle OAuth callback
-        const { error } = await supabase.auth.getSession();
+        console.log("Traitement du callback d'authentification");
+        
+        // Récupérer la session actuelle
+        const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Erreur de callback d'authentification:", error);
+          toast.error("Échec de l'authentification", {
+            description: error.message
+          });
           navigate("/auth");
-        } else {
+        } else if (data?.session) {
+          console.log("Session récupérée avec succès:", data.session);
+          toast.success("Connexion réussie");
           navigate("/admin");
+        } else {
+          console.error("Pas de session trouvée dans le callback");
+          navigate("/auth");
         }
       } catch (err) {
         console.error("Erreur inattendue lors du callback:", err);
+        toast.error("Une erreur est survenue lors de l'authentification");
         navigate("/auth");
       }
     };
