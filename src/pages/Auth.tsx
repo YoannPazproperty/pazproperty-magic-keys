@@ -13,6 +13,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -32,14 +34,20 @@ const registerSchema = z
     path: ["confirmPassword"],
   });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email("Adresse e-mail invalide"),
+});
+
 type LoginValues = z.infer<typeof loginSchema>;
 type RegisterValues = z.infer<typeof registerSchema>;
+type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 const Auth = () => {
   const { signIn, signInWithGoogle } = useAuth();
-  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot-password">("login");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -60,13 +68,42 @@ const Auth = () => {
     },
   });
 
+  const forgotPasswordForm = useForm<ForgotPasswordValues>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
   const onLoginSubmit = async (values: LoginValues) => {
     setLoading(true);
     try {
-      const { success } = await signIn(values.email, values.password);
+      const { success, error } = await signIn(values.email, values.password);
       if (success) {
         navigate("/admin");
+      } else if (error) {
+        console.error("Erreur de connexion:", error);
+        
+        // Message d'erreur plus convivial basé sur le type d'erreur
+        if (error.message && error.message.includes("Database error querying schema")) {
+          toast.error("Problème temporaire de connexion à la base de données", {
+            description: "Veuillez réessayer dans quelques instants. Si le problème persiste, contactez l'administrateur.",
+          });
+        } else if (error.message && error.message.includes("Invalid login credentials")) {
+          toast.error("Identifiants invalides", {
+            description: "Vérifiez votre adresse e-mail et votre mot de passe.",
+          });
+        } else {
+          toast.error("Échec de connexion", {
+            description: error.message || "Veuillez réessayer ou contacter l'administrateur",
+          });
+        }
       }
+    } catch (error: any) {
+      toast.error("Erreur de connexion", {
+        description: "Une erreur inattendue s'est produite. Veuillez réessayer.",
+      });
+      console.error("Erreur lors de la tentative de connexion:", error);
     } finally {
       setLoading(false);
     }
@@ -75,6 +112,34 @@ const Auth = () => {
   const onRegisterSubmit = async (values: RegisterValues) => {
     console.log("Registration values:", values);
     alert("L'inscription n'est pas en libre-service. Veuillez contacter votre administrateur pour créer un compte.");
+  };
+
+  const handleForgotPassword = async (values: ForgotPasswordValues) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/auth/callback?reset=true`,
+      });
+      
+      if (error) {
+        console.error("Erreur lors de la récupération du mot de passe:", error);
+        toast.error("Échec de l'envoi du lien de récupération", {
+          description: error.message,
+        });
+      } else {
+        setResetEmailSent(true);
+        toast.success("Email envoyé", {
+          description: "Si cette adresse existe dans notre système, vous recevrez un email avec les instructions pour réinitialiser votre mot de passe.",
+        });
+      }
+    } catch (err) {
+      console.error("Exception lors de la récupération du mot de passe:", err);
+      toast.error("Erreur technique", {
+        description: "Une erreur est survenue lors de la demande de récupération de mot de passe.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -88,7 +153,7 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "register")}>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "register" | "forgot-password")}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Connexion</TabsTrigger>
                 <TabsTrigger value="register">S'inscrire</TabsTrigger>
@@ -130,12 +195,13 @@ const Auth = () => {
                     </Button>
                     
                     <div className="text-sm text-center text-muted-foreground">
-                      <a href="#" className="hover:underline" onClick={(e) => { 
-                        e.preventDefault(); 
-                        alert("Veuillez contacter l'administrateur pour réinitialiser votre mot de passe"); 
-                      }}>
+                      <button 
+                        type="button"
+                        onClick={() => setActiveTab("forgot-password")}
+                        className="hover:underline text-primary"
+                      >
                         Mot de passe oublié?
-                      </a>
+                      </button>
                     </div>
                   </form>
                 </Form>
@@ -238,6 +304,60 @@ const Auth = () => {
                     </Button>
                   </form>
                 </Form>
+              </TabsContent>
+
+              <TabsContent value="forgot-password" className="mt-4">
+                {resetEmailSent ? (
+                  <div className="space-y-4">
+                    <Alert variant="default" className="bg-green-50 border-green-200">
+                      <AlertDescription className="text-green-800">
+                        Si cette adresse e-mail existe dans notre système, vous recevrez un lien pour réinitialiser votre mot de passe.
+                        Veuillez vérifier votre boîte de réception (et vos spams).
+                      </AlertDescription>
+                    </Alert>
+                    <Button 
+                      type="button"
+                      className="w-full"
+                      onClick={() => {
+                        setResetEmailSent(false);
+                        setActiveTab("login");
+                      }}
+                    >
+                      Retour à la connexion
+                    </Button>
+                  </div>
+                ) : (
+                  <Form {...forgotPasswordForm}>
+                    <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+                      <FormField
+                        control={forgotPasswordForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Adresse e-mail</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="votre@email.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "Envoi en cours..." : "Envoyer le lien de récupération"}
+                      </Button>
+                      
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setActiveTab("login")}
+                      >
+                        Retour à la connexion
+                      </Button>
+                    </form>
+                  </Form>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>

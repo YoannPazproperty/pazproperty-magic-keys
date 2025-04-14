@@ -15,6 +15,10 @@ interface AuthContextType {
   }>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{
+    error: any | null;
+    success: boolean;
+  }>;
   getUserRole: () => Promise<"admin" | "manager" | "user" | null>;
 }
 
@@ -41,6 +45,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             navigate("/auth");
           } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
             console.log("Utilisateur connecté ou token rafraîchi");
+          } else if (event === "PASSWORD_RECOVERY") {
+            navigate("/auth/callback?reset=true");
           }
         }, 0);
       }
@@ -85,22 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error("Erreur de connexion:", error);
         
-        // Message d'erreur plus convivial basé sur le type d'erreur
-        if (error.message.includes("Database error querying schema")) {
-          toast.error("Problème de connexion à la base de données", {
-            description: "Veuillez réessayer dans quelques instants. Si le problème persiste, contactez l'administrateur.",
-          });
-        } else if (error.message.includes("Invalid login credentials")) {
-          toast.error("Identifiants invalides", {
-            description: "Vérifiez votre adresse e-mail et votre mot de passe.",
-          });
-        } else {
-          toast.error("Échec de connexion", {
-            description: error.message,
-          });
-        }
-        
-        setLoading(false);
         return { error, success: false };
       }
 
@@ -108,15 +98,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success("Connexion réussie");
       
       // Ne pas naviguer ici - laisser le gestionnaire d'événements onAuthStateChange s'en charger
-      setLoading(false);
       return { error: null, success: true };
     } catch (err) {
       console.error("Erreur inattendue lors de la connexion:", err);
-      toast.error("Erreur de connexion", {
-        description: "Une erreur inattendue s'est produite. Veuillez réessayer.",
-      });
-      setLoading(false);
       return { error: err, success: false };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -145,10 +132,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       // Pas besoin de naviguer - la redirection OAuth prendra le relais
       
-      setLoading(false);
     } catch (err) {
       console.error("Erreur inattendue lors de l'authentification Google:", err);
       toast.error("Erreur de connexion Google");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setLoading(true);
+      console.log("Demande de réinitialisation du mot de passe pour:", email);
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?reset=true`,
+      });
+
+      if (error) {
+        console.error("Erreur lors de la réinitialisation du mot de passe:", error);
+        return { error, success: false };
+      }
+
+      console.log("Demande de réinitialisation envoyée avec succès");
+      return { error: null, success: true };
+    } catch (err) {
+      console.error("Erreur inattendue lors de la réinitialisation du mot de passe:", err);
+      return { error: err, success: false };
+    } finally {
       setLoading(false);
     }
   };
@@ -167,11 +178,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         toast.success("Déconnexion réussie");
         // Ne pas naviguer ici - laisser le gestionnaire d'événements onAuthStateChange s'en charger
       }
-      
-      setLoading(false);
     } catch (err) {
       console.error("Erreur inattendue lors de la déconnexion:", err);
       toast.error("Erreur de déconnexion");
+    } finally {
       setLoading(false);
     }
   };
@@ -207,6 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signInWithGoogle,
         signOut,
+        resetPassword,
         getUserRole,
       }}
     >

@@ -7,6 +7,9 @@ import { toast } from "sonner";
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Traiter le callback d'authentification
@@ -14,6 +17,16 @@ const AuthCallback = () => {
       try {
         console.log("Traitement du callback d'authentification");
         console.log("URL actuelle:", window.location.href);
+        
+        // Vérifier si c'est un flux de réinitialisation de mot de passe
+        const searchParams = new URLSearchParams(window.location.search);
+        const isReset = searchParams.get("reset") === "true";
+        const type = searchParams.get("type");
+        
+        if (isReset || type === "recovery") {
+          setIsPasswordReset(true);
+          return; // Attendre que l'utilisateur entre un nouveau mot de passe
+        }
         
         // Extraire le hash de l'URL s'il existe
         const hashParams = window.location.hash 
@@ -94,8 +107,83 @@ const AuthCallback = () => {
       }
     };
 
-    handleAuthCallback();
-  }, [navigate]);
+    if (!isPasswordReset) {
+      handleAuthCallback();
+    }
+  }, [navigate, isPasswordReset]);
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      
+      if (error) {
+        console.error("Erreur lors de la réinitialisation du mot de passe:", error);
+        setError(error.message);
+        toast.error("Échec de la réinitialisation du mot de passe", {
+          description: error.message
+        });
+      } else {
+        toast.success("Mot de passe mis à jour avec succès");
+        setTimeout(() => navigate("/admin"), 2000);
+      }
+    } catch (err: any) {
+      console.error("Exception lors de la réinitialisation du mot de passe:", err);
+      setError(err.message || "Une erreur est survenue lors de la réinitialisation du mot de passe");
+      toast.error("Erreur technique");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isPasswordReset) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-6 text-center">Réinitialisation de mot de passe</h2>
+          <form onSubmit={handlePasswordReset} className="space-y-4">
+            <div>
+              <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
+                Nouveau mot de passe
+              </label>
+              <input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Minimum 8 caractères"
+                required
+                minLength={8}
+              />
+            </div>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
+            <button
+              type="submit"
+              className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
+              disabled={loading}
+            >
+              {loading ? "Réinitialisation en cours..." : "Réinitialiser mon mot de passe"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex items-center justify-center">
