@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
@@ -152,27 +153,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      // Construction de l'URL de redirection complète avec l'origine actuelle
-      const origin = window.location.origin;
-      const redirectURL = `${origin}/auth/callback`;
-      console.log(`URL de redirection pour la réinitialisation: ${redirectURL}`);
-
-      // Effectuer la demande de réinitialisation avec options complètes
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectURL,
+      // Utiliser le paramètre redirectTo directement sans construire l'URL manuellement
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback`,
       });
 
       if (error) {
         console.error("Erreur détaillée lors de la réinitialisation du mot de passe:", error);
         
         // Traitement spécifique des types d'erreurs connus
-        if (error.message.includes("rate limit")) {
+        if (error.message && error.message.includes("rate limit")) {
           return { 
             error, 
             success: false,
             message: "Trop de tentatives. Veuillez réessayer dans quelques minutes."
           };
-        } else if (error.message.includes("Invalid login credentials")) {
+        } else if (error.message && error.message.includes("Invalid login credentials")) {
           return { 
             error, 
             success: false,
