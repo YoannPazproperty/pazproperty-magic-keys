@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -138,8 +139,16 @@ const Auth = () => {
                 
                 <Alert className="mt-4 bg-amber-50 border-amber-200 text-amber-800">
                   <Info className="h-4 w-4 mr-2" />
-                  <AlertDescription>
-                    L'authentification Google n'est pas encore configurée. Veuillez configurer le fournisseur Google dans le tableau de bord Supabase.
+                  <AlertDescription className="text-sm">
+                    <p className="font-medium mb-1">L'authentification Google n'est pas encore configurée.</p>
+                    <p>Pour configurer l'authentification Google :</p>
+                    <ol className="list-decimal ml-5 mt-1 space-y-1">
+                      <li>Allez sur Google Cloud Console</li>
+                      <li>Sélectionnez votre projet</li>
+                      <li>Cliquez sur "Identifiants" dans la barre latérale</li>
+                      <li>Créez un ID client OAuth 2.0 pour une application Web</li>
+                      <li>Ajoutez les identifiants dans le tableau de bord Supabase</li>
+                    </ol>
                   </AlertDescription>
                 </Alert>
                 
