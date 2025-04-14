@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ const Auth = () => {
   const { signIn, signInWithGoogle } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -59,9 +61,14 @@ const Auth = () => {
   });
 
   const onLoginSubmit = async (values: LoginValues) => {
-    const { success } = await signIn(values.email, values.password);
-    if (success) {
-      navigate("/admin");
+    setLoading(true);
+    try {
+      const { success } = await signIn(values.email, values.password);
+      if (success) {
+        navigate("/admin");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,9 +125,18 @@ const Auth = () => {
                       )}
                     />
                     
-                    <Button type="submit" className="w-full">
-                      Se connecter
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Connexion en cours..." : "Se connecter"}
                     </Button>
+                    
+                    <div className="text-sm text-center text-muted-foreground">
+                      <a href="#" className="hover:underline" onClick={(e) => { 
+                        e.preventDefault(); 
+                        alert("Veuillez contacter l'administrateur pour réinitialiser votre mot de passe"); 
+                      }}>
+                        Mot de passe oublié?
+                      </a>
+                    </div>
                   </form>
                 </Form>
                 
@@ -136,11 +152,11 @@ const Auth = () => {
                 <Button 
                   variant="outline" 
                   type="button" 
-                  className="w-full mt-4"
-                  onClick={() => signInWithGoogle()}
+                  className="w-full mt-4 opacity-50"
+                  disabled={true}
                 >
                   <FcGoogle className="mr-2 h-6 w-6" />
-                  Continuer avec Google
+                  Google (désactivé temporairement)
                 </Button>
               </TabsContent>
               
@@ -226,9 +242,13 @@ const Auth = () => {
             </Tabs>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <p className="text-sm text-muted-foreground">
-              Cette interface est réservée au personnel autorisé de Pazproperty.
-            </p>
+            <Alert variant="default" className="bg-amber-50 border-amber-200">
+              <Info className="h-4 w-4 text-amber-700" />
+              <AlertDescription className="text-xs text-amber-700">
+                Cette interface est réservée au personnel autorisé de Pazproperty.
+                {activeTab === "login" && " Utilisez votre adresse e-mail professionnelle pour vous connecter."}
+              </AlertDescription>
+            </Alert>
           </CardFooter>
         </Card>
       </div>
