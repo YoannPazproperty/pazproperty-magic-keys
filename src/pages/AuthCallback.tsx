@@ -12,6 +12,7 @@ const AuthCallback = () => {
     const handleAuthCallback = async () => {
       try {
         console.log("Traitement du callback d'authentification");
+        console.log("URL actuelle:", window.location.href);
         
         // Récupérer la session actuelle
         const { data, error } = await supabase.auth.getSession();
@@ -28,7 +29,25 @@ const AuthCallback = () => {
           navigate("/admin");
         } else {
           console.error("Pas de session trouvée dans le callback");
-          navigate("/auth");
+          
+          // Essayer de traiter l'URL manuellement si nécessaire
+          const fragment = window.location.hash;
+          console.log("Fragment d'URL:", fragment);
+          
+          if (fragment && fragment.includes("access_token")) {
+            console.log("Token trouvé dans l'URL, tentative de traitement manuel");
+            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+            
+            if (sessionError || !sessionData.session) {
+              console.error("Échec du traitement manuel:", sessionError);
+              navigate("/auth");
+            } else {
+              console.log("Traitement manuel réussi");
+              navigate("/admin");
+            }
+          } else {
+            navigate("/auth");
+          }
         }
       } catch (err) {
         console.error("Erreur inattendue lors du callback:", err);
