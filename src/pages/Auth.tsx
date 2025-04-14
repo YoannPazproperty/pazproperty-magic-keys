@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,6 @@ const Auth = () => {
   const { signIn, signInWithGoogle } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const navigate = useNavigate();
-  const [googleAuthConfigured, setGoogleAuthConfigured] = useState(false);
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -68,9 +66,7 @@ const Auth = () => {
   };
 
   const onRegisterSubmit = async (values: RegisterValues) => {
-    // Registration will be handled by the administrator
     console.log("Registration values:", values);
-    // Show message that registration is not self-service
     alert("L'inscription n'est pas en libre-service. Veuillez contacter votre administrateur pour créer un compte.");
   };
 
@@ -137,30 +133,14 @@ const Auth = () => {
                   </div>
                 </div>
                 
-                <Alert className="mt-4 bg-amber-50 border-amber-200 text-amber-800">
-                  <Info className="h-4 w-4 mr-2" />
-                  <AlertDescription className="text-sm">
-                    <p className="font-medium mb-1">L'authentification Google n'est pas encore configurée.</p>
-                    <p>Pour configurer l'authentification Google :</p>
-                    <ol className="list-decimal ml-5 mt-1 space-y-1">
-                      <li>Allez sur Google Cloud Console</li>
-                      <li>Sélectionnez votre projet</li>
-                      <li>Cliquez sur "Identifiants" dans la barre latérale</li>
-                      <li>Créez un ID client OAuth 2.0 pour une application Web</li>
-                      <li>Ajoutez les identifiants dans le tableau de bord Supabase</li>
-                    </ol>
-                  </AlertDescription>
-                </Alert>
-                
                 <Button 
                   variant="outline" 
                   type="button" 
                   className="w-full mt-4"
                   onClick={() => signInWithGoogle()}
-                  disabled={!googleAuthConfigured}
                 >
                   <FcGoogle className="mr-2 h-6 w-6" />
-                  Google (non configuré)
+                  Continuer avec Google
                 </Button>
               </TabsContent>
               
