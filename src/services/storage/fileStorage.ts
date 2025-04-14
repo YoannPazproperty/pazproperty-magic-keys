@@ -1,6 +1,5 @@
-
 import { v4 as uuidv4 } from 'uuid';
-import { getSupabase, checkBucketExists } from '../supabaseService';
+import { getSupabase, checkBucketExists } from '../supabase';
 import { toast } from "sonner";
 
 // Store a file (uniquement dans Supabase Storage)
