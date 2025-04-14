@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ type RegisterValues = z.infer<typeof registerSchema>;
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 const Auth = () => {
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, resetPassword } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot-password">("login");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -117,7 +118,8 @@ const Auth = () => {
     setLoading(true);
     setResetError(null);
     try {
-      const { error, success, message } = await useAuth().resetPassword(values.email);
+      // Appel correct à la fonction resetPassword du hook useAuth
+      const { error, success, message } = await resetPassword(values.email);
       
       if (error) {
         console.error("Erreur détaillée lors de la récupération du mot de passe:", error);

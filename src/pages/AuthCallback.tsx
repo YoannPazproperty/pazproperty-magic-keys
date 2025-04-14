@@ -27,6 +27,7 @@ const AuthCallback = () => {
         const type = searchParams.get("type");
         
         if (isReset || type === "recovery") {
+          console.log("Détection d'un flux de réinitialisation de mot de passe");
           setIsPasswordReset(true);
           return; // Attendre que l'utilisateur entre un nouveau mot de passe
         }
@@ -127,6 +128,7 @@ const AuthCallback = () => {
     setLoading(true);
     
     try {
+      console.log("Tentative de réinitialisation du mot de passe");
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       
       if (error) {
@@ -136,6 +138,7 @@ const AuthCallback = () => {
           description: error.message
         });
       } else {
+        console.log("Mot de passe réinitialisé avec succès");
         toast.success("Mot de passe mis à jour avec succès");
         setTimeout(() => navigate("/admin"), 2000);
       }
