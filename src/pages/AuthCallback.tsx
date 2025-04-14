@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -10,6 +12,7 @@ const AuthCallback = () => {
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   useEffect(() => {
     // Traiter le callback d'authentification
@@ -114,9 +117,10 @@ const AuthCallback = () => {
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordError(null);
     
     if (newPassword.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caractères");
+      setPasswordError("Le mot de passe doit contenir au moins 8 caractères");
       return;
     }
     
@@ -127,7 +131,7 @@ const AuthCallback = () => {
       
       if (error) {
         console.error("Erreur lors de la réinitialisation du mot de passe:", error);
-        setError(error.message);
+        setPasswordError(error.message);
         toast.error("Échec de la réinitialisation du mot de passe", {
           description: error.message
         });
@@ -137,7 +141,7 @@ const AuthCallback = () => {
       }
     } catch (err: any) {
       console.error("Exception lors de la réinitialisation du mot de passe:", err);
-      setError(err.message || "Une erreur est survenue lors de la réinitialisation du mot de passe");
+      setPasswordError(err.message || "Une erreur est survenue lors de la réinitialisation du mot de passe");
       toast.error("Erreur technique");
     } finally {
       setLoading(false);
@@ -166,10 +170,11 @@ const AuthCallback = () => {
               />
             </div>
             
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-                {error}
-              </div>
+            {passwordError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{passwordError}</AlertDescription>
+              </Alert>
             )}
             
             <button
@@ -193,9 +198,10 @@ const AuthCallback = () => {
           {error ? "Erreur d'authentification..." : "Authentification en cours..."}
         </p>
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md max-w-md text-sm">
-            {error}
-          </div>
+          <Alert variant="destructive" className="max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
       </div>
     </div>

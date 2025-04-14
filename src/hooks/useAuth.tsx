@@ -18,6 +18,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{
     error: any | null;
     success: boolean;
+    message?: string;
   }>;
   getUserRole: () => Promise<"admin" | "manager" | "user" | null>;
 }
@@ -145,20 +146,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       console.log("Demande de réinitialisation du mot de passe pour:", email);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // Vérification de base de l'adresse e-mail
+      if (!email || !email.includes('@')) {
+        return { 
+          error: { message: "Veuillez fournir une adresse e-mail valide" }, 
+          success: false 
+        };
+      }
+
+      // Effectuer la demande de réinitialisation avec plus d'options explicites
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?reset=true`,
       });
 
       if (error) {
-        console.error("Erreur lors de la réinitialisation du mot de passe:", error);
-        return { error, success: false };
+        console.error("Erreur détaillée lors de la réinitialisation du mot de passe:", error);
+        
+        // Traitement spécifique des types d'erreurs connus
+        if (error.message.includes("rate limit")) {
+          return { 
+            error, 
+            success: false,
+            message: "Trop de tentatives. Veuillez réessayer dans quelques minutes."
+          };
+        } else if (error.message.includes("Invalid login credentials")) {
+          return { 
+            error, 
+            success: false,
+            message: "Adresse e-mail non reconnue dans notre système."
+          };
+        } else if (error.message.includes("Unable to process request")) {
+          return { 
+            error, 
+            success: false,
+            message: "Erreur de communication avec le serveur d'authentification. Vérifiez la configuration de Supabase."
+          };
+        }
+        
+        return { 
+          error, 
+          success: false,
+          message: error.message || "Erreur lors de la réinitialisation du mot de passe"
+        };
       }
 
-      console.log("Demande de réinitialisation envoyée avec succès");
-      return { error: null, success: true };
-    } catch (err) {
-      console.error("Erreur inattendue lors de la réinitialisation du mot de passe:", err);
-      return { error: err, success: false };
+      console.log("Demande de réinitialisation envoyée avec succès, réponse:", data);
+      return { 
+        error: null, 
+        success: true,
+        message: "Si cette adresse existe dans notre système, vous recevrez un e-mail avec les instructions."
+      };
+    } catch (err: any) {
+      console.error("Exception inattendue lors de la réinitialisation du mot de passe:", err);
+      return { 
+        error: err, 
+        success: false,
+        message: "Une erreur technique s'est produite. Veuillez réessayer plus tard."
+      };
     } finally {
       setLoading(false);
     }

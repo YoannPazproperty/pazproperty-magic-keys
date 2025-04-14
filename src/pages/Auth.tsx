@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -48,6 +47,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -84,7 +84,6 @@ const Auth = () => {
       } else if (error) {
         console.error("Erreur de connexion:", error);
         
-        // Message d'erreur plus convivial basé sur le type d'erreur
         if (error.message && error.message.includes("Database error querying schema")) {
           toast.error("Problème temporaire de connexion à la base de données", {
             description: "Veuillez réessayer dans quelques instants. Si le problème persiste, contactez l'administrateur.",
@@ -116,24 +115,26 @@ const Auth = () => {
 
   const handleForgotPassword = async (values: ForgotPasswordValues) => {
     setLoading(true);
+    setResetError(null);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/auth/callback?reset=true`,
-      });
+      const { error, success, message } = await useAuth().resetPassword(values.email);
       
       if (error) {
-        console.error("Erreur lors de la récupération du mot de passe:", error);
+        console.error("Erreur détaillée lors de la récupération du mot de passe:", error);
+        setResetError(message || error.message || "Échec de l'envoi du lien de récupération");
+        
         toast.error("Échec de l'envoi du lien de récupération", {
-          description: error.message,
+          description: message || error.message || "Une erreur est survenue lors de l'envoi",
         });
       } else {
         setResetEmailSent(true);
         toast.success("Email envoyé", {
-          description: "Si cette adresse existe dans notre système, vous recevrez un email avec les instructions pour réinitialiser votre mot de passe.",
+          description: message || "Si cette adresse existe dans notre système, vous recevrez un email avec les instructions.",
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Exception lors de la récupération du mot de passe:", err);
+      setResetError("Une erreur technique s'est produite");
       toast.error("Erreur technique", {
         description: "Une erreur est survenue lors de la demande de récupération de mot de passe.",
       });
@@ -342,6 +343,15 @@ const Auth = () => {
                           </FormItem>
                         )}
                       />
+                      
+                      {resetError && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            {resetError}
+                          </AlertDescription>
+                        </Alert>
+                      )}
                       
                       <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? "Envoi en cours..." : "Envoyer le lien de récupération"}
