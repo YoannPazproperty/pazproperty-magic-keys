@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,14 +21,15 @@ const AuthCallback = () => {
         console.log("URL actuelle:", window.location.href);
         
         // Vérifier si c'est un flux de réinitialisation de mot de passe
-        const urlSearchParams = new URLSearchParams(window.location.search);
+        const urlParams = new URL(window.location.href).searchParams;
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         
-        const isReset = urlSearchParams.get("reset") === "true";
-        const type = urlSearchParams.get("type") || hashParams.get("type");
+        // Différentes façons dont le paramètre de réinitialisation peut être passé
+        const isReset = urlParams.get("reset") === "true";
+        const type = urlParams.get("type") || hashParams.get("type");
         const accessToken = hashParams.get("access_token");
         
-        console.log("Debug URL params:", { 
+        console.log("Debug paramètres URL:", { 
           isReset, 
           type, 
           accessToken: accessToken ? "présent" : "absent",
@@ -37,27 +37,15 @@ const AuthCallback = () => {
           search: window.location.search
         });
         
-        // Si c'est un reset de mot de passe OU si on a un token dans le hash
+        // Si c'est un reset de mot de passe ou si on a un token dans le hash
         if (isReset || type === "recovery" || accessToken) {
           console.log("Détection d'un flux de réinitialisation de mot de passe");
           setIsPasswordReset(true);
           return; // Attendre que l'utilisateur entre un nouveau mot de passe
         }
         
-        // Extraire le hash de l'URL s'il existe pour capturer les erreurs
-        if (hashParams && hashParams.get("error_description")) {
-          const errorDescription = hashParams.get("error_description");
-          console.error("Erreur dans les paramètres de l'URL:", errorDescription);
-          setError(errorDescription || "Erreur d'authentification");
-          toast.error("Échec de l'authentification", {
-            description: errorDescription
-          });
-          setTimeout(() => navigate("/auth"), 3000);
-          return;
-        }
-        
-        // Essayer d'échanger le code d'autorisation contre des jetons si présent dans l'URL
-        const code = urlSearchParams.get("code");
+        // Extraire le code d'autorisation de l'URL s'il existe
+        const code = urlParams.get("code");
         
         if (code) {
           console.log("Code d'autorisation trouvé, tentative d'échange");
@@ -137,39 +125,22 @@ const AuthCallback = () => {
     try {
       console.log("Tentative de réinitialisation du mot de passe");
       
-      // Récupération plus robuste du token depuis l'URL (hash ou query params)
-      const hash = window.location.hash.substring(1);
-      const hashParams = new URLSearchParams(hash);
-      const queryParams = new URLSearchParams(window.location.search);
+      // Extraire le token depuis l'URL
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
       
-      // Chercher le token dans différents endroits possibles
-      const token = 
-        hashParams.get("access_token") || 
-        queryParams.get("token") || 
-        hashParams.get("token");
-      
-      console.log("Paramètres d'URL analysés:", {
-        hashPresent: hash.length > 0,
-        accessTokenInHash: !!hashParams.get("access_token"),
-        tokenInQuery: !!queryParams.get("token")
-      });
-      
-      if (!token) {
-        console.error("Aucun token de réinitialisation trouvé dans l'URL");
-        setPasswordError("Le lien de réinitialisation est invalide ou a expiré. Veuillez réessayer.");
-        toast.error("Lien de réinitialisation invalide");
-        setLoading(false);
+      if (!accessToken) {
+        console.error("Aucun token d'accès trouvé");
+        setPasswordError("Lien de réinitialisation invalide ou expiré");
         return;
       }
       
-      console.log("Token trouvé, mise à jour du mot de passe...");
-      
-      // Si nous avons un token d'accès dans le hash, configuration explicite
-      if (hashParams.get("access_token")) {
-        // Mettre à jour explicitement la session Supabase avec le token
+      // Définir la session avec les tokens extraits
+      if (accessToken && refreshToken) {
         await supabase.auth.setSession({
-          access_token: token,
-          refresh_token: hashParams.get("refresh_token") || "",
+          access_token: accessToken,
+          refresh_token: refreshToken,
         });
       }
       
@@ -179,9 +150,9 @@ const AuthCallback = () => {
       });
       
       if (error) {
-        console.error("Erreur lors de la réinitialisation du mot de passe:", error);
+        console.error("Erreur lors de la réinitialisation:", error);
         setPasswordError(error.message);
-        toast.error("Échec de la réinitialisation du mot de passe", {
+        toast.error("Échec de la réinitialisation", {
           description: error.message
         });
       } else {
@@ -190,8 +161,8 @@ const AuthCallback = () => {
         setTimeout(() => navigate("/admin"), 2000);
       }
     } catch (err: any) {
-      console.error("Exception lors de la réinitialisation du mot de passe:", err);
-      setPasswordError(err.message || "Une erreur est survenue lors de la réinitialisation du mot de passe");
+      console.error("Exception lors de la réinitialisation:", err);
+      setPasswordError(err.message || "Erreur technique");
       toast.error("Erreur technique");
     } finally {
       setLoading(false);

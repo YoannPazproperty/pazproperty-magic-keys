@@ -282,6 +282,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      handle_password_reset: {
+        Args: { email: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _user_id: string

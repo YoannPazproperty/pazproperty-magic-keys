@@ -152,14 +152,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      // Construction précise de l'URL de redirection complète
+      // Construction de l'URL de redirection complète avec l'origine actuelle
       const origin = window.location.origin;
-      const redirectURL = new URL("/auth/callback", origin);
-      console.log(`URL de redirection pour la réinitialisation : ${redirectURL.toString()}`);
+      const redirectURL = `${origin}/auth/callback`;
+      console.log(`URL de redirection pour la réinitialisation: ${redirectURL}`);
 
-      // Effectuer la demande de réinitialisation avec toutes les options nécessaires
+      // Effectuer la demande de réinitialisation avec options complètes
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectURL.toString(),
+        redirectTo: redirectURL,
       });
 
       if (error) {
@@ -178,12 +178,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             success: false,
             message: "Adresse e-mail non reconnue dans notre système."
           };
-        } else if (error.message.includes("Unable to process request")) {
-          return { 
-            error, 
-            success: false,
-            message: "Erreur de communication avec le serveur d'authentification. Vérifiez la configuration des URL dans Supabase."
-          };
         }
         
         return { 
@@ -193,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      console.log("Demande de réinitialisation envoyée avec succès, réponse:", data);
+      console.log("Demande de réinitialisation envoyée avec succès");
       return { 
         error: null, 
         success: true,
