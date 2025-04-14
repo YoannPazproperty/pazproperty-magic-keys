@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Upload, X, ImageIcon, VideoIcon, FileIcon, Cloud, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   maxFiles = 4,
   accept = "image/*,video/*",
   supabaseConnected = null,
-  maxFileSize = 10 // Limite par défaut à 10 Mo
+  maxFileSize = 500 // Limite augmentée à 500 Mo
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -65,7 +64,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
     onChange(updatedFiles);
   };
   
-  // ... reste du code existant (méthodes removeFile, getFileIcon, etc.)
   const removeFile = (index: number) => {
     const updatedFiles = [...files];
     updatedFiles.splice(index, 1);
