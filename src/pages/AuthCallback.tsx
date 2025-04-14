@@ -9,12 +9,19 @@ const AuthCallback = () => {
   useEffect(() => {
     // Traiter le callback d'authentification
     const handleAuthCallback = async () => {
-      const { error } = await supabase.auth.getSessionFromUrl();
-      if (error) {
-        console.error("Erreur de callback d'authentification:", error);
+      try {
+        // Use the current method to handle OAuth callback
+        const { error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Erreur de callback d'authentification:", error);
+          navigate("/auth");
+        } else {
+          navigate("/admin");
+        }
+      } catch (err) {
+        console.error("Erreur inattendue lors du callback:", err);
         navigate("/auth");
-      } else {
-        navigate("/admin");
       }
     };
 
