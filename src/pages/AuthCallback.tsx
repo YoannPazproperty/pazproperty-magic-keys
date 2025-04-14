@@ -1,11 +1,12 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Traiter le callback d'authentification
@@ -22,67 +23,74 @@ const AuthCallback = () => {
         if (hashParams && hashParams.get("error_description")) {
           const errorDescription = hashParams.get("error_description");
           console.error("Erreur dans les paramètres de l'URL:", errorDescription);
+          setError(errorDescription || "Erreur d'authentification");
           toast.error("Échec de l'authentification", {
             description: errorDescription
           });
-          navigate("/auth");
+          setTimeout(() => navigate("/auth"), 3000);
           return;
         }
         
-        // Récupérer la session actuelle
-        const { data, error } = await supabase.auth.getSession();
+        // Essayer d'échanger le code d'autorisation contre des jetons si présent dans l'URL
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
         
-        if (error) {
-          console.error("Erreur de callback d'authentification:", error);
-          toast.error("Échec de l'authentification", {
-            description: error.message
-          });
-          navigate("/auth");
-        } else if (data?.session) {
-          console.log("Session récupérée avec succès:", data.session);
-          toast.success("Connexion réussie");
-          navigate("/admin");
-        } else {
-          console.error("Pas de session trouvée dans le callback");
-          
-          // Essayer d'échanger le code d'autorisation contre des jetons si présent dans l'URL
-          const params = new URLSearchParams(window.location.search);
-          const code = params.get("code");
-          
-          if (code) {
-            console.log("Code d'autorisation trouvé, tentative d'échange");
-            try {
-              const { data: exchangeData, error: exchangeError } = 
-                await supabase.auth.exchangeCodeForSession(code);
-                
-              if (exchangeError) {
-                console.error("Erreur lors de l'échange du code:", exchangeError);
-                toast.error("Erreur d'authentification");
-                navigate("/auth");
-              } else if (exchangeData.session) {
-                console.log("Session créée avec succès via échange de code");
-                toast.success("Connexion réussie");
-                navigate("/admin");
-              } else {
-                console.error("Aucune session retournée après l'échange de code");
-                toast.error("Impossible de finaliser la connexion");
-                navigate("/auth");
-              }
-            } catch (exchangeErr) {
-              console.error("Exception lors de l'échange du code:", exchangeErr);
-              toast.error("Erreur d'authentification");
-              navigate("/auth");
+        if (code) {
+          console.log("Code d'autorisation trouvé, tentative d'échange");
+          try {
+            const { data, error: exchangeError } = 
+              await supabase.auth.exchangeCodeForSession(code);
+              
+            if (exchangeError) {
+              console.error("Erreur lors de l'échange du code:", exchangeError);
+              setError(exchangeError.message);
+              toast.error("Erreur d'authentification", {
+                description: exchangeError.message
+              });
+              setTimeout(() => navigate("/auth"), 3000);
+            } else if (data.session) {
+              console.log("Session créée avec succès via échange de code");
+              toast.success("Connexion réussie");
+              navigate("/admin");
+            } else {
+              console.error("Aucune session retournée après l'échange de code");
+              setError("Impossible de finaliser la connexion");
+              toast.error("Impossible de finaliser la connexion");
+              setTimeout(() => navigate("/auth"), 3000);
             }
+          } catch (exchangeErr: any) {
+            console.error("Exception lors de l'échange du code:", exchangeErr);
+            setError(exchangeErr.message || "Erreur lors de l'échange du code");
+            toast.error("Erreur d'authentification");
+            setTimeout(() => navigate("/auth"), 3000);
+          }
+        } else {
+          // Récupérer la session actuelle
+          const { data, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.error("Erreur de récupération de session:", sessionError);
+            setError(sessionError.message);
+            toast.error("Échec de l'authentification", {
+              description: sessionError.message
+            });
+            setTimeout(() => navigate("/auth"), 3000);
+          } else if (data?.session) {
+            console.log("Session récupérée avec succès");
+            toast.success("Connexion réussie");
+            navigate("/admin");
           } else {
             // Si pas de code et pas de session, rediriger vers l'authentification
-            console.log("Aucun code trouvé dans l'URL, redirection vers la page d'authentification");
-            navigate("/auth");
+            console.log("Aucun code trouvé dans l'URL et pas de session active");
+            setError("Aucune information d'authentification trouvée");
+            setTimeout(() => navigate("/auth"), 2000);
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erreur inattendue lors du callback:", err);
+        setError(err.message || "Une erreur est survenue lors de l'authentification");
         toast.error("Une erreur est survenue lors de l'authentification");
-        navigate("/auth");
+        setTimeout(() => navigate("/auth"), 3000);
       }
     };
 
@@ -94,8 +102,13 @@ const AuthCallback = () => {
       <div className="flex flex-col items-center space-y-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         <p className="text-center text-gray-500">
-          Authentification en cours...
+          {error ? "Erreur d'authentification..." : "Authentification en cours..."}
         </p>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md max-w-md text-sm">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );
