@@ -1,6 +1,16 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { getSupabase, checkBucketExists } from '../supabase';
 import { toast } from "sonner";
+
+// Fonction pour nettoyer le nom de fichier de caractères spéciaux
+const sanitizeFileName = (fileName: string): string => {
+  // Remplacer les caractères accentués par leur version non accentuée
+  const normalized = fileName.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  
+  // Remplacer tous les caractères non alphanumériques (sauf points) par des underscores
+  return normalized.replace(/[^a-zA-Z0-9._]/g, '_');
+};
 
 // Store a file (uniquement dans Supabase Storage)
 export const storeFile = async (file: File): Promise<string> => {
@@ -33,8 +43,12 @@ export const storeFile = async (file: File): Promise<string> => {
       throw new Error("Supabase client not available");
     }
     
-    // Prepare safe filename
-    const filePath = `${fileId}-${file.name.replace(/\s+/g, '_')}`;
+    // Sanitize filename before uploading
+    const sanitizedFileName = sanitizeFileName(file.name);
+    console.log(`fileStorage: Original filename: "${file.name}", sanitized: "${sanitizedFileName}"`);
+    
+    // Prepare safe filename with UUID prefix
+    const filePath = `${fileId}-${sanitizedFileName}`;
     console.log(`fileStorage: Uploading file to path: ${filePath}...`);
     
     const bucketName = 'declaration-media';
