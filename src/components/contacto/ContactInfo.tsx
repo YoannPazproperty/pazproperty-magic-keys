@@ -25,7 +25,7 @@ const ContactInfo = () => {
           </div>
           <div>
             <h3 className="text-xl font-semibold mb-2">Email</h3>
-            <p className="text-gray-600">info@pazproperty.pt</p>
+            <p className="text-gray-600">yoann@pazproperty.pt</p>
             <p className="text-gray-500 text-sm mt-1">Respondemos em 24 horas</p>
           </div>
         </div>
