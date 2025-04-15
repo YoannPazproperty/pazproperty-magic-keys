@@ -13,7 +13,7 @@ const Footer = () => {
               <span className="text-xl font-bold text-gradient">Pazproperty</span>
             </Link>
             <p className="text-gray-600 mb-4">
-              <em>Your keys, our responsability</em>
+              <em>As suas chaves, a nossa missão</em>
             </p>
             <p className="text-gray-600">
               Gestão de propriedades em Lisboa, Portugal.
