@@ -143,9 +143,9 @@ export const urgencyToMondayMap: Record<string, string> = {
 
 // Email configuration
 export const EMAIL_CONFIG = {
-  technicianEmails: ["technicien@pazproperty.pt"], // Default technician email
-  adminEmails: ["admin@pazproperty.pt"], // Default admin email
-  fromEmail: "notifications@pazproperty.pt" // Sender email
+  technicianEmails: ["technicien@pazproperty.pt"], 
+  adminEmails: ["yoann@pazproperty.pt"], // Changed from admin@pazproperty.pt
+  fromEmail: "yoann@pazproperty.pt" // Changed from notifications@pazproperty.pt
 };
 
 // Monday.com board configurations
