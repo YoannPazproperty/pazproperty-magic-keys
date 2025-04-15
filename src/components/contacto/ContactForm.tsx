@@ -39,6 +39,10 @@ const ContactForm = () => {
       
       console.log("Resposta da função:", data);
       
+      if (data.details) {
+        console.log("Détails des emails:", data.details);
+      }
+      
       // Show success message
       toast.success("Mensagem enviada com sucesso! Entraremos em contacto consigo em breve.");
       
