@@ -1,0 +1,49 @@
+
+import React from "react";
+import { Mail, Phone, MapPin } from "lucide-react";
+
+const ContactInfo = () => {
+  return (
+    <div>
+      <h2 className="text-3xl font-bold mb-8">Informações de Contacto</h2>
+      
+      <div className="space-y-8">
+        <div className="flex items-start">
+          <div className="mt-1 mr-4 bg-primary/10 p-3 rounded-full">
+            <Phone className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Telefone</h3>
+            <p className="text-gray-600">+351 912 345 678</p>
+            <p className="text-gray-500 text-sm mt-1">Seg-Sex: 9:00 - 18:00</p>
+          </div>
+        </div>
+        
+        <div className="flex items-start">
+          <div className="mt-1 mr-4 bg-primary/10 p-3 rounded-full">
+            <Mail className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Email</h3>
+            <p className="text-gray-600">info@pazproperty.pt</p>
+            <p className="text-gray-500 text-sm mt-1">Respondemos em 24 horas</p>
+          </div>
+        </div>
+        
+        <div className="flex items-start">
+          <div className="mt-1 mr-4 bg-primary/10 p-3 rounded-full">
+            <MapPin className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Morada</h3>
+            <p className="text-gray-600">Avenida da Liberdade, 110</p>
+            <p className="text-gray-600">1250-146 Lisboa, Portugal</p>
+            <p className="text-gray-500 text-sm mt-1">Seg-Sex: 9:00 - 18:00 (com marcação)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ContactInfo;
