@@ -30,7 +30,7 @@ const Index = () => {
                 Gestão Locativa <span className="text-gradient">Simplificada</span> em Lisboa
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                <em>As suas chaves, a nossa missão</em> - Cuidamos do seu imóvel enquanto você descansa.
+                <em>As suas chaves, a nossa missão</em>
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" className="bg-brand-blue hover:bg-primary/90">
