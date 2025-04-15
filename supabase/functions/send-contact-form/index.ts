@@ -29,11 +29,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Received contact form submission:", formData);
 
+    // Vérification de la clé API Resend
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    console.log("Resend API Key configured:", apiKey ? `Yes (${apiKey.substring(0, 5)}...)` : "No");
+
+    // Destinataires
+    const recipients = ["alexa@pazproperty.pt", "yoann@pazproperty.pt"];
+    console.log("Sending email to recipients:", recipients);
+    
     // Send email to company staff
     console.log("Sending email to company staff...");
     const emailResponse = await resend.emails.send({
       from: "PAZ Property <onboarding@resend.dev>", 
-      to: ["alexa@pazproperty.pt", "yoann@pazproperty.pt"],
+      to: recipients,
       subject: "Novo formulário de contacto do website",
       html: `
         <h1>Novo contacto do website</h1>
@@ -99,4 +107,3 @@ const handler = async (req: Request): Promise<Response> => {
 };
 
 serve(handler);
-

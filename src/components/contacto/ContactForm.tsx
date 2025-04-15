@@ -35,12 +35,17 @@ const ContactForm = () => {
         body: formData,
       });
       
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Erro na função edge:", error);
+        throw new Error(error.message);
+      }
       
-      console.log("Resposta da função:", data);
+      console.log("Resposta completa da função:", data);
       
       if (data.details) {
-        console.log("Détails des emails:", data.details);
+        console.log("Detalhes dos emails:");
+        console.log("Email para empresa:", data.details.companyEmail);
+        console.log("Email de confirmação:", data.details.confirmationEmail);
       }
       
       // Show success message
@@ -54,7 +59,7 @@ const ContactForm = () => {
         mensagem: "",
       });
     } catch (error) {
-      console.error("Erro ao enviar formulário:", error);
+      console.error("Erro detalhado ao enviar formulário:", error);
       toast.error("Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente mais tarde.");
     } finally {
       setIsSubmitting(false);
