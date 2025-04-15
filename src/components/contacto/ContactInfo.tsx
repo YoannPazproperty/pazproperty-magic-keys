@@ -36,8 +36,8 @@ const ContactInfo = () => {
           </div>
           <div>
             <h3 className="text-xl font-semibold mb-2">Morada</h3>
-            <p className="text-gray-600">Avenida da Liberdade, 110</p>
-            <p className="text-gray-600">1250-146 Lisboa, Portugal</p>
+            <p className="text-gray-600">Rua Professor Sergio Pinto 224, 3°Dto</p>
+            <p className="text-gray-600">2870-497 Montijo, Portugal</p>
             <p className="text-gray-500 text-sm mt-1">Seg-Sex: 9:00 - 18:00 (com marcação)</p>
           </div>
         </div>

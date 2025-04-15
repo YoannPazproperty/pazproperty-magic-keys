@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -77,7 +76,7 @@ const Footer = () => {
             <h3 className="font-medium text-gray-900 mb-4">Contacto</h3>
             <ul className="space-y-2">
               <li className="text-gray-600">
-                <span className="block">Lisboa, Portugal</span>
+                <span className="block">Montijo, Portugal</span>
               </li>
               <li className="text-gray-600">
                 <a href="mailto:info@pazproperty.pt" className="hover:text-primary transition-colors">
