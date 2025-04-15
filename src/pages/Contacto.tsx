@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,6 @@ const Contacto = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Aqui você pode adicionar a lógica para enviar o formulário
     console.log("Formulário enviado:", formData);
     alert("Obrigado pelo seu contacto! Responderemos em breve.");
     setFormData({
@@ -42,10 +40,10 @@ const Contacto = () => {
         <div className="container mx-auto">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Entre em Contacto</h1>
-            <p className="text-xl text-gray-600">
-              Estamos aqui para responder a todas as suas questões sobre gestão locativa em Lisboa. 
-              Entre em contacto connosco hoje mesmo.
-            </p>
+            <div className="text-xl text-gray-600">
+              <p><em>Your keys, our responsibilities</em></p>
+              <p><em>As suas chaves, a nossa missão</em></p>
+            </div>
           </div>
         </div>
       </section>
@@ -198,7 +196,6 @@ const Contacto = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold mb-8 text-center">Onde Estamos</h2>
           <div className="h-96 rounded-xl overflow-hidden shadow-lg">
-            {/* Aqui você poderia integrar um mapa real (Google Maps, etc.) */}
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
               <p className="text-gray-500">Mapa de Localização - Avenida da Liberdade, Lisboa</p>
             </div>

@@ -1,4 +1,4 @@
-
+import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,10 @@ const Sobre = () => {
         <div className="container mx-auto">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Sobre a Pazproperty</h1>
-            <p className="text-xl text-gray-600">
-              Somos uma empresa de gestão locativa dedicada a simplificar a vida dos proprietários 
-              em Lisboa, oferecendo serviços completos e personalizados.
-            </p>
+            <div className="text-xl text-gray-600 mb-8">
+              <p><em>Your keys, our responsibilities</em></p>
+              <p><em>As suas chaves, a nossa missão</em></p>
+            </div>
           </div>
         </div>
       </section>

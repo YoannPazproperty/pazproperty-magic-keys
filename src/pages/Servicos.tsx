@@ -1,7 +1,7 @@
-
-import { ArrowRight, Clipboard, Wrench, Home, ClipboardCheck, Search, Settings, Shield } from "lucide-react";
+import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { ArrowRight, Clipboard, Wrench, Home, ClipboardCheck, Search, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -11,14 +11,14 @@ const Servicos = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 bg-gray-50" id="servicos">
+      <section className="pt-32 pb-20 px-4 bg-gray-50">
         <div className="container mx-auto">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Nossos Serviços</h1>
-            <p className="text-xl text-gray-600">
-              Oferecemos uma gama completa de serviços de gestão imobiliária para proprietários em Lisboa, 
-              desde a gestão locativa até à manutenção e consultoria.
-            </p>
+            <div className="text-xl text-gray-600 mb-8">
+              <p><em>Your keys, our responsibilities</em></p>
+              <p><em>As suas chaves, a nossa missão</em></p>
+            </div>
           </div>
         </div>
       </section>
