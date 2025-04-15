@@ -1,1 +1,5 @@
-project_id = "ubztjjxmldogpwawcnrj"
+
+project_id = "project-id"
+
+[functions.send-contact-form]
+verify_jwt = false
