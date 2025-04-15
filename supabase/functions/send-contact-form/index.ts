@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email to company staff
     console.log("Sending email to company staff...");
     const emailResponse = await resend.emails.send({
-      from: "PAZ Property <onboarding@resend.dev>", 
+      from: "Contacto PAZ Property <contacto@pazproperty.pt>", 
       to: recipients,
       subject: "Novo formulário de contacto do website",
       html: `
@@ -58,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send confirmation email to the customer
     console.log("Sending confirmation email to customer...");
     const confirmationResponse = await resend.emails.send({
-      from: "PAZ Property <onboarding@resend.dev>",
+      from: "Contacto PAZ Property <contacto@pazproperty.pt>",
       to: [email],
       subject: "Recebemos a sua mensagem - PAZ Property",
       html: `
