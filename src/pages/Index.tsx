@@ -29,9 +29,10 @@ const Index = () => {
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
                 Gestão Locativa <span className="text-gradient">Simplificada</span> em Lisboa
               </h1>
-              <p className="text-xl text-gray-600 mb-8">
-                <em>As suas chaves, a nossa missão</em>
-              </p>
+              <div className="text-xl text-gray-600 mb-8">
+                <p><em>Your keys, our responsibilities</em></p>
+                <p><em>As suas chaves, a nossa missão</em></p>
+              </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" className="bg-brand-blue hover:bg-primary/90">
                   <Link to="/contacto">Fale Connosco</Link>

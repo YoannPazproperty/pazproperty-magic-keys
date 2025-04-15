@@ -12,9 +12,10 @@ const Footer = () => {
             <Link to="/" className="inline-block mb-4">
               <span className="text-xl font-bold text-gradient">Pazproperty</span>
             </Link>
-            <p className="text-gray-600 mb-4">
-              <em>As suas chaves, a nossa missão</em>
-            </p>
+            <div className="text-gray-600 mb-4">
+              <p><em>Your keys, our responsibilities</em></p>
+              <p><em>As suas chaves, a nossa missão</em></p>
+            </div>
             <p className="text-gray-600">
               Gestão de propriedades em Lisboa, Portugal.
             </p>
