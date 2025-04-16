@@ -36,9 +36,12 @@ const ContactForm = () => {
     try {
       console.log("Enviando formulário:", formData);
       
-      // Call the Supabase edge function
+      // Call the Supabase edge function with correct CORS settings
       const { data, error } = await supabase.functions.invoke('send-contact-form', {
         body: formData,
+        headers: {
+          "Content-Type": "application/json"
+        }
       });
       
       if (error) {
@@ -48,7 +51,7 @@ const ContactForm = () => {
       
       console.log("Resposta completa da função:", data);
       
-      if (data.details) {
+      if (data && data.details) {
         console.log("Detalhes dos emails:");
         console.log("Email para empresa:", data.details.companyEmail);
         console.log("Email de confirmação:", data.details.confirmationEmail);
