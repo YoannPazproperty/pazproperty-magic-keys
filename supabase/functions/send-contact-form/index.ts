@@ -1,8 +1,15 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.3";
 
+// Initialiser le client Resend pour l'envoi d'emails
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+// Configuration de Supabase
+const supabaseUrl = "https://ubztjjxmldogpwawcnrj.supabase.co";
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +37,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Received contact form submission:", formData);
 
+    // Sauvegarder les données dans la base de données
+    console.log("Saving data to contactos_comerciais table...");
+    const { data: insertData, error: insertError } = await supabase
+      .from("contactos_comerciais")
+      .insert([
+        { nome, email, telefone, tipo, mensagem }
+      ]);
+    
+    if (insertError) {
+      console.error("Error saving to database:", insertError);
+      throw new Error(`Database error: ${insertError.message}`);
+    }
+    
+    console.log("Data saved successfully!");
+    
     // Vérification de la clé API Resend
     const apiKey = Deno.env.get("RESEND_API_KEY");
     console.log("Resend API Key configured:", apiKey ? `Yes (${apiKey.substring(0, 5)}...)` : "No");
@@ -75,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Emails sent successfully",
+        message: "Data saved and emails sent successfully",
         details: {
           companyEmail: emailResponse,
           confirmationEmail: confirmationResponse
@@ -90,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error sending emails:", error);
+    console.error("Error in send-contact-form function:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
