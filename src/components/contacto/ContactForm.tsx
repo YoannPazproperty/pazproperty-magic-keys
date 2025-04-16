@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,10 +50,17 @@ const ContactForm = () => {
       
       console.log("Resposta completa da função:", data);
       
-      if (data && data.details) {
-        console.log("Detalhes dos emails:");
-        console.log("Email para empresa:", data.details.companyEmail);
-        console.log("Email de confirmação:", data.details.confirmationEmail);
+      // Vérifiez les résultats de l'envoi d'email et de la sauvegarde en base de données
+      if (data.email?.success) {
+        console.log("Emails envoyés avec succès !");
+      } else {
+        console.warn("Problème avec l'envoi des emails:", data.email);
+      }
+      
+      if (data.database?.success) {
+        console.log("Données sauvegardées dans Supabase:", data.database.data);
+      } else {
+        console.warn("Problème avec la sauvegarde dans Supabase:", data.database);
       }
       
       // Show success message
