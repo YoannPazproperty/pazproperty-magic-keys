@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,13 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Loader2 } from "lucide-react";
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
     telefone: "",
-    tipo: "proprietario", // Valeur par défaut: propriétaire
+    tipo: "proprietario", // Default value: proprietário
     mensagem: "",
   });
   
@@ -35,45 +37,46 @@ const ContactForm = () => {
     try {
       console.log("Enviando formulário:", formData);
       
-      // Call the Supabase edge function with correct CORS settings
-      const { data, error } = await supabase.functions.invoke('send-contact-form', {
+      const response = await supabase.functions.invoke('send-contact-form', {
         body: formData,
         headers: {
           "Content-Type": "application/json"
         }
       });
       
-      if (error) {
-        console.error("Erro na função edge:", error);
-        throw new Error(error.message);
+      if (response.error) {
+        throw new Error(response.error.message || "Erro ao processar o formulário");
       }
       
+      const data = response.data;
       console.log("Resposta completa da função:", data);
       
-      // Vérifiez les résultats de l'envoi d'email et de la sauvegarde en base de données
       if (data.email?.success) {
-        console.log("Emails envoyés avec succès !");
+        console.log("Emails enviados com sucesso!");
       } else {
-        console.warn("Problème avec l'envoi des emails:", data.email);
+        console.warn("Problema com o envio dos emails:", data.email);
       }
       
       if (data.database?.success) {
-        console.log("Données sauvegardées dans Supabase:", data.database.data);
+        console.log("Dados salvos em Supabase:", data.database.data);
       } else {
-        console.warn("Problème avec la sauvegarde dans Supabase:", data.database);
+        console.warn("Problema com a gravação em Supabase:", data.database);
       }
       
-      // Show success message
-      toast.success("Mensagem enviada com sucesso! Entraremos em contacto consigo em breve.");
-      
-      // Reset form
-      setFormData({
-        nome: "",
-        email: "",
-        telefone: "",
-        tipo: "proprietario",
-        mensagem: "",
-      });
+      if (data.email?.success || data.database?.success) {
+        toast.success("Mensagem enviada com sucesso! Entraremos em contacto consigo em breve.");
+        
+        // Reset form
+        setFormData({
+          nome: "",
+          email: "",
+          telefone: "",
+          tipo: "proprietario",
+          mensagem: "",
+        });
+      } else {
+        toast.error("Ocorreu um erro ao processar o seu pedido. Por favor, tente novamente mais tarde.");
+      }
     } catch (error) {
       console.error("Erro detalhado ao enviar formulário:", error);
       toast.error("Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente mais tarde.");
@@ -173,11 +176,15 @@ const ContactForm = () => {
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <>Enviando...</>
+            <span className="flex items-center">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+              A enviar...
+            </span>
           ) : (
-            <>
-              <Send className="mr-2 h-4 w-4" /> Enviar Mensagem
-            </>
+            <span className="flex items-center">
+              <Send className="mr-2 h-4 w-4" /> 
+              Enviar Mensagem
+            </span>
           )}
         </Button>
       </form>
