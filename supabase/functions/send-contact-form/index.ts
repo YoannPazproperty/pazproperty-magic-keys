@@ -14,6 +14,7 @@ interface ContactFormData {
   nome: string;
   email: string;
   telefone: string;
+  tipo: string;
   mensagem: string;
 }
 
@@ -25,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const formData: ContactFormData = await req.json();
-    const { nome, email, telefone, mensagem } = formData;
+    const { nome, email, telefone, tipo, mensagem } = formData;
 
     console.log("Received contact form submission:", formData);
 
@@ -48,6 +49,7 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>Nome:</strong> ${nome}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Telefone:</strong> ${telefone}</p>
+        <p><strong>Tipo:</strong> ${tipo === 'proprietario' ? 'Proprietário' : 'Inquilino'}</p>
         <p><strong>Mensagem:</strong></p>
         <p>${mensagem.replace(/\n/g, "<br>")}</p>
       `,

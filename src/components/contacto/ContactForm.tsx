@@ -3,16 +3,18 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Send } from "lucide-react";
+import { Send, User, Mail, Phone, Home, MessageSquare } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
     telefone: "",
+    tipo: "proprietario", // Valeur par défaut: propriétaire
     mensagem: "",
   });
   
@@ -21,6 +23,10 @@ const ContactForm = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRadioChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, tipo: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,6 +62,7 @@ const ContactForm = () => {
         nome: "",
         email: "",
         telefone: "",
+        tipo: "proprietario",
         mensagem: "",
       });
     } catch (error) {
@@ -72,7 +79,9 @@ const ContactForm = () => {
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="nome">Nome Completo</Label>
+          <Label htmlFor="nome" className="flex items-center gap-2">
+            <User className="h-4 w-4" /> Nome Completo
+          </Label>
           <Input
             id="nome"
             name="nome"
@@ -84,7 +93,9 @@ const ContactForm = () => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" /> Email
+          </Label>
           <Input
             id="email"
             name="email"
@@ -97,7 +108,9 @@ const ContactForm = () => {
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="telefone">Telefone</Label>
+          <Label htmlFor="telefone" className="flex items-center gap-2">
+            <Phone className="h-4 w-4" /> Telefone
+          </Label>
           <Input
             id="telefone"
             name="telefone"
@@ -107,8 +120,32 @@ const ContactForm = () => {
           />
         </div>
         
+        <div className="space-y-3">
+          <Label htmlFor="tipo-usuario" className="flex items-center gap-2">
+            <Home className="h-4 w-4" /> É proprietário ou inquilino?
+          </Label>
+          <RadioGroup 
+            id="tipo-usuario"
+            defaultValue="proprietario"
+            value={formData.tipo}
+            onValueChange={handleRadioChange}
+            className="flex flex-col space-y-1 sm:flex-row sm:space-x-6 sm:space-y-0"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="proprietario" id="proprietario" />
+              <Label htmlFor="proprietario">Proprietário</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="inquilino" id="inquilino" />
+              <Label htmlFor="inquilino">Inquilino</Label>
+            </div>
+          </RadioGroup>
+        </div>
+        
         <div className="space-y-2">
-          <Label htmlFor="mensagem">Mensagem</Label>
+          <Label htmlFor="mensagem" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" /> Mensagem
+          </Label>
           <Textarea
             id="mensagem"
             name="mensagem"
