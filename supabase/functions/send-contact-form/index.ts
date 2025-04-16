@@ -37,20 +37,33 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Received contact form submission:", formData);
 
+    // Vérification de la clé Supabase
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    console.log("Supabase service key configured:", serviceKey ? `Yes (${serviceKey.substring(0, 5)}...)` : "No");
+    
     // Sauvegarder les données dans la base de données
     console.log("Saving data to contactos_comerciais table...");
-    const { data: insertData, error: insertError } = await supabase
-      .from("contactos_comerciais")
-      .insert([
-        { nome, email, telefone, tipo, mensagem }
-      ]);
     
-    if (insertError) {
-      console.error("Error saving to database:", insertError);
-      throw new Error(`Database error: ${insertError.message}`);
+    try {
+      const { data: insertData, error: insertError } = await supabase
+        .from("contactos_comerciais")
+        .insert([
+          { nome, email, telefone, tipo, mensagem }
+        ])
+        .select(); // Ajouter .select() pour récupérer les données insérées
+      
+      if (insertError) {
+        console.error("Error saving to database:", insertError);
+        console.error("Error details:", insertError.details);
+        console.error("Error hint:", insertError.hint);
+        throw new Error(`Database error: ${insertError.message}`);
+      }
+      
+      console.log("Data saved successfully!", insertData);
+    } catch (dbError) {
+      console.error("Exception during database operation:", dbError);
+      throw new Error(`Database operation failed: ${dbError.message}`);
     }
-    
-    console.log("Data saved successfully!");
     
     // Vérification de la clé API Resend
     const apiKey = Deno.env.get("RESEND_API_KEY");
