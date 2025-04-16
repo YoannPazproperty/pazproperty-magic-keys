@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
@@ -40,7 +39,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email to company staff
     console.log("Sending email to company staff...");
     const emailResponse = await resend.emails.send({
-      from: "Contacto PAZ Property <contacto@pazproperty.pt>", 
+      from: "PAZ Property <yoann@pazproperty.pt>", 
       to: recipients,
       subject: "Novo formulário de contacto do website",
       html: `
@@ -58,7 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send confirmation email to the customer
     console.log("Sending confirmation email to customer...");
     const confirmationResponse = await resend.emails.send({
-      from: "Contacto PAZ Property <contacto@pazproperty.pt>",
+      from: "PAZ Property <yoann@pazproperty.pt>",
       to: [email],
       subject: "Recebemos a sua mensagem - PAZ Property",
       html: `
