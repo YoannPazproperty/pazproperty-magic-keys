@@ -37,7 +37,12 @@ const ContactForm = () => {
     try {
       console.log("Enviando formulário:", formData);
       
-      // Call the Edge function
+      // Vérifier que toutes les données requises sont présentes
+      if (!formData.nome || !formData.email || !formData.mensagem) {
+        throw new Error("Veuillez remplir tous les champs obligatoires");
+      }
+      
+      // Call the Edge function with proper headers
       const response = await supabase.functions.invoke('send-contact-form', {
         body: JSON.stringify(formData),
         headers: {
