@@ -312,6 +312,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fix_confirmation_tokens: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       handle_password_reset: {
         Args: { email: string }
         Returns: boolean

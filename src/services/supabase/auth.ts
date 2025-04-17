@@ -11,36 +11,53 @@ export const fixConfirmationTokens = async (): Promise<{ success: boolean; messa
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData.session?.access_token || '';
     
+    if (!accessToken) {
+      console.log('Tentative de réparation sans session active');
+      // Essayons sans token d'authentification
+    }
+    
+    const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
+    
     const response = await fetch(
-      'https://ubztjjxmldogpwawcnrj.supabase.co/functions/v1/password-reset-fix',
+      `${supabaseUrl}/functions/v1/password-reset-fix`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': accessToken ? `Bearer ${accessToken}` : '',
         },
       }
     );
 
+    if (response.status === 500) {
+      console.error('Erreur serveur lors de la réparation des tokens:', await response.text());
+      return { 
+        success: false, 
+        message: 'Le serveur a rencontré une erreur interne lors de la réparation' 
+      };
+    }
+
     const data = await response.json();
     
     if (!response.ok) {
-      console.error('Error fixing confirmation tokens:', data);
+      console.error('Erreur lors de la réparation des tokens:', data);
       return { 
         success: false, 
-        message: data.error || 'Failed to fix confirmation tokens' 
+        message: data.error || 'Échec de la réparation des tokens' 
       };
     }
     
+    console.log('Résultat de la réparation:', data);
+    
     return { 
       success: true, 
-      message: 'Confirmation tokens fixed successfully' 
+      message: data.message || 'Tokens de confirmation réparés avec succès' 
     };
   } catch (error) {
-    console.error('Unexpected error fixing confirmation tokens:', error);
+    console.error('Erreur inattendue lors de la réparation des tokens:', error);
     return { 
       success: false, 
-      message: 'An unexpected error occurred' 
+      message: 'Une erreur inattendue est survenue lors de la tentative de réparation' 
     };
   }
 };

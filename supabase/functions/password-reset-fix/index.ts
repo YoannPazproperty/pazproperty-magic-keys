@@ -18,21 +18,13 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     
-    // Create Supabase client with service role key for admin privileges
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    console.log("Password reset fix function initiated");
-    
-    // Execute SQL query to fix NULL confirmation_token values
-    const { data, error } = await supabase.rpc('fix_confirmation_tokens');
-    
-    if (error) {
-      console.error("Error fixing confirmation tokens:", error);
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing environment variables");
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Failed to fix confirmation tokens",
-          details: error
+          error: "Configuration incorrecte",
+          details: "Variables d'environnement manquantes"
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -41,26 +33,64 @@ serve(async (req) => {
       );
     }
     
-    console.log("Confirmation tokens fixed successfully:", data);
+    // Create Supabase client with service role key for admin privileges
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Confirmation tokens have been successfully fixed",
-        details: data
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+    console.log("Password reset fix function initiated");
+    
+    try {
+      // Execute the database function to fix NULL confirmation_token values
+      const { data, error } = await supabase.rpc('fix_confirmation_tokens');
+      
+      if (error) {
+        console.error("Error fixing confirmation tokens:", error);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: "Échec de la correction des tokens",
+            details: error
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 500,
+          }
+        );
       }
-    );
+      
+      console.log("Confirmation tokens fix result:", data);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Les tokens de confirmation ont été corrigés avec succès",
+          details: data
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    } catch (dbError) {
+      console.error("Database error:", dbError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Erreur lors de l'exécution de la fonction SQL",
+          details: dbError instanceof Error ? dbError.message : String(dbError)
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        }
+      );
+    }
   } catch (error) {
     console.error("Unexpected error:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: "An unexpected error occurred",
-        details: error.message
+        error: "Une erreur inattendue s'est produite",
+        details: error instanceof Error ? error.message : String(error)
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
