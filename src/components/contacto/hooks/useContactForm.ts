@@ -72,8 +72,8 @@ export function useContactForm(): UseContactFormReturn {
       
       console.log("Dados preparados para envio:", dataToSend);
       
-      // Test connection to Edge Function
-      console.log("Testando conexão com Edge Function...");
+      // Test connection to Edge Function with CORS preflight
+      console.log("Testando conexão com Edge Function via CORS preflight...");
       
       try {
         const testResponse = await fetch("https://ubztjjxmldogpwawcnrj.supabase.co/functions/v1/send-contact-form", {
@@ -87,16 +87,18 @@ export function useContactForm(): UseContactFormReturn {
         console.error("Erro ao testar conexão:", testError);
       }
       
-      // Call the Edge function with the proper headers and JSON body
-      console.log("Enviando dados para Edge Function via supabase.functions.invoke...");
+      // FIXED: Using fetch directly with proper headers and token acquisition
+      console.log("Enviando dados para Edge Function via fetch...");
       
-      // MODIFICATION: Utilisons directement fetch au lieu de supabase.functions.invoke
-      // car nous avons vu dans les logs que fetch fonctionne mais pas invoke
+      // Get the session token
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token || "";
+      
       const response = await fetch("https://ubztjjxmldogpwawcnrj.supabase.co/functions/v1/send-contact-form", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "apikey": supabase.auth.getSession().then(({ data }) => data?.session?.access_token || "")
+          "Authorization": `Bearer ${accessToken}`
         },
         body: JSON.stringify(dataToSend)
       });
