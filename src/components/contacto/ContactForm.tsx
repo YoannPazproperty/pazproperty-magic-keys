@@ -37,9 +37,9 @@ const ContactForm = () => {
     try {
       console.log("Enviando formulário:", formData);
       
-      // Call the Edge function with form data
+      // Call the Edge function with form data - ensuring we're sending a proper JSON body
       const response = await supabase.functions.invoke('send-contact-form', {
-        body: formData,
+        body: JSON.stringify(formData),
         headers: {
           'Content-Type': 'application/json'
         }

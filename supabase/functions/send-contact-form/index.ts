@@ -42,6 +42,15 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Get and log the raw request body for debugging
+    const clonedReq = req.clone();
+    try {
+      const bodyText = await clonedReq.text();
+      console.log("📄 Raw request body:", bodyText);
+    } catch (e) {
+      console.error("❌ Error reading raw body:", e);
+    }
+
     // Parse the request body
     let formData: ContactFormData;
     try {
@@ -90,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Send email to company
       const emailResponse = await resend.emails.send({
-        from: "PAZ Property <no-reply@resend.dev>",  // Changed to use a valid Resend domain
+        from: "PAZ Property <no-reply@resend.dev>",  // Using Resend's domain
         to: recipients,
         subject: "Novo formulário de contacto do website",
         html: `
@@ -107,7 +116,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Send confirmation to customer
       const confirmationResponse = await resend.emails.send({
-        from: "PAZ Property <no-reply@resend.dev>",  // Changed to use a valid Resend domain
+        from: "PAZ Property <no-reply@resend.dev>",  // Using Resend's domain
         to: [formData.email],
         subject: "Recebemos a sua mensagem - PAZ Property",
         html: `
