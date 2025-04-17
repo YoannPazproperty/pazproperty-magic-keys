@@ -108,7 +108,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Send email to company
       console.log("🔄 Sending email to company...");
       const emailResponse = await resend.emails.send({
-        from: "PAZ Property <onboarding@resend.dev>",
+        from: "PAZ Property <yoann@pazproperty.pt>", // Changement de l'expéditeur
         to: recipients,
         subject: "Nouveau formulaire de contact du site web",
         html: html,
@@ -119,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Send confirmation to customer
       console.log("🔄 Sending confirmation to customer...");
       const confirmationResponse = await resend.emails.send({
-        from: "PAZ Property <onboarding@resend.dev>",
+        from: "PAZ Property <yoann@pazproperty.pt>", // Changement de l'expéditeur
         to: [formData.email],
         subject: "Nous avons bien reçu votre message - PAZ Property",
         html: `
