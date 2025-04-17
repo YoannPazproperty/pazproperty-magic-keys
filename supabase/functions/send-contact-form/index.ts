@@ -2,7 +2,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
-// Essential CORS headers
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -43,21 +42,12 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("📥 Request received, attempting to parse body...");
     
-    let bodyText;
-    try {
-      // Clone and read the request body as text for debugging
-      const clonedReq = req.clone();
-      bodyText = await clonedReq.text();
-      console.log("📄 Raw request body:", bodyText);
-    } catch (e) {
-      console.error("❌ Error reading raw body:", e);
-    }
+    const bodyText = await req.text();
+    console.log("📄 Raw request body:", bodyText);
     
-    // Parse the JSON body from the original request
     let formData: ContactFormData;
     try {
-      formData = JSON.parse(bodyText || await req.text());
-      
+      formData = JSON.parse(bodyText);
       console.log("📝 Form data parsed:", formData);
       
       // Basic validation
@@ -70,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ 
           success: false, 
           error: `Invalid request body: ${parseError.message}`,
-          receivedBody: bodyText || "could not read body" 
+          receivedBody: bodyText 
         }),
         {
           status: 400,
@@ -105,12 +95,12 @@ const handler = async (req: Request): Promise<Response> => {
     
     // Email template to company
     const html = `
-      <h1>Novo contacto do website</h1>
-      <p><strong>Nome:</strong> ${formData.nome}</p>
-      <p><strong>Email:</strong> ${formData.email}</p>
-      <p><strong>Telefone:</strong> ${formData.telefone || "Não fornecido"}</p>
-      <p><strong>Tipo:</strong> ${formData.tipo === 'proprietario' ? 'Proprietário' : 'Inquilino'}</p>
-      <p><strong>Mensagem:</strong></p>
+      <h1>Nouveau contact via le site web</h1>
+      <p><strong>Nom :</strong> ${formData.nome}</p>
+      <p><strong>Email :</strong> ${formData.email}</p>
+      <p><strong>Téléphone :</strong> ${formData.telefone || "Non fourni"}</p>
+      <p><strong>Type :</strong> ${formData.tipo === 'proprietario' ? 'Propriétaire' : 'Locataire'}</p>
+      <p><strong>Message :</strong></p>
       <p>${formData.mensagem.replace(/\n/g, "<br>")}</p>
     `;
     
@@ -120,7 +110,7 @@ const handler = async (req: Request): Promise<Response> => {
       const emailResponse = await resend.emails.send({
         from: "PAZ Property <onboarding@resend.dev>",
         to: recipients,
-        subject: "Novo formulário de contacto do website",
+        subject: "Nouveau formulaire de contact du site web",
         html: html,
       });
       
@@ -131,11 +121,11 @@ const handler = async (req: Request): Promise<Response> => {
       const confirmationResponse = await resend.emails.send({
         from: "PAZ Property <onboarding@resend.dev>",
         to: [formData.email],
-        subject: "Recebemos a sua mensagem - PAZ Property",
+        subject: "Nous avons bien reçu votre message - PAZ Property",
         html: `
-          <h1>Obrigado pelo seu contacto, ${formData.nome}!</h1>
-          <p>Recebemos a sua mensagem e entraremos em contacto consigo em breve.</p>
-          <p>Cumprimentos,<br>Equipa PAZ Property</p>
+          <h1>Merci pour votre message, ${formData.nome} !</h1>
+          <p>Nous avons bien reçu votre message et nous vous recontacterons bientôt.</p>
+          <p>Cordialement,<br>L'équipe PAZ Property</p>
         `,
       });
       
@@ -144,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({
           success: true,
-          message: "Emails sent successfully",
+          message: "Emails envoyés avec succès",
         }),
         {
           status: 200,
@@ -152,12 +142,12 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     } catch (emailError: any) {
-      console.error("❌ Error sending emails:", emailError);
+      console.error("❌ Erreur lors de l'envoi des emails:", emailError);
       
       return new Response(
         JSON.stringify({
           success: false,
-          error: emailError.message || "Unknown email error",
+          error: emailError.message || "Erreur inconnue",
           details: JSON.stringify(emailError)
         }),
         {
@@ -167,11 +157,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
   } catch (error: any) {
-    console.error("❌ General error in edge function:", error);
+    console.error("❌ Erreur générale dans la fonction edge:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || "Unknown error",
+        error: error.message || "Erreur inconnue",
         stack: error.stack
       }),
       {
