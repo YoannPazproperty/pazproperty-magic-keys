@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +13,7 @@ const AuthCallback = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Traiter le callback d'authentification
@@ -43,6 +43,13 @@ const AuthCallback = () => {
         if (isReset || type === "recovery" || accessToken) {
           console.log("Détection d'un flux de réinitialisation de mot de passe");
           setIsPasswordReset(true);
+          
+          // Stocker le token pour l'utiliser lors de la réinitialisation
+          if (accessToken) {
+            console.log("Token de réinitialisation trouvé dans l'URL");
+            setToken(accessToken);
+          }
+          
           return; // Attendre que l'utilisateur entre un nouveau mot de passe
         }
         
@@ -130,55 +137,52 @@ const AuthCallback = () => {
     setLoading(true);
     
     try {
-      console.log("Tentative de réinitialisation du mot de passe");
+      console.log("Tentative de réinitialisation du mot de passe avec token personnalisé");
       
-      // Extraire le token depuis l'URL
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get("access_token");
-      const refreshToken = hashParams.get("refresh_token");
-      
-      if (!accessToken) {
+      if (!token) {
         console.error("Aucun token d'accès trouvé");
         setPasswordError("Lien de réinitialisation invalide ou expiré");
         setLoading(false);
         return;
       }
+
+      // Dans ce cas, nous avons un token généré par notre fonction Edge personnalisée
+      // Nous allons utiliser directement l'endpoint de l'API pour définir un nouveau mot de passe
       
-      // Définir la session avec les tokens extraits
-      if (accessToken && refreshToken) {
-        try {
-          await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-        } catch (sessionErr: any) {
-          console.error("Erreur lors de la définition de la session:", sessionErr);
-          setPasswordError("Erreur d'authentification: " + (sessionErr.message || "Session invalide"));
-          setLoading(false);
-          return;
+      const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/set-admin-password`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: '', // L'email est déterminé côté serveur via le token
+            password: newPassword,
+            recoveryToken: token // Passer le token pour identification
+          })
         }
-      }
+      );
+
+      const data = await response.json();
       
-      // Mise à jour du mot de passe
-      try {
-        const { error } = await supabase.auth.updateUser({ 
-          password: newPassword 
+      if (!response.ok) {
+        console.error("Erreur lors de la réinitialisation avec le token personnalisé:", data);
+        setPasswordError(data.error || "Échec de la réinitialisation du mot de passe");
+        toast.error("Échec de la réinitialisation", {
+          description: data.error || "Une erreur s'est produite"
         });
+      } else {
+        console.log("Mot de passe réinitialisé avec succès");
+        toast.success("Mot de passe mis à jour avec succès");
         
-        if (error) {
-          console.error("Erreur lors de la réinitialisation:", error);
-          setPasswordError(error.message);
-          toast.error("Échec de la réinitialisation", {
-            description: error.message
-          });
-        } else {
-          console.log("Mot de passe réinitialisé avec succès");
-          toast.success("Mot de passe mis à jour avec succès");
-          setTimeout(() => navigate("/admin"), 2000);
-        }
-      } catch (updateErr: any) {
-        console.error("Exception lors de la mise à jour du mot de passe:", updateErr);
-        setPasswordError(updateErr.message || "Erreur lors de la mise à jour du mot de passe");
+        // Rediriger vers la page de connexion après un délai
+        setTimeout(() => {
+          navigate("/auth");
+          // Rafraîchir la page pour s'assurer que l'état d'authentification est correctement mis à jour
+          window.location.reload();
+        }, 2000);
       }
     } catch (err: any) {
       console.error("Exception lors de la réinitialisation:", err);
