@@ -7,13 +7,17 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const fixConfirmationTokens = async (): Promise<{ success: boolean; message: string }> => {
   try {
+    // First get the session to extract the access token using the current API
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token || '';
+    
     const response = await fetch(
       'https://ubztjjxmldogpwawcnrj.supabase.co/functions/v1/password-reset-fix',
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
       }
     );
