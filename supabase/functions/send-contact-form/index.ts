@@ -90,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Send email to company
       const emailResponse = await resend.emails.send({
-        from: "PAZ Property <yoann@pazproperty.pt>", 
+        from: "PAZ Property <no-reply@resend.dev>",  // Changed to use a valid Resend domain
         to: recipients,
         subject: "Novo formulário de contacto do website",
         html: `
@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Send confirmation to customer
       const confirmationResponse = await resend.emails.send({
-        from: "PAZ Property <yoann@pazproperty.pt>",
+        from: "PAZ Property <no-reply@resend.dev>",  // Changed to use a valid Resend domain
         to: [formData.email],
         subject: "Recebemos a sua mensagem - PAZ Property",
         html: `
