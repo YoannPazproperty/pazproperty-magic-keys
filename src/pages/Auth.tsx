@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Info } from "lucide-react";
+import { AlertCircle, Info, Tool } from "lucide-react";
 import { toast } from "sonner";
+import { fixConfirmationTokens } from "@/services/supabase/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -47,6 +49,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [isFixingTokens, setIsFixingTokens] = useState(false);
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -110,6 +113,30 @@ const Auth = () => {
   const onRegisterSubmit = async (values: RegisterValues) => {
     console.log("Registration values:", values);
     alert("L'inscription n'est pas en libre-service. Veuillez contacter votre administrateur pour créer un compte.");
+  };
+
+  const handleFixConfirmationTokens = async () => {
+    setIsFixingTokens(true);
+    try {
+      const { success, message } = await fixConfirmationTokens();
+      
+      if (success) {
+        toast.success("Base de données corrigée", {
+          description: "Les tokens de confirmation ont été réparés avec succès. Vous pouvez maintenant réinitialiser votre mot de passe.",
+        });
+      } else {
+        toast.error("Échec de la réparation", {
+          description: message || "Une erreur est survenue lors de la réparation des tokens",
+        });
+      }
+    } catch (err: any) {
+      console.error("Erreur lors de la correction des tokens:", err);
+      toast.error("Erreur technique", {
+        description: "Une erreur s'est produite lors de la réparation de la base de données",
+      });
+    } finally {
+      setIsFixingTokens(false);
+    }
   };
 
   const handleForgotPassword = async (values: ForgotPasswordValues) => {
@@ -329,45 +356,63 @@ const Auth = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Form {...forgotPasswordForm}>
-                    <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
-                      <FormField
-                        control={forgotPasswordForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Adresse e-mail</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="votre@email.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
+                  <>
+                    <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
+                      <Tool className="h-4 w-4 text-amber-700" />
+                      <AlertDescription className="text-amber-700 text-sm">
+                        Si vous rencontrez des problèmes avec la réinitialisation de mot de passe, utilisez d'abord le bouton "Réparer la base de données" ci-dessous.
+                      </AlertDescription>
+                    </Alert>
+                    
+                    <Button 
+                      type="button" 
+                      className="w-full mb-4 bg-blue-600 hover:bg-blue-700"
+                      onClick={handleFixConfirmationTokens}
+                      disabled={isFixingTokens}
+                    >
+                      {isFixingTokens ? "Réparation en cours..." : "Réparer la base de données"}
+                    </Button>
+                    
+                    <Form {...forgotPasswordForm}>
+                      <form onSubmit={forgotPasswordForm.handleSubmit(handleForgotPassword)} className="space-y-4">
+                        <FormField
+                          control={forgotPasswordForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Adresse e-mail</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="votre@email.com" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {resetError && (
+                          <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>
+                              {resetError}
+                            </AlertDescription>
+                          </Alert>
                         )}
-                      />
-                      
-                      {resetError && (
-                        <Alert variant="destructive">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>
-                            {resetError}
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                      
-                      <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Envoi en cours..." : "Envoyer le lien de récupération"}
-                      </Button>
-                      
-                      <Button 
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => setActiveTab("login")}
-                      >
-                        Retour à la connexion
-                      </Button>
-                    </form>
-                  </Form>
+                        
+                        <Button type="submit" className="w-full" disabled={loading}>
+                          {loading ? "Envoi en cours..." : "Envoyer le lien de récupération"}
+                        </Button>
+                        
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setActiveTab("login")}
+                        >
+                          Retour à la connexion
+                        </Button>
+                      </form>
+                    </Form>
+                  </>
                 )}
               </TabsContent>
             </Tabs>
