@@ -63,7 +63,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       // Try parsing the JSON
       try {
-        // Vérifier si le corps est vide
+        // Check if the body is empty
         if (!rawBody || rawBody.trim() === "") {
           throw new Error("Request body is empty");
         }
@@ -116,6 +116,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Get recipient emails
     const recipient1 = Deno.env.get("alexa@pazproperty.pt") || "alexa@pazproperty.pt";
     const recipient2 = Deno.env.get("yoann@pazproperty.pt") || "yoann@pazproperty.pt";
+    
+    // Debug information
+    console.log("📧 Environment variables for recipients:");
+    console.log("alexa@pazproperty.pt env var:", Deno.env.get("alexa@pazproperty.pt"));
+    console.log("yoann@pazproperty.pt env var:", Deno.env.get("yoann@pazproperty.pt"));
+    
     const recipients = [recipient1, recipient2];
     
     console.log("📧 Sending email to:", recipients);
@@ -134,7 +140,7 @@ const handler = async (req: Request): Promise<Response> => {
     try {
       console.log("📧 Attempting to send email to company...");
       
-      // Send email to company
+      // Send email to company with fixed sender address
       const emailResponse = await resend.emails.send({
         from: "PAZ Property <onboarding@resend.dev>",
         to: recipients,
@@ -147,7 +153,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       console.log("📧 Attempting to send confirmation to customer...");
       
-      // Send confirmation to customer
+      // Send confirmation to customer with fixed sender address
       const confirmationResponse = await resend.emails.send({
         from: "PAZ Property <onboarding@resend.dev>",
         to: [formData.email],
@@ -174,10 +180,18 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (emailError: any) {
       console.error("❌ Email sending error:", emailError);
       
+      // Log detailed error information
+      console.error("Error details:", JSON.stringify(emailError));
+      console.error("Error name:", emailError.name);
+      console.error("Error message:", emailError.message);
+      console.error("Error code:", emailError.code);
+      
       return new Response(
         JSON.stringify({
           success: false,
           error: emailError.message || "Unknown error",
+          errorCode: emailError.code || "unknown",
+          errorName: emailError.name || "Unknown",
           details: JSON.stringify(emailError)
         }),
         {
