@@ -13,7 +13,7 @@ const corsHeaders = {
 interface ContactFormData {
   nome: string;
   email: string;
-  telefone: string;
+  telefone: string | null;
   tipo: string;
   mensagem: string;
 }
@@ -30,47 +30,57 @@ const handler = async (req: Request): Promise<Response> => {
     });
   }
 
-  try {
-    if (req.method !== "POST") {
-      throw new Error(`Method ${req.method} not supported`);
-    }
+  if (req.method !== "POST") {
+    console.error(`Method ${req.method} not supported`);
+    return new Response(
+      JSON.stringify({ success: false, error: `Method ${req.method} not supported` }),
+      {
+        status: 405,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      }
+    );
+  }
 
+  try {
     // Parse the request body
     let formData: ContactFormData;
     try {
       formData = await req.json();
       console.log("Form data received:", formData);
+      
+      // Validate required fields
+      if (!formData.nome || !formData.email || !formData.mensagem || !formData.tipo) {
+        throw new Error("Missing required fields");
+      }
     } catch (parseError) {
       console.error("Failed to parse request body:", parseError);
-      throw new Error("Invalid request body: " + parseError.message);
-    }
-
-    // Initialize Resend for email sending
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY environment variable not found");
-    }
-    const resend = new Resend(resendApiKey);
-    
-    // Initialize Supabase client
-    const supabaseUrl = "https://ubztjjxmldogpwawcnrj.supabase.co";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseKey) {
-      throw new Error("SUPABASE_SERVICE_ROLE_KEY environment variable not found");
+      return new Response(
+        JSON.stringify({ success: false, error: `Invalid request body: ${parseError.message}` }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     // Create responses object to track results
     const results = {
       emailSent: false,
-      companyEmailId: null,
-      confirmationEmailId: null,
+      emailError: null,
       databaseSaved: false,
-      databaseData: null
+      databaseError: null
     };
 
     // STEP 1: Send emails
-    console.log("STEP 1: Sending emails...");
+    console.log("STEP 1: Attempting to send emails...");
     try {
+      const resendApiKey = Deno.env.get("RESEND_API_KEY");
+      if (!resendApiKey) {
+        throw new Error("RESEND_API_KEY environment variable not found");
+      }
+      
+      const resend = new Resend(resendApiKey);
+      
       // Recipients
       const recipients = ["alexa@pazproperty.pt", "yoann@pazproperty.pt"];
       console.log("Sending email to:", recipients);
@@ -91,7 +101,6 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
       console.log("Company email result:", emailResponse);
-      results.companyEmailId = emailResponse.id;
       
       // Send confirmation to customer
       const confirmationResponse = await resend.emails.send({
@@ -105,16 +114,23 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
       console.log("Confirmation email result:", confirmationResponse);
-      results.confirmationEmailId = confirmationResponse.id;
+      
       results.emailSent = true;
     } catch (emailError) {
       console.error("Error sending emails:", emailError);
-      // Continue execution to try database save
+      results.emailError = emailError.message;
     }
     
-    // STEP 2: Save to database
-    console.log("STEP 2: Saving to database...");
+    // STEP 2: Save to database (independent from email sending)
+    console.log("STEP 2: Attempting to save to database...");
     try {
+      const supabaseUrl = "https://ubztjjxmldogpwawcnrj.supabase.co";
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      
+      if (!supabaseKey) {
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY environment variable not found");
+      }
+      
       const supabase = createClient(supabaseUrl, supabaseKey);
       
       const { data, error } = await supabase
@@ -122,61 +138,73 @@ const handler = async (req: Request): Promise<Response> => {
         .insert([{ 
           nome: formData.nome, 
           email: formData.email, 
-          telefone: formData.telefone, 
+          telefone: formData.telefone || null, 
           tipo: formData.tipo, 
           mensagem: formData.mensagem 
-        }])
-        .select();
+        }]);
       
       if (error) {
-        console.error("Database error:", error);
         throw error;
       }
       
-      console.log("Data saved to Supabase:", data);
+      console.log("Data saved to Supabase successfully");
       results.databaseSaved = true;
-      results.databaseData = data;
     } catch (dbError) {
       console.error("Error saving to database:", dbError);
-      // Continue to return response even if database save fails
+      results.databaseError = dbError.message || "Unknown database error";
     }
 
-    // Return results
-    return new Response(
-      JSON.stringify({ 
-        success: results.emailSent || results.databaseSaved, // Success if either operation worked
-        email: {
-          success: results.emailSent,
-          companyEmailId: results.companyEmailId,
-          confirmationEmailId: results.confirmationEmailId
-        },
-        database: {
-          success: results.databaseSaved,
-          data: results.databaseData
+    // Return results based on what succeeded
+    if (results.emailSent || results.databaseSaved) {
+      // At least one operation succeeded
+      return new Response(
+        JSON.stringify({
+          success: true,
+          partialSuccess: !(results.emailSent && results.databaseSaved),
+          email: {
+            success: results.emailSent,
+            error: results.emailError
+          },
+          database: {
+            success: results.databaseSaved,
+            error: results.databaseError
+          }
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
         }
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
-      }
-    );
+      );
+    } else {
+      // Both operations failed
+      return new Response(
+        JSON.stringify({
+          success: false,
+          email: {
+            success: false,
+            error: results.emailError
+          },
+          database: {
+            success: false,
+            error: results.databaseError
+          }
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
   } catch (error) {
     console.error("General error in edge function:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message,
-        stack: error.stack 
+        error: error.message || "Unknown error" 
       }),
       {
         status: 500,
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders 
-        },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   }

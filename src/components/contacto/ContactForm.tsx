@@ -39,32 +39,32 @@ const ContactForm = () => {
       
       const response = await supabase.functions.invoke('send-contact-form', {
         body: formData,
-        headers: {
-          "Content-Type": "application/json"
-        }
       });
       
+      console.log("Resposta completa da função:", response);
+      
       if (response.error) {
-        throw new Error(response.error.message || "Erro ao processar o formulário");
+        throw new Error(`Erro: ${response.error.message || "Erro desconhecido"}`);
       }
       
       const data = response.data;
-      console.log("Resposta completa da função:", data);
       
-      if (data.email?.success) {
-        console.log("Emails enviados com sucesso!");
-      } else {
-        console.warn("Problema com o envio dos emails:", data.email);
-      }
-      
-      if (data.database?.success) {
-        console.log("Dados salvos em Supabase:", data.database.data);
-      } else {
-        console.warn("Problema com a gravação em Supabase:", data.database);
-      }
-      
-      if (data.email?.success || data.database?.success) {
+      // Handle success, even if partial
+      if (data.success) {
         toast.success("Mensagem enviada com sucesso! Entraremos em contacto consigo em breve.");
+        
+        if (data.partialSuccess) {
+          console.warn("Algumas operações falharam:", data);
+          
+          if (!data.email.success) {
+            console.error("Problemas com o envio de emails:", data.email.error);
+            toast.warning("O formulário foi recebido, mas houve um problema no envio do email de confirmação.");
+          }
+          
+          if (!data.database.success) {
+            console.error("Problemas com o salvamento na base de dados:", data.database.error);
+          }
+        }
         
         // Reset form
         setFormData({
@@ -75,7 +75,10 @@ const ContactForm = () => {
           mensagem: "",
         });
       } else {
-        toast.error("Ocorreu um erro ao processar o seu pedido. Por favor, tente novamente mais tarde.");
+        // Complete failure
+        throw new Error("Ambas as operações falharam: " + 
+          (data.email.error || "Erro no email") + ", " + 
+          (data.database.error || "Erro na base de dados"));
       }
     } catch (error) {
       console.error("Erro detalhado ao enviar formulário:", error);
