@@ -56,11 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Parse the JSON body from the original request
     let formData: ContactFormData;
     try {
-      if (!bodyText) {
-        formData = await req.json();
-      } else {
-        formData = JSON.parse(bodyText);
-      }
+      formData = JSON.parse(bodyText || await req.text());
       
       console.log("📝 Form data parsed:", formData);
       
@@ -83,49 +79,57 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
     
-    // STEP 1: Focus on sending emails first
-    console.log("📧 Attempting to send emails...");
+    // Get the Resend API key
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("❌ RESEND_API_KEY environment variable not found");
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing Resend API key" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    console.log("✅ Resend API key found");
+    
+    // Initialize Resend
+    const resend = new Resend(resendApiKey);
+    
+    // Get recipient emails from environment variables
+    const recipient1 = Deno.env.get("alexa@pazproperty.pt") || "alexa@pazproperty.pt";
+    const recipient2 = Deno.env.get("yoann@pazproperty.pt") || "yoann@pazproperty.pt";
+    const recipients = [recipient1, recipient2];
+    
+    console.log("📧 Attempting to send email to:", recipients);
+    
+    // Email template to company
+    const html = `
+      <h1>Novo contacto do website</h1>
+      <p><strong>Nome:</strong> ${formData.nome}</p>
+      <p><strong>Email:</strong> ${formData.email}</p>
+      <p><strong>Telefone:</strong> ${formData.telefone || "Não fornecido"}</p>
+      <p><strong>Tipo:</strong> ${formData.tipo === 'proprietario' ? 'Proprietário' : 'Inquilino'}</p>
+      <p><strong>Mensagem:</strong></p>
+      <p>${formData.mensagem.replace(/\n/g, "<br>")}</p>
+    `;
+    
     try {
-      const resendApiKey = Deno.env.get("RESEND_API_KEY");
-      
-      if (!resendApiKey) {
-        throw new Error("RESEND_API_KEY environment variable not found");
-      }
-      console.log("✅ Resend API key found");
-      
-      const resend = new Resend(resendApiKey);
-      
-      // Get the recipient emails from environment variables
-      const recipient1 = Deno.env.get("alexa@pazproperty.pt") || "alexa@pazproperty.pt";
-      const recipient2 = Deno.env.get("yoann@pazproperty.pt") || "yoann@pazproperty.pt";
-      const recipients = [recipient1, recipient2];
-      
-      console.log("📤 Sending email to:", recipients);
-      
-      // Email template to company
-      const html = `
-        <h1>Novo contacto do website</h1>
-        <p><strong>Nome:</strong> ${formData.nome}</p>
-        <p><strong>Email:</strong> ${formData.email}</p>
-        <p><strong>Telefone:</strong> ${formData.telefone || "Não fornecido"}</p>
-        <p><strong>Tipo:</strong> ${formData.tipo === 'proprietario' ? 'Proprietário' : 'Inquilino'}</p>
-        <p><strong>Mensagem:</strong></p>
-        <p>${formData.mensagem.replace(/\n/g, "<br>")}</p>
-      `;
-      
       // Send email to company
+      console.log("🔄 Sending email to company...");
       const emailResponse = await resend.emails.send({
-        from: "PAZ Property <onboarding@resend.dev>", // Using default Resend domain for testing
+        from: "PAZ Property <onboarding@resend.dev>",
         to: recipients,
         subject: "Novo formulário de contacto do website",
         html: html,
       });
       
-      console.log("✅ Company email sent, response:", emailResponse);
+      console.log("✅ Company email response:", emailResponse);
       
       // Send confirmation to customer
+      console.log("🔄 Sending confirmation to customer...");
       const confirmationResponse = await resend.emails.send({
-        from: "PAZ Property <onboarding@resend.dev>", // Using default Resend domain for testing
+        from: "PAZ Property <onboarding@resend.dev>",
         to: [formData.email],
         subject: "Recebemos a sua mensagem - PAZ Property",
         html: `
@@ -135,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
       
-      console.log("✅ Confirmation email sent, response:", confirmationResponse);
+      console.log("✅ Customer confirmation email response:", confirmationResponse);
       
       return new Response(
         JSON.stringify({
@@ -153,7 +157,8 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: emailError.message || "Unknown email error"
+          error: emailError.message || "Unknown email error",
+          details: JSON.stringify(emailError)
         }),
         {
           status: 500,
@@ -161,13 +166,13 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
-
   } catch (error: any) {
     console.error("❌ General error in edge function:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || "Unknown error" 
+        error: error.message || "Unknown error",
+        stack: error.stack
       }),
       {
         status: 500,

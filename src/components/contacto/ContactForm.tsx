@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +37,7 @@ const ContactForm = () => {
     try {
       console.log("Enviando formulário:", formData);
       
-      // Call the Edge function with form data - ensuring we're sending a proper JSON body
+      // Call the Edge function
       const response = await supabase.functions.invoke('send-contact-form', {
         body: JSON.stringify(formData),
         headers: {
@@ -46,7 +47,6 @@ const ContactForm = () => {
       
       console.log("Resposta completa da função:", response);
       
-      // Check for errors in the response
       if (response.error) {
         console.error("Erro na resposta da função:", response.error);
         throw new Error(`Erro: ${response.error.message || "Erro desconhecido"}`);
@@ -66,13 +66,12 @@ const ContactForm = () => {
           mensagem: "",
         });
       } else {
-        // Handle unexpected response format
         console.error("Resposta inesperada:", data);
-        throw new Error("Resposta inesperada do servidor");
+        throw new Error(data?.error || "Resposta inesperada do servidor");
       }
     } catch (error: any) {
       console.error("Erro detalhado ao enviar formulário:", error);
-      toast.error("Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente mais tarde.");
+      toast.error(`Ocorreu um erro ao enviar a mensagem: ${error.message || "Erro desconhecido"}`);
     } finally {
       setIsSubmitting(false);
     }
