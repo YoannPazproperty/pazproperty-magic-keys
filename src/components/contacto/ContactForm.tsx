@@ -20,6 +20,7 @@ const ContactForm = () => {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -33,6 +34,7 @@ const ContactForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
     
     try {
       console.log("Enviando formulário:", formData);
@@ -54,7 +56,7 @@ const ContactForm = () => {
       
       if (response.error) {
         console.error("Erro na resposta da função:", response.error);
-        throw new Error(`Erro: ${response.error.message || "Erro desconhecido"}`);
+        throw new Error(`Erro na função: ${response.error.message || "Erro desconhecido"}`);
       }
       
       const data = response.data;
@@ -76,6 +78,7 @@ const ContactForm = () => {
       }
     } catch (error: any) {
       console.error("Erro detalhado ao enviar formulário:", error);
+      setError(error.message || "Erro desconhecido");
       toast.error(`Ocorreu um erro ao enviar a mensagem: ${error.message || "Erro desconhecido"}`);
     } finally {
       setIsSubmitting(false);
@@ -85,6 +88,13 @@ const ContactForm = () => {
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
       <h2 className="text-2xl font-bold mb-6">Envie-nos uma Mensagem</h2>
+      
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+          <p className="font-medium">Erro:</p>
+          <p>{error}</p>
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Nome */}

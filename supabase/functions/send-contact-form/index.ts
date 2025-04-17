@@ -81,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
-    console.log("✅ Resend API key found");
+    console.log("✅ Resend API key found:", resendApiKey.substring(0, 5) + "...");
     
     // Initialize Resend
     const resend = new Resend(resendApiKey);
@@ -108,20 +108,31 @@ const handler = async (req: Request): Promise<Response> => {
       // Send email to company
       console.log("🔄 Sending email to company...");
       
-      // Use onboarding@resend.dev as sender for testing
-      const emailResponse = await resend.emails.send({
+      // Utilisez "onboarding@resend.dev" comme expéditeur pour les tests
+      // Important: Pour utiliser votre propre domaine, vous devez d'abord le vérifier dans Resend
+      const emailData = {
         from: "PAZ Property <onboarding@resend.dev>",
         to: recipients,
         subject: "Nouveau formulaire de contact du site web",
         html: html,
         reply_to: formData.email,
-      });
+      };
+      
+      console.log("📧 Email data to company:", emailData);
+      
+      const emailResponse = await resend.emails.send(emailData);
       
       console.log("✅ Company email response:", JSON.stringify(emailResponse));
       
+      // Check if there was an error in the response
+      if (emailResponse.error) {
+        throw new Error(`Resend API error: ${JSON.stringify(emailResponse.error)}`);
+      }
+      
       // Send confirmation to customer
       console.log("🔄 Sending confirmation to customer...");
-      const confirmationResponse = await resend.emails.send({
+      
+      const confirmationData = {
         from: "PAZ Property <onboarding@resend.dev>",
         to: [formData.email],
         subject: "Nous avons bien reçu votre message - PAZ Property",
@@ -130,9 +141,18 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Nous avons bien reçu votre message et nous vous recontacterons bientôt.</p>
           <p>Cordialement,<br>L'équipe PAZ Property</p>
         `,
-      });
+      };
+      
+      console.log("📧 Email data to customer:", confirmationData);
+      
+      const confirmationResponse = await resend.emails.send(confirmationData);
       
       console.log("✅ Customer confirmation email response:", JSON.stringify(confirmationResponse));
+      
+      // Check if there was an error in the customer email response
+      if (confirmationResponse.error) {
+        throw new Error(`Resend API error (customer email): ${JSON.stringify(confirmationResponse.error)}`);
+      }
       
       return new Response(
         JSON.stringify({
@@ -148,6 +168,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     } catch (emailError: any) {
       console.error("❌ Erreur lors de l'envoi des emails:", emailError);
+      console.error("❌ Détails de l'erreur:", JSON.stringify(emailError));
       
       return new Response(
         JSON.stringify({
@@ -163,6 +184,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
   } catch (error: any) {
     console.error("❌ Erreur générale dans la fonction edge:", error);
+    console.error("❌ Stack trace:", error.stack);
     return new Response(
       JSON.stringify({ 
         success: false, 
