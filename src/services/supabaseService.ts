@@ -4,3 +4,5 @@
 export * from './supabase/core';
 export * from './supabase/storage';
 export * from './supabase/init';
+export * from './supabase/auth';
+

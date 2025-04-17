@@ -4,3 +4,6 @@ project_id = "ubztjjxmldogpwawcnrj"
 [functions.send-contact-form]
 verify_jwt = false
 
+[functions.password-reset-fix]
+verify_jwt = false
+
