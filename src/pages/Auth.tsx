@@ -13,7 +13,7 @@ import { FcGoogle } from "react-icons/fc";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Info, Wrench } from "lucide-react";
 import { toast } from "sonner";
-import { fixConfirmationTokens } from "@/services/supabase/auth";
+import { fixConfirmationTokens, generatePasswordResetLink } from "@/services/supabase/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -42,13 +42,14 @@ type RegisterValues = z.infer<typeof registerSchema>;
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 const Auth = () => {
-  const { signIn, signInWithGoogle, resetPassword } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot-password">("login");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [isFixingTokens, setIsFixingTokens] = useState(false);
+  const [resetLink, setResetLink] = useState<string | null>(null);
 
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -142,22 +143,30 @@ const Auth = () => {
     console.log("Demande de réinitialisation pour:", values.email);
     setLoading(true);
     setResetError(null);
+    setResetLink(null);
     
     try {
-      const { error, success, message } = await resetPassword(values.email);
+      const { success, message, resetLink } = await generatePasswordResetLink(values.email);
       
-      if (error) {
-        console.error("Erreur détaillée lors de la récupération du mot de passe:", error);
-        setResetError(message || error.message || "Échec de l'envoi du lien de récupération");
-        
-        toast.error("Échec de l'envoi du lien de récupération", {
-          description: message || error.message || "Une erreur est survenue lors de l'envoi",
+      if (!success) {
+        setResetError(message);
+        toast.error("Échec de la réinitialisation", {
+          description: message,
         });
       } else {
         setResetEmailSent(true);
-        toast.success("Email envoyé", {
-          description: message || "Si cette adresse existe dans notre système, vous recevrez un email avec les instructions.",
-        });
+        
+        if (resetLink) {
+          setResetLink(resetLink);
+          toast.info("Lien de réinitialisation généré", {
+            description: "Pour des raisons de démonstration, le lien est affiché directement.",
+            duration: 10000,
+          });
+        } else {
+          toast.success("Email envoyé", {
+            description: message,
+          });
+        }
       }
     } catch (err: any) {
       console.error("Exception lors de la récupération du mot de passe:", err);
@@ -343,11 +352,32 @@ const Auth = () => {
                         Veuillez vérifier votre boîte de réception (et vos spams).
                       </AlertDescription>
                     </Alert>
+                    
+                    {resetLink && (
+                      <div className="mt-4 space-y-2">
+                        <Alert variant="default" className="bg-blue-50 border-blue-200">
+                          <AlertDescription className="text-blue-800">
+                            <p className="font-bold mb-1">Lien de réinitialisation (démo uniquement):</p>
+                            <p className="break-all text-xs">{resetLink}</p>
+                          </AlertDescription>
+                        </Alert>
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => window.open(resetLink, '_blank')}
+                        >
+                          Ouvrir le lien de réinitialisation
+                        </Button>
+                      </div>
+                    )}
+                    
                     <Button 
                       type="button"
                       className="w-full"
                       onClick={() => {
                         setResetEmailSent(false);
+                        setResetLink(null);
                         setActiveTab("login");
                       }}
                     >
@@ -398,7 +428,7 @@ const Auth = () => {
                         )}
                         
                         <Button type="submit" className="w-full" disabled={loading}>
-                          {loading ? "Envoi en cours..." : "Envoyer le lien de récupération"}
+                          {loading ? "Envoi en cours..." : "Générer un lien de récupération"}
                         </Button>
                         
                         <Button 

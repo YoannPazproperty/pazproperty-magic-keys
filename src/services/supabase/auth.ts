@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 /**
  * Fixes NULL confirmation_token values in the Supabase database
@@ -58,6 +59,130 @@ export const fixConfirmationTokens = async (): Promise<{ success: boolean; messa
     return { 
       success: false, 
       message: 'Une erreur inattendue est survenue lors de la tentative de réparation' 
+    };
+  }
+};
+
+/**
+ * Alternative password reset method that works even when Supabase email services fail
+ * This will generate a direct password reset link that can be used
+ */
+export const generatePasswordResetLink = async (email: string): Promise<{ 
+  success: boolean; 
+  message: string;
+  resetLink?: string;
+}> => {
+  try {
+    // Vérifier que l'email est valide
+    if (!email || !email.includes('@')) {
+      return { 
+        success: false, 
+        message: "Veuillez fournir une adresse e-mail valide" 
+      };
+    }
+
+    const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
+    
+    // Générer un token de réinitialisation directement via l'API Supabase
+    const response = await fetch(
+      `${supabaseUrl}/functions/v1/generate-reset-link`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      }
+    );
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error('Erreur lors de la génération du lien de réinitialisation:', data);
+      
+      // Si l'email n'existe pas, nous retournons quand même un succès pour des raisons de sécurité
+      if (response.status === 404) {
+        return { 
+          success: true, 
+          message: "Si cette adresse existe dans notre système, vous recevrez les instructions de réinitialisation." 
+        };
+      }
+      
+      return { 
+        success: false, 
+        message: data.error || 'Échec de la génération du lien de réinitialisation' 
+      };
+    }
+    
+    return { 
+      success: true, 
+      message: "Lien de réinitialisation généré avec succès.",
+      resetLink: data.resetLink
+    };
+  } catch (error) {
+    console.error('Erreur inattendue lors de la génération du lien:', error);
+    return { 
+      success: false, 
+      message: 'Une erreur inattendue est survenue' 
+    };
+  }
+};
+
+/**
+ * Sets a new password for an administrator
+ * This function bypasses the email verification step that might be failing
+ */
+export const setAdminPassword = async (email: string, newPassword: string): Promise<{ 
+  success: boolean; 
+  message: string;
+}> => {
+  try {
+    if (!email || !email.includes('@') || !newPassword || newPassword.length < 8) {
+      return { 
+        success: false, 
+        message: "L'email ou le mot de passe fourni est invalide" 
+      };
+    }
+
+    const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
+    
+    // Appeler notre fonction Edge pour définir directement le mot de passe
+    const response = await fetch(
+      `${supabaseUrl}/functions/v1/set-admin-password`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email, 
+          password: newPassword,
+          adminKey: 'supadmin2025' // Clé de sécurité simple
+        })
+      }
+    );
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error('Erreur lors de la définition du mot de passe:', data);
+      return { 
+        success: false, 
+        message: data.error || 'Échec de la définition du mot de passe' 
+      };
+    }
+    
+    toast.success("Mot de passe mis à jour avec succès");
+    
+    return { 
+      success: true, 
+      message: "Mot de passe administrateur défini avec succès" 
+    };
+  } catch (error) {
+    console.error('Erreur inattendue lors de la définition du mot de passe:', error);
+    return { 
+      success: false, 
+      message: 'Une erreur inattendue est survenue' 
     };
   }
 };
