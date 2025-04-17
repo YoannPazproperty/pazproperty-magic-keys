@@ -40,7 +40,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log("📥 Request received");
+    console.log("📥 Request received, processing...");
     
     let formData: ContactFormData;
     
@@ -48,21 +48,37 @@ const handler = async (req: Request): Promise<Response> => {
       // Log request headers for debugging
       console.log("📋 Request headers:", Object.fromEntries(req.headers.entries()));
       
-      // Try to parse request body directly - supabase already handles JSON parsing
-      formData = await req.json();
-      console.log("📝 Form data:", formData);
+      // Check content type
+      const contentType = req.headers.get("content-type");
+      console.log("📝 Content-Type:", contentType);
+      
+      if (!contentType || !contentType.includes("application/json")) {
+        console.error("❌ Invalid Content-Type:", contentType);
+        throw new Error(`Expected application/json but got ${contentType}`);
+      }
+      
+      // Get raw body for debugging
+      const clonedReq = req.clone();
+      const rawBody = await clonedReq.text();
+      console.log("📄 Raw request body:", rawBody);
+      
+      // Try parsing the JSON
+      try {
+        formData = JSON.parse(rawBody);
+      } catch (jsonError) {
+        console.error("❌ JSON parse error:", jsonError);
+        throw new Error(`Invalid JSON format: ${jsonError.message}`);
+      }
+      
+      console.log("📝 Parsed form data:", formData);
       
       // Basic validation
       if (!formData || !formData.nome || !formData.email || !formData.mensagem) {
-        throw new Error("Required fields missing");
+        console.error("❌ Required fields missing:", formData);
+        throw new Error("Required fields missing: name, email or message");
       }
     } catch (parseError) {
       console.error("❌ Failed to parse request body:", parseError);
-      
-      // Try reading raw body for debugging
-      const rawBody = await req.text();
-      console.log("📄 Raw body:", rawBody);
-      
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -81,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!resendApiKey) {
       console.error("❌ RESEND_API_KEY environment variable not found");
       return new Response(
-        JSON.stringify({ success: false, error: "Resend API key missing" }),
+        JSON.stringify({ success: false, error: "Email configuration error" }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -89,12 +105,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
     
+    console.log("✅ Resend API key found");
+    
     // Initialize Resend
     const resend = new Resend(resendApiKey);
     
     // Get recipient emails
-    const recipient1 = "alexa@pazproperty.pt";
-    const recipient2 = "yoann@pazproperty.pt";
+    const recipient1 = Deno.env.get("alexa@pazproperty.pt") || "alexa@pazproperty.pt";
+    const recipient2 = Deno.env.get("yoann@pazproperty.pt") || "yoann@pazproperty.pt";
     const recipients = [recipient1, recipient2];
     
     console.log("📧 Sending email to:", recipients);
@@ -111,6 +129,8 @@ const handler = async (req: Request): Promise<Response> => {
     `;
     
     try {
+      console.log("📧 Attempting to send email to company...");
+      
       // Send email to company
       const emailResponse = await resend.emails.send({
         from: "PAZ Property <onboarding@resend.dev>",
@@ -118,9 +138,14 @@ const handler = async (req: Request): Promise<Response> => {
         subject: "Nouveau formulaire de contact du site web",
         html: html,
         reply_to: formData.email,
+      }).catch(error => {
+        console.error("💥 Resend API error:", error);
+        throw new Error(`Resend API error: ${JSON.stringify(error)}`);
       });
       
-      console.log("✅ Email sent, response:", emailResponse);
+      console.log("✅ Email to company sent, response:", emailResponse);
+      
+      console.log("📧 Attempting to send confirmation to customer...");
       
       // Send confirmation to customer
       const confirmationResponse = await resend.emails.send({
@@ -132,6 +157,10 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Nous avons bien reçu votre message et nous vous recontacterons bientôt.</p>
           <p>Cordialement,<br>L'équipe PAZ Property</p>
         `,
+      }).catch(error => {
+        console.error("💥 Confirmation email error:", error);
+        // We don't throw here, as we already sent the main email
+        console.log("⚠️ Confirmation email failed, but proceeding with success response");
       });
       
       console.log("✅ Confirmation email sent, response:", confirmationResponse);

@@ -48,11 +48,17 @@ export function useContactForm(): UseContactFormReturn {
     
     try {
       // Log the form data for debugging
-      console.log("Enviando formulário:", formData);
+      console.log("Preparando para enviar formulário:", formData);
       
       // Validate required fields
       if (!formData.nome || !formData.email || !formData.mensagem) {
         throw new Error("Por favor, preencha todos os campos obrigatórios");
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error("Por favor, forneça um endereço de email válido");
       }
       
       // Create a copy of the form data to send
@@ -64,7 +70,26 @@ export function useContactForm(): UseContactFormReturn {
         mensagem: formData.mensagem
       };
       
+      console.log("Dados preparados para envio:", dataToSend);
+      
+      // Test connection to Edge Function
+      console.log("Testando conexão com Edge Function...");
+      
+      try {
+        const testResponse = await fetch("https://ubztjjxmldogpwawcnrj.supabase.co/functions/v1/send-contact-form", {
+          method: "OPTIONS",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+        console.log("Resposta do teste CORS:", testResponse.status, testResponse.statusText);
+      } catch (testError) {
+        console.error("Erro ao testar conexão:", testError);
+      }
+      
       // Call the Edge function with the proper headers and JSON body
+      console.log("Enviando dados para Edge Function via supabase.functions.invoke...");
+      
       const response = await supabase.functions.invoke('send-contact-form', {
         body: dataToSend,
         headers: {
@@ -99,8 +124,32 @@ export function useContactForm(): UseContactFormReturn {
       }
     } catch (error: any) {
       console.error("Erro detalhado ao enviar formulário:", error);
+      
+      // Log stack trace if available
+      if (error.stack) {
+        console.error("Stack trace:", error.stack);
+      }
+      
       setError(error.message || "Erro desconhecido");
       toast.error(`Ocorreu um erro ao enviar a mensagem: ${error.message || "Erro desconhecido"}`);
+      
+      // Try a direct fetch as fallback for testing
+      try {
+        console.log("Testando envio direto via fetch como fallback...");
+        
+        const rawResponse = await fetch("https://ubztjjxmldogpwawcnrj.supabase.co/functions/v1/send-contact-form", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabase.auth.getSession()}`
+          },
+          body: JSON.stringify(formData)
+        });
+        
+        console.log("Resposta do teste direto:", await rawResponse.text());
+      } catch (fetchError) {
+        console.error("Erro no teste direto:", fetchError);
+      }
     } finally {
       setIsSubmitting(false);
     }
