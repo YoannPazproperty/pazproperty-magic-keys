@@ -116,24 +116,15 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("✅ Resend API key found, first 4 chars:", resendApiKey.substring(0, 4));
     
     try {
-      // Test Resend API key validity by getting account info
-      console.log("🔑 Testing Resend API key validity...");
-      
       // Initialize Resend
       const resend = new Resend(resendApiKey);
       
       // Get recipient emails
-      const recipient1 = Deno.env.get("alexa@pazproperty.pt") || "alexa@pazproperty.pt";
-      const recipient2 = Deno.env.get("yoann@pazproperty.pt") || "yoann@pazproperty.pt";
+      const recipient1 = "alexa@pazproperty.pt";
+      const recipient2 = "yoann@pazproperty.pt";
       
       // Debug information
-      console.log("📧 Environment variables for recipients:");
-      console.log("alexa@pazproperty.pt env var:", Deno.env.get("alexa@pazproperty.pt"));
-      console.log("yoann@pazproperty.pt env var:", Deno.env.get("yoann@pazproperty.pt"));
-      
-      const recipients = [recipient1, recipient2];
-      
-      console.log("📧 Sending email to recipients:", recipients);
+      console.log("📧 Recipients:", [recipient1, recipient2]);
       
       // Email template to company
       const html = `
@@ -147,26 +138,12 @@ const handler = async (req: Request): Promise<Response> => {
       `;
       
       try {
-        console.log("📧 Attempting to send email to company...");
+        console.log("📧 Attempting to send emails...");
         
-        // Send test email to verify API key
-        const testEmailParams = {
-          from: "onboarding@resend.dev",
-          to: ["delivered@resend.dev"],
-          subject: "Test email from PAZ Property",
-          html: "<p>This is a test email to verify API key.</p>",
-        };
-        
-        console.log("📤 Sending test email with params:", JSON.stringify(testEmailParams));
-        const testResponse = await resend.emails.send(testEmailParams);
-        console.log("✅ Test email sent, response:", testResponse);
-        
-        // Now send the actual emails
-        
-        // Send email to company with fixed sender address
+        // IMPORTANT - Send company email with domain verified sender address
         const emailParams = {
-          from: "onboarding@resend.dev",
-          to: recipients,
+          from: "contact@pazproperty.pt", // Using your verified domain
+          to: [recipient1, recipient2],
           subject: "Nouveau formulaire de contact du site web",
           html: html,
           reply_to: formData.email,
@@ -174,12 +151,11 @@ const handler = async (req: Request): Promise<Response> => {
         
         console.log("📤 Sending company email with params:", JSON.stringify(emailParams));
         const emailResponse = await resend.emails.send(emailParams);
-        
         console.log("✅ Email to company sent, response:", emailResponse);
         
-        // Send confirmation to customer with fixed sender address
+        // Send confirmation to customer with domain verified sender address
         const confirmationParams = {
-          from: "onboarding@resend.dev",
+          from: "contact@pazproperty.pt", // Using your verified domain
           to: [formData.email],
           subject: "Nous avons bien reçu votre message - PAZ Property",
           html: `
@@ -191,14 +167,12 @@ const handler = async (req: Request): Promise<Response> => {
         
         console.log("📤 Sending confirmation email with params:", JSON.stringify(confirmationParams));
         const confirmationResponse = await resend.emails.send(confirmationParams);
-        
         console.log("✅ Confirmation email sent, response:", confirmationResponse);
         
         return new Response(
           JSON.stringify({
             success: true,
             message: "Emails sent successfully",
-            testEmail: testResponse,
             companyEmail: emailResponse,
             confirmationEmail: confirmationResponse
           }),
@@ -216,6 +190,72 @@ const handler = async (req: Request): Promise<Response> => {
         console.error("Error message:", emailError.message);
         console.error("Error code:", emailError.code);
         console.error("Error reason:", emailError.reason);
+        
+        // If it's an unauthorized sender error, try with the default Resend sender
+        if (emailError.statusCode === 403 || 
+            emailError.message?.includes("sender") || 
+            emailError.message?.includes("from address")) {
+          
+          console.log("⚠️ Attempting to use default Resend sender address as fallback");
+          
+          try {
+            // Try with onboarding@resend.dev as fallback
+            const fallbackEmailParams = {
+              from: "onboarding@resend.dev",
+              to: [recipient1, recipient2],
+              subject: "Nouveau formulaire de contact du site web",
+              html: html,
+              reply_to: formData.email,
+            };
+            
+            console.log("📤 Sending fallback company email with params:", JSON.stringify(fallbackEmailParams));
+            const fallbackResponse = await resend.emails.send(fallbackEmailParams);
+            console.log("✅ Fallback email to company sent, response:", fallbackResponse);
+            
+            // Send confirmation to customer as fallback
+            const fallbackConfirmationParams = {
+              from: "onboarding@resend.dev",
+              to: [formData.email],
+              subject: "Nous avons bien reçu votre message - PAZ Property",
+              html: `
+                <h1>Merci pour votre message, ${formData.nome} !</h1>
+                <p>Nous avons bien reçu votre message et nous vous recontacterons bientôt.</p>
+                <p>Cordialement,<br>L'équipe PAZ Property</p>
+              `,
+            };
+            
+            const fallbackConfirmationResponse = await resend.emails.send(fallbackConfirmationParams);
+            console.log("✅ Fallback confirmation email sent, response:", fallbackConfirmationResponse);
+            
+            return new Response(
+              JSON.stringify({
+                success: true,
+                message: "Emails sent with fallback sender",
+                companyEmail: fallbackResponse,
+                confirmationEmail: fallbackConfirmationResponse
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json", ...corsHeaders },
+              }
+            );
+          } catch (fallbackError: any) {
+            console.error("❌ Fallback email sending error:", fallbackError);
+            
+            return new Response(
+              JSON.stringify({
+                success: false,
+                error: "Failed to send emails even with fallback",
+                originalError: emailError.message || "Unknown error",
+                fallbackError: fallbackError.message || "Unknown error"
+              }),
+              {
+                status: 500,
+                headers: { "Content-Type": "application/json", ...corsHeaders },
+              }
+            );
+          }
+        }
         
         return new Response(
           JSON.stringify({
