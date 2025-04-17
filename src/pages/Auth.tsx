@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Info, Tool } from "lucide-react";
+import { AlertCircle, Info, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { fixConfirmationTokens } from "@/services/supabase/auth";
 
@@ -357,8 +356,8 @@ const Auth = () => {
                   </div>
                 ) : (
                   <>
-                    <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
-                      <Tool className="h-4 w-4 text-amber-700" />
+                    <Alert className="mb-4 bg-amber-50 border-amber-200">
+                      <Wrench className="h-4 w-4 text-amber-700" />
                       <AlertDescription className="text-amber-700 text-sm">
                         Si vous rencontrez des problèmes avec la réinitialisation de mot de passe, utilisez d'abord le bouton "Réparer la base de données" ci-dessous.
                       </AlertDescription>
@@ -418,7 +417,7 @@ const Auth = () => {
             </Tabs>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Alert variant="default" className="bg-amber-50 border-amber-200">
+            <Alert className="bg-amber-50 border-amber-200">
               <Info className="h-4 w-4 text-amber-700" />
               <AlertDescription className="text-xs text-amber-700">
                 Cette interface est réservée au personnel autorisé de Pazproperty.
