@@ -82,7 +82,7 @@ export function useContactForm(): UseContactFormReturn {
             "Content-Type": "application/json"
           }
         });
-        console.log("Resposta do teste CORS:", testResponse.status, testResponse.statusText);
+        console.log("Resposta do teste CORS:", testResponse.status);
       } catch (testError) {
         console.error("Erro ao testar conexão:", testError);
       }
@@ -90,24 +90,26 @@ export function useContactForm(): UseContactFormReturn {
       // Call the Edge function with the proper headers and JSON body
       console.log("Enviando dados para Edge Function via supabase.functions.invoke...");
       
-      const response = await supabase.functions.invoke('send-contact-form', {
-        body: dataToSend,
+      // MODIFICATION: Utilisons directement fetch au lieu de supabase.functions.invoke
+      // car nous avons vu dans les logs que fetch fonctionne mais pas invoke
+      const response = await fetch("https://ubztjjxmldogpwawcnrj.supabase.co/functions/v1/send-contact-form", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+          "apikey": supabase.auth.getSession().then(({ data }) => data?.session?.access_token || "")
+        },
+        body: JSON.stringify(dataToSend)
       });
       
-      // Log the complete response for debugging
-      console.log("Resposta completa da função:", response);
+      // Log the response
+      const responseData = await response.json();
+      console.log("Resposta completa da função:", responseData);
       
-      if (response.error) {
-        console.error("Erro na resposta da função:", response.error);
-        throw new Error(`Erro na função: ${response.error.message || "Erro desconhecido"}`);
+      if (!response.ok) {
+        throw new Error(`Erro na função: ${responseData.error || response.statusText}`);
       }
       
-      const data = response.data;
-      
-      if (data && data.success) {
+      if (responseData && responseData.success) {
         toast.success("Mensagem enviada com sucesso! Entraremos em contacto consigo em breve.");
         
         // Reset the form after successful submission
@@ -119,8 +121,8 @@ export function useContactForm(): UseContactFormReturn {
           mensagem: "",
         });
       } else {
-        console.error("Resposta inesperada:", data);
-        throw new Error(data?.error || "Resposta inesperada do servidor");
+        console.error("Resposta inesperada:", responseData);
+        throw new Error(responseData?.error || "Resposta inesperada do servidor");
       }
     } catch (error: any) {
       console.error("Erro detalhado ao enviar formulário:", error);
@@ -132,24 +134,6 @@ export function useContactForm(): UseContactFormReturn {
       
       setError(error.message || "Erro desconhecido");
       toast.error(`Ocorreu um erro ao enviar a mensagem: ${error.message || "Erro desconhecido"}`);
-      
-      // Try a direct fetch as fallback for testing
-      try {
-        console.log("Testando envio direto via fetch como fallback...");
-        
-        const rawResponse = await fetch("https://ubztjjxmldogpwawcnrj.supabase.co/functions/v1/send-contact-form", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${supabase.auth.getSession()}`
-          },
-          body: JSON.stringify(formData)
-        });
-        
-        console.log("Resposta do teste direto:", await rawResponse.text());
-      } catch (fetchError) {
-        console.error("Erro no teste direto:", fetchError);
-      }
     } finally {
       setIsSubmitting(false);
     }

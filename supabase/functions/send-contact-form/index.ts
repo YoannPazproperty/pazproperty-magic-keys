@@ -58,12 +58,15 @@ const handler = async (req: Request): Promise<Response> => {
       }
       
       // Get raw body for debugging
-      const clonedReq = req.clone();
-      const rawBody = await clonedReq.text();
+      const rawBody = await req.text();
       console.log("📄 Raw request body:", rawBody);
       
       // Try parsing the JSON
       try {
+        // Vérifier si le corps est vide
+        if (!rawBody || rawBody.trim() === "") {
+          throw new Error("Request body is empty");
+        }
         formData = JSON.parse(rawBody);
       } catch (jsonError) {
         console.error("❌ JSON parse error:", jsonError);
@@ -138,9 +141,6 @@ const handler = async (req: Request): Promise<Response> => {
         subject: "Nouveau formulaire de contact du site web",
         html: html,
         reply_to: formData.email,
-      }).catch(error => {
-        console.error("💥 Resend API error:", error);
-        throw new Error(`Resend API error: ${JSON.stringify(error)}`);
       });
       
       console.log("✅ Email to company sent, response:", emailResponse);
@@ -157,10 +157,6 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Nous avons bien reçu votre message et nous vous recontacterons bientôt.</p>
           <p>Cordialement,<br>L'équipe PAZ Property</p>
         `,
-      }).catch(error => {
-        console.error("💥 Confirmation email error:", error);
-        // We don't throw here, as we already sent the main email
-        console.log("⚠️ Confirmation email failed, but proceeding with success response");
       });
       
       console.log("✅ Confirmation email sent, response:", confirmationResponse);
