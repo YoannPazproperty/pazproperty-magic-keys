@@ -42,24 +42,27 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("📥 Request received, attempting to parse body...");
     
+    // Lire le corps de la requête sous forme de texte
     const bodyText = await req.text();
     console.log("📄 Raw request body:", bodyText);
     
     let formData: ContactFormData;
+    
     try {
+      // Tenter de parser le corps en tant que JSON
       formData = JSON.parse(bodyText);
-      console.log("📝 Form data parsed:", formData);
+      console.log("📝 Form data parsed successfully:", formData);
       
-      // Basic validation
+      // Validation basique
       if (!formData.nome || !formData.email || !formData.mensagem) {
-        throw new Error("Missing required fields");
+        throw new Error("Champs requis manquants: nom, email ou message");
       }
     } catch (parseError) {
       console.error("❌ Failed to parse request body:", parseError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Invalid request body: ${parseError.message}`,
+          error: `Corps de requête invalide: ${parseError.message}`,
           receivedBody: bodyText 
         }),
         {
@@ -74,21 +77,21 @@ const handler = async (req: Request): Promise<Response> => {
     if (!resendApiKey) {
       console.error("❌ RESEND_API_KEY environment variable not found");
       return new Response(
-        JSON.stringify({ success: false, error: "Missing Resend API key" }),
+        JSON.stringify({ success: false, error: "Clé API Resend manquante" }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
     }
-    console.log("✅ Resend API key found:", resendApiKey.substring(0, 5) + "...");
+    console.log("✅ Resend API key found");
     
     // Initialize Resend
     const resend = new Resend(resendApiKey);
     
     // Get recipient emails from environment variables
-    const recipient1 = Deno.env.get("alexa@pazproperty.pt") || "alexa@pazproperty.pt";
-    const recipient2 = Deno.env.get("yoann@pazproperty.pt") || "yoann@pazproperty.pt";
+    const recipient1 = "alexa@pazproperty.pt";
+    const recipient2 = "yoann@pazproperty.pt";
     const recipients = [recipient1, recipient2];
     
     console.log("📧 Attempting to send email to:", recipients);
@@ -108,31 +111,25 @@ const handler = async (req: Request): Promise<Response> => {
       // Send email to company
       console.log("🔄 Sending email to company...");
       
-      // Utilisez "onboarding@resend.dev" comme expéditeur pour les tests
-      // Important: Pour utiliser votre propre domaine, vous devez d'abord le vérifier dans Resend
-      const emailData = {
+      const emailResponse = await resend.emails.send({
         from: "PAZ Property <onboarding@resend.dev>",
         to: recipients,
         subject: "Nouveau formulaire de contact du site web",
         html: html,
         reply_to: formData.email,
-      };
+      });
       
-      console.log("📧 Email data to company:", emailData);
+      console.log("✅ Email response:", emailResponse);
       
-      const emailResponse = await resend.emails.send(emailData);
-      
-      console.log("✅ Company email response:", JSON.stringify(emailResponse));
-      
-      // Check if there was an error in the response
       if (emailResponse.error) {
-        throw new Error(`Resend API error: ${JSON.stringify(emailResponse.error)}`);
+        console.error("❌ Email sending error:", emailResponse.error);
+        throw new Error(`Erreur Resend: ${JSON.stringify(emailResponse.error)}`);
       }
       
       // Send confirmation to customer
       console.log("🔄 Sending confirmation to customer...");
       
-      const confirmationData = {
+      const confirmationResponse = await resend.emails.send({
         from: "PAZ Property <onboarding@resend.dev>",
         to: [formData.email],
         subject: "Nous avons bien reçu votre message - PAZ Property",
@@ -141,25 +138,18 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Nous avons bien reçu votre message et nous vous recontacterons bientôt.</p>
           <p>Cordialement,<br>L'équipe PAZ Property</p>
         `,
-      };
+      });
       
-      console.log("📧 Email data to customer:", confirmationData);
+      console.log("✅ Confirmation email response:", confirmationResponse);
       
-      const confirmationResponse = await resend.emails.send(confirmationData);
-      
-      console.log("✅ Customer confirmation email response:", JSON.stringify(confirmationResponse));
-      
-      // Check if there was an error in the customer email response
       if (confirmationResponse.error) {
-        throw new Error(`Resend API error (customer email): ${JSON.stringify(confirmationResponse.error)}`);
+        console.error("❌ Confirmation email sending error:", confirmationResponse.error);
       }
       
       return new Response(
         JSON.stringify({
           success: true,
           message: "Emails envoyés avec succès",
-          companyEmailResponse: emailResponse,
-          customerEmailResponse: confirmationResponse
         }),
         {
           status: 200,
@@ -168,7 +158,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     } catch (emailError: any) {
       console.error("❌ Erreur lors de l'envoi des emails:", emailError);
-      console.error("❌ Détails de l'erreur:", JSON.stringify(emailError));
       
       return new Response(
         JSON.stringify({
@@ -184,7 +173,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
   } catch (error: any) {
     console.error("❌ Erreur générale dans la fonction edge:", error);
-    console.error("❌ Stack trace:", error.stack);
     return new Response(
       JSON.stringify({ 
         success: false, 

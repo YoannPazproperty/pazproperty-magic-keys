@@ -37,14 +37,15 @@ const ContactForm = () => {
     setError(null);
     
     try {
+      // Afficher les données du formulaire pour déboguer
       console.log("Enviando formulário:", formData);
       
-      // Vérifier que toutes les données requises sont présentes
+      // Vérification des champs requis
       if (!formData.nome || !formData.email || !formData.mensagem) {
         throw new Error("Veuillez remplir tous les champs obligatoires");
       }
       
-      // Call the Edge function with proper headers
+      // Appeler la fonction Edge avec les en-têtes appropriés
       const response = await supabase.functions.invoke('send-contact-form', {
         body: JSON.stringify(formData),
         headers: {
@@ -52,6 +53,7 @@ const ContactForm = () => {
         }
       });
       
+      // Journaliser la réponse complète pour le débogage
       console.log("Resposta completa da função:", response);
       
       if (response.error) {
@@ -64,7 +66,7 @@ const ContactForm = () => {
       if (data && data.success) {
         toast.success("Mensagem enviada com sucesso! Entraremos em contacto consigo em breve.");
         
-        // Reset form
+        // Réinitialiser le formulaire
         setFormData({
           nome: "",
           email: "",
