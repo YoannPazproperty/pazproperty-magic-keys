@@ -47,7 +47,6 @@ export function useContactForm(): UseContactFormReturn {
     setError(null);
     
     try {
-      // Log the form data for debugging
       console.log("Preparando para enviar formulário:", formData);
       
       // Validate required fields
@@ -72,24 +71,6 @@ export function useContactForm(): UseContactFormReturn {
       
       console.log("Dados preparados para envio:", dataToSend);
       
-      // Test connection to Edge Function with CORS preflight
-      console.log("Testando conexão com Edge Function via CORS preflight...");
-      
-      try {
-        const testResponse = await fetch("https://ubztjjxmldogpwawcnrj.supabase.co/functions/v1/send-contact-form", {
-          method: "OPTIONS",
-          headers: {
-            "Content-Type": "application/json"
-          }
-        });
-        console.log("Resposta do teste CORS:", testResponse.status);
-      } catch (testError) {
-        console.error("Erro ao testar conexão:", testError);
-      }
-      
-      // FIXED: Using fetch directly with proper headers and token acquisition
-      console.log("Enviando dados para Edge Function via fetch...");
-      
       // Get the session token
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token || "";
@@ -108,10 +89,17 @@ export function useContactForm(): UseContactFormReturn {
       console.log("Resposta completa da função:", responseData);
       
       if (!response.ok) {
-        throw new Error(`Erro na função: ${responseData.error || response.statusText}`);
+        // Si la réponse n'est pas OK, vérifier les détails
+        const errorMessage = responseData.error || 
+                            (responseData.email?.error ? `Erreur email: ${responseData.email.error}` : null) ||
+                            (responseData.database?.error ? `Erreur base de données: ${responseData.database.error}` : null) ||
+                            response.statusText;
+        
+        throw new Error(`Erro na função: ${errorMessage}`);
       }
       
-      if (responseData && responseData.success) {
+      // Si les emails ont été envoyés avec succès, même si la sauvegarde en base a échoué
+      if (responseData.success || (responseData.email && responseData.email.success)) {
         toast.success("Mensagem enviada com sucesso! Entraremos em contacto consigo em breve.");
         
         // Reset the form after successful submission
@@ -122,17 +110,18 @@ export function useContactForm(): UseContactFormReturn {
           tipo: "proprietario",
           mensagem: "",
         });
+        
+        // Si sauvegarde en BDD a échoué mais emails envoyés, afficher une notification
+        if (responseData.database && !responseData.database.success) {
+          console.warn("Atenção: Email enviado com sucesso, mas falha ao salvar na base de dados", responseData.database);
+          toast.info("Email enviado, mas houve um problema ao salvar seus dados.");
+        }
       } else {
         console.error("Resposta inesperada:", responseData);
         throw new Error(responseData?.error || "Resposta inesperada do servidor");
       }
     } catch (error: any) {
       console.error("Erro detalhado ao enviar formulário:", error);
-      
-      // Log stack trace if available
-      if (error.stack) {
-        console.error("Stack trace:", error.stack);
-      }
       
       setError(error.message || "Erro desconhecido");
       toast.error(`Ocorreu um erro ao enviar a mensagem: ${error.message || "Erro desconhecido"}`);
