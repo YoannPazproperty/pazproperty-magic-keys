@@ -19,11 +19,11 @@ interface ContactFormData {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("Edge function 'send-contact-form' called with method:", req.method);
+  console.log("🚀 Edge function 'send-contact-form' called with method:", req.method);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    console.log("Handling CORS preflight request");
+    console.log("✅ Handling CORS preflight request");
     return new Response(null, { 
       status: 204, 
       headers: corsHeaders 
@@ -31,7 +31,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   if (req.method !== "POST") {
-    console.error(`Method ${req.method} not supported`);
+    console.error(`❌ Method ${req.method} not supported`);
     return new Response(
       JSON.stringify({ success: false, error: `Method ${req.method} not supported` }),
       {
@@ -46,14 +46,14 @@ const handler = async (req: Request): Promise<Response> => {
     let formData: ContactFormData;
     try {
       formData = await req.json();
-      console.log("Form data received:", formData);
+      console.log("📝 Form data received:", formData);
       
       // Validate required fields
       if (!formData.nome || !formData.email || !formData.mensagem || !formData.tipo) {
         throw new Error("Missing required fields");
       }
     } catch (parseError) {
-      console.error("Failed to parse request body:", parseError);
+      console.error("❌ Failed to parse request body:", parseError);
       return new Response(
         JSON.stringify({ success: false, error: `Invalid request body: ${parseError.message}` }),
         {
@@ -66,13 +66,13 @@ const handler = async (req: Request): Promise<Response> => {
     // Create responses object to track results
     const results = {
       emailSent: false,
-      emailError: null,
+      emailError: null as string | null,
       databaseSaved: false,
-      databaseError: null
+      databaseError: null as string | null
     };
 
     // STEP 1: Send emails
-    console.log("STEP 1: Attempting to send emails...");
+    console.log("📧 STEP 1: Attempting to send emails...");
     try {
       const resendApiKey = Deno.env.get("RESEND_API_KEY");
       if (!resendApiKey) {
@@ -81,9 +81,12 @@ const handler = async (req: Request): Promise<Response> => {
       
       const resend = new Resend(resendApiKey);
       
-      // Recipients
-      const recipients = ["alexa@pazproperty.pt", "yoann@pazproperty.pt"];
-      console.log("Sending email to:", recipients);
+      // Recipients - these are stored as secrets in Supabase
+      const recipient1 = Deno.env.get("alexa@pazproperty.pt") || "alexa@pazproperty.pt";
+      const recipient2 = Deno.env.get("yoann@pazproperty.pt") || "yoann@pazproperty.pt";
+      const recipients = [recipient1, recipient2];
+      
+      console.log("📤 Sending email to:", recipients);
       
       // Send email to company
       const emailResponse = await resend.emails.send({
@@ -100,7 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
           <p>${formData.mensagem.replace(/\n/g, "<br>")}</p>
         `,
       });
-      console.log("Company email result:", emailResponse);
+      console.log("✅ Company email result:", emailResponse);
       
       // Send confirmation to customer
       const confirmationResponse = await resend.emails.send({
@@ -113,16 +116,16 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Cumprimentos,<br>Equipa PAZ Property</p>
         `,
       });
-      console.log("Confirmation email result:", confirmationResponse);
+      console.log("✅ Confirmation email result:", confirmationResponse);
       
       results.emailSent = true;
-    } catch (emailError) {
-      console.error("Error sending emails:", emailError);
-      results.emailError = emailError.message;
+    } catch (emailError: any) {
+      console.error("❌ Error sending emails:", emailError);
+      results.emailError = emailError.message || "Unknown email error";
     }
     
     // STEP 2: Save to database (independent from email sending)
-    console.log("STEP 2: Attempting to save to database...");
+    console.log("💾 STEP 2: Attempting to save to database...");
     try {
       const supabaseUrl = "https://ubztjjxmldogpwawcnrj.supabase.co";
       const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -132,6 +135,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
       
       const supabase = createClient(supabaseUrl, supabaseKey);
+      console.log("🔌 Supabase client created");
       
       const { data, error } = await supabase
         .from("contactos_comerciais")
@@ -147,10 +151,10 @@ const handler = async (req: Request): Promise<Response> => {
         throw error;
       }
       
-      console.log("Data saved to Supabase successfully");
+      console.log("✅ Data saved to Supabase successfully");
       results.databaseSaved = true;
-    } catch (dbError) {
-      console.error("Error saving to database:", dbError);
+    } catch (dbError: any) {
+      console.error("❌ Error saving to database:", dbError);
       results.databaseError = dbError.message || "Unknown database error";
     }
 
@@ -195,8 +199,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
-  } catch (error) {
-    console.error("General error in edge function:", error);
+  } catch (error: any) {
+    console.error("❌ General error in edge function:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 

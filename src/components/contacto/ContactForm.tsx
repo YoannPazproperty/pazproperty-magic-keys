@@ -37,8 +37,12 @@ const ContactForm = () => {
     try {
       console.log("Enviando formulário:", formData);
       
+      // Appeler la fonction Edge avec les données du formulaire
       const response = await supabase.functions.invoke('send-contact-form', {
         body: formData,
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
       console.log("Resposta completa da função:", response);
@@ -50,7 +54,7 @@ const ContactForm = () => {
       const data = response.data;
       
       // Handle success, even if partial
-      if (data.success) {
+      if (data && data.success) {
         toast.success("Mensagem enviada com sucesso! Entraremos em contacto consigo em breve.");
         
         if (data.partialSuccess) {
@@ -75,10 +79,14 @@ const ContactForm = () => {
           mensagem: "",
         });
       } else {
-        // Complete failure
-        throw new Error("Ambas as operações falharam: " + 
-          (data.email.error || "Erro no email") + ", " + 
-          (data.database.error || "Erro na base de dados"));
+        // Complete failure or unexpected response format
+        if (data) {
+          throw new Error("Falha nas operações: " + 
+            (data.email?.error || "Erro no email") + ", " + 
+            (data.database?.error || "Erro na base de dados"));
+        } else {
+          throw new Error("Resposta inesperada da função");
+        }
       }
     } catch (error) {
       console.error("Erro detalhado ao enviar formulário:", error);
@@ -93,6 +101,7 @@ const ContactForm = () => {
       <h2 className="text-2xl font-bold mb-6">Envie-nos uma Mensagem</h2>
       
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Nome */}
         <div className="space-y-2">
           <Label htmlFor="nome" className="flex items-center gap-2">
             <User className="h-4 w-4" /> Nome Completo
@@ -107,6 +116,7 @@ const ContactForm = () => {
           />
         </div>
         
+        {/* Email */}
         <div className="space-y-2">
           <Label htmlFor="email" className="flex items-center gap-2">
             <Mail className="h-4 w-4" /> Email
@@ -122,6 +132,7 @@ const ContactForm = () => {
           />
         </div>
         
+        {/* Telefone */}
         <div className="space-y-2">
           <Label htmlFor="telefone" className="flex items-center gap-2">
             <Phone className="h-4 w-4" /> Telefone
@@ -135,6 +146,7 @@ const ContactForm = () => {
           />
         </div>
         
+        {/* Tipo de usuário */}
         <div className="space-y-3">
           <Label htmlFor="tipo-usuario" className="flex items-center gap-2">
             <Home className="h-4 w-4" /> É proprietário ou inquilino?
@@ -157,6 +169,7 @@ const ContactForm = () => {
           </RadioGroup>
         </div>
         
+        {/* Mensagem */}
         <div className="space-y-2">
           <Label htmlFor="mensagem" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" /> Mensagem
@@ -173,6 +186,7 @@ const ContactForm = () => {
           />
         </div>
         
+        {/* Botão de envio */}
         <Button 
           type="submit" 
           className="w-full bg-brand-blue hover:bg-primary/90"
