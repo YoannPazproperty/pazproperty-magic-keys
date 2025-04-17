@@ -42,27 +42,36 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     console.log("📥 Request received, attempting to parse body...");
     
-    // Lire le corps de la requête sous forme de texte
+    // Vérifier le Content-Type
+    const contentType = req.headers.get("Content-Type") || "";
+    console.log("📄 Content-Type:", contentType);
+
+    // Read the request body as text
     const bodyText = await req.text();
     console.log("📄 Raw request body:", bodyText);
     
     let formData: ContactFormData;
     
     try {
-      // Tenter de parser le corps en tant que JSON
-      formData = JSON.parse(bodyText);
-      console.log("📝 Form data parsed successfully:", formData);
+      // Attempt to parse the body as JSON
+      if (bodyText && bodyText.trim()) {
+        formData = JSON.parse(bodyText);
+        console.log("📝 Form data parsed successfully:", formData);
+      } else {
+        throw new Error("Empty request body");
+      }
       
-      // Validation basique
+      // Basic validation
       if (!formData.nome || !formData.email || !formData.mensagem) {
-        throw new Error("Champs requis manquants: nom, email ou message");
+        throw new Error("Required fields missing: name, email or message");
       }
     } catch (parseError) {
       console.error("❌ Failed to parse request body:", parseError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Corps de requête invalide: ${parseError.message}`,
+          error: `Invalid request body: ${parseError.message}`,
+          receivedContentType: contentType,
           receivedBody: bodyText 
         }),
         {
@@ -77,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!resendApiKey) {
       console.error("❌ RESEND_API_KEY environment variable not found");
       return new Response(
-        JSON.stringify({ success: false, error: "Clé API Resend manquante" }),
+        JSON.stringify({ success: false, error: "Resend API key missing" }),
         {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -89,7 +98,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Initialize Resend
     const resend = new Resend(resendApiKey);
     
-    // Get recipient emails from environment variables
+    // Get recipient emails
     const recipient1 = "alexa@pazproperty.pt";
     const recipient2 = "yoann@pazproperty.pt";
     const recipients = [recipient1, recipient2];
@@ -121,9 +130,9 @@ const handler = async (req: Request): Promise<Response> => {
       
       console.log("✅ Email response:", emailResponse);
       
-      if (emailResponse.error) {
+      if ("error" in emailResponse && emailResponse.error) {
         console.error("❌ Email sending error:", emailResponse.error);
-        throw new Error(`Erreur Resend: ${JSON.stringify(emailResponse.error)}`);
+        throw new Error(`Resend error: ${JSON.stringify(emailResponse.error)}`);
       }
       
       // Send confirmation to customer
@@ -142,7 +151,7 @@ const handler = async (req: Request): Promise<Response> => {
       
       console.log("✅ Confirmation email response:", confirmationResponse);
       
-      if (confirmationResponse.error) {
+      if ("error" in confirmationResponse && confirmationResponse.error) {
         console.error("❌ Confirmation email sending error:", confirmationResponse.error);
       }
       

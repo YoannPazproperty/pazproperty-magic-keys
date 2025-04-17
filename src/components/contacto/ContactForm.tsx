@@ -42,12 +42,12 @@ const ContactForm = () => {
       
       // Vérification des champs requis
       if (!formData.nome || !formData.email || !formData.mensagem) {
-        throw new Error("Veuillez remplir tous les champs obligatoires");
+        throw new Error("Por favor, preencha todos os campos obrigatórios");
       }
       
       // Appeler la fonction Edge avec les en-têtes appropriés
       const response = await supabase.functions.invoke('send-contact-form', {
-        body: JSON.stringify(formData),
+        body: formData,  // Supabase stringify automatiquement l'objet
         headers: {
           'Content-Type': 'application/json'
         }
