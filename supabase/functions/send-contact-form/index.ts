@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.3";
 
 // Essential CORS headers
 const corsHeaders = {
@@ -19,7 +18,7 @@ interface ContactFormData {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("🚀 Edge function 'send-contact-form' called with method:", req.method);
+  console.log("🚀 Edge function 'send-contact-form' started, method:", req.method);
   
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -42,81 +41,91 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // Get and log the raw request body for debugging
-    const clonedReq = req.clone();
+    console.log("📥 Request received, attempting to parse body...");
+    
+    let bodyText;
     try {
-      const bodyText = await clonedReq.text();
+      // Clone and read the request body as text for debugging
+      const clonedReq = req.clone();
+      bodyText = await clonedReq.text();
       console.log("📄 Raw request body:", bodyText);
     } catch (e) {
       console.error("❌ Error reading raw body:", e);
     }
-
-    // Parse the request body
+    
+    // Parse the JSON body from the original request
     let formData: ContactFormData;
     try {
-      formData = await req.json();
-      console.log("📝 Form data received:", formData);
+      if (!bodyText) {
+        formData = await req.json();
+      } else {
+        formData = JSON.parse(bodyText);
+      }
       
-      // Validate required fields
-      if (!formData.nome || !formData.email || !formData.mensagem || !formData.tipo) {
+      console.log("📝 Form data parsed:", formData);
+      
+      // Basic validation
+      if (!formData.nome || !formData.email || !formData.mensagem) {
         throw new Error("Missing required fields");
       }
     } catch (parseError) {
       console.error("❌ Failed to parse request body:", parseError);
       return new Response(
-        JSON.stringify({ success: false, error: `Invalid request body: ${parseError.message}` }),
+        JSON.stringify({ 
+          success: false, 
+          error: `Invalid request body: ${parseError.message}`,
+          receivedBody: bodyText || "could not read body" 
+        }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
     }
-
-    // Create responses object to track results
-    const results = {
-      emailSent: false,
-      emailError: null as string | null,
-      databaseSaved: false,
-      databaseError: null as string | null
-    };
-
-    // STEP 1: Send emails
-    console.log("📧 STEP 1: Attempting to send emails...");
+    
+    // STEP 1: Focus on sending emails first
+    console.log("📧 Attempting to send emails...");
     try {
       const resendApiKey = Deno.env.get("RESEND_API_KEY");
+      
       if (!resendApiKey) {
         throw new Error("RESEND_API_KEY environment variable not found");
       }
+      console.log("✅ Resend API key found");
       
       const resend = new Resend(resendApiKey);
       
-      // Recipients - these are stored as secrets in Supabase
+      // Get the recipient emails from environment variables
       const recipient1 = Deno.env.get("alexa@pazproperty.pt") || "alexa@pazproperty.pt";
       const recipient2 = Deno.env.get("yoann@pazproperty.pt") || "yoann@pazproperty.pt";
       const recipients = [recipient1, recipient2];
       
       console.log("📤 Sending email to:", recipients);
       
+      // Email template to company
+      const html = `
+        <h1>Novo contacto do website</h1>
+        <p><strong>Nome:</strong> ${formData.nome}</p>
+        <p><strong>Email:</strong> ${formData.email}</p>
+        <p><strong>Telefone:</strong> ${formData.telefone || "Não fornecido"}</p>
+        <p><strong>Tipo:</strong> ${formData.tipo === 'proprietario' ? 'Proprietário' : 'Inquilino'}</p>
+        <p><strong>Mensagem:</strong></p>
+        <p>${formData.mensagem.replace(/\n/g, "<br>")}</p>
+      `;
+      
       // Send email to company
       const emailResponse = await resend.emails.send({
-        from: "PAZ Property <no-reply@resend.dev>",  // Using Resend's domain
+        from: "PAZ Property <onboarding@resend.dev>", // Using default Resend domain for testing
         to: recipients,
         subject: "Novo formulário de contacto do website",
-        html: `
-          <h1>Novo contacto do website</h1>
-          <p><strong>Nome:</strong> ${formData.nome}</p>
-          <p><strong>Email:</strong> ${formData.email}</p>
-          <p><strong>Telefone:</strong> ${formData.telefone || "Não fornecido"}</p>
-          <p><strong>Tipo:</strong> ${formData.tipo === 'proprietario' ? 'Proprietário' : 'Inquilino'}</p>
-          <p><strong>Mensagem:</strong></p>
-          <p>${formData.mensagem.replace(/\n/g, "<br>")}</p>
-        `,
+        html: html,
       });
-      console.log("✅ Company email result:", emailResponse);
+      
+      console.log("✅ Company email sent, response:", emailResponse);
       
       // Send confirmation to customer
       const confirmationResponse = await resend.emails.send({
-        from: "PAZ Property <no-reply@resend.dev>",  // Using Resend's domain
+        from: "PAZ Property <onboarding@resend.dev>", // Using default Resend domain for testing
         to: [formData.email],
         subject: "Recebemos a sua mensagem - PAZ Property",
         html: `
@@ -125,82 +134,26 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Cumprimentos,<br>Equipa PAZ Property</p>
         `,
       });
-      console.log("✅ Confirmation email result:", confirmationResponse);
       
-      results.emailSent = true;
-    } catch (emailError: any) {
-      console.error("❌ Error sending emails:", emailError);
-      results.emailError = emailError.message || "Unknown email error";
-    }
-    
-    // STEP 2: Save to database (independent from email sending)
-    console.log("💾 STEP 2: Attempting to save to database...");
-    try {
-      const supabaseUrl = "https://ubztjjxmldogpwawcnrj.supabase.co";
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      console.log("✅ Confirmation email sent, response:", confirmationResponse);
       
-      if (!supabaseKey) {
-        throw new Error("SUPABASE_SERVICE_ROLE_KEY environment variable not found");
-      }
-      
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      console.log("🔌 Supabase client created");
-      
-      const { data, error } = await supabase
-        .from("contactos_comerciais")
-        .insert([{ 
-          nome: formData.nome, 
-          email: formData.email, 
-          telefone: formData.telefone || null, 
-          tipo: formData.tipo, 
-          mensagem: formData.mensagem 
-        }]);
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log("✅ Data saved to Supabase successfully");
-      results.databaseSaved = true;
-    } catch (dbError: any) {
-      console.error("❌ Error saving to database:", dbError);
-      results.databaseError = dbError.message || "Unknown database error";
-    }
-
-    // Return results based on what succeeded
-    if (results.emailSent || results.databaseSaved) {
-      // At least one operation succeeded
       return new Response(
         JSON.stringify({
           success: true,
-          partialSuccess: !(results.emailSent && results.databaseSaved),
-          email: {
-            success: results.emailSent,
-            error: results.emailError
-          },
-          database: {
-            success: results.databaseSaved,
-            error: results.databaseError
-          }
+          message: "Emails sent successfully",
         }),
         {
           status: 200,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
-    } else {
-      // Both operations failed
+    } catch (emailError: any) {
+      console.error("❌ Error sending emails:", emailError);
+      
       return new Response(
         JSON.stringify({
           success: false,
-          email: {
-            success: false,
-            error: results.emailError
-          },
-          database: {
-            success: false,
-            error: results.databaseError
-          }
+          error: emailError.message || "Unknown email error"
         }),
         {
           status: 500,
@@ -208,6 +161,7 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
   } catch (error: any) {
     console.error("❌ General error in edge function:", error);
     return new Response(

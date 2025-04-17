@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,28 +46,16 @@ const ContactForm = () => {
       
       console.log("Resposta completa da função:", response);
       
+      // Check for errors in the response
       if (response.error) {
+        console.error("Erro na resposta da função:", response.error);
         throw new Error(`Erro: ${response.error.message || "Erro desconhecido"}`);
       }
       
       const data = response.data;
       
-      // Handle success, even if partial
       if (data && data.success) {
         toast.success("Mensagem enviada com sucesso! Entraremos em contacto consigo em breve.");
-        
-        if (data.partialSuccess) {
-          console.warn("Algumas operações falharam:", data);
-          
-          if (!data.email.success) {
-            console.error("Problemas com o envio de emails:", data.email.error);
-            toast.warning("O formulário foi recebido, mas houve um problema no envio do email de confirmação.");
-          }
-          
-          if (!data.database.success) {
-            console.error("Problemas com o salvamento na base de dados:", data.database.error);
-          }
-        }
         
         // Reset form
         setFormData({
@@ -79,16 +66,11 @@ const ContactForm = () => {
           mensagem: "",
         });
       } else {
-        // Complete failure or unexpected response format
-        if (data) {
-          throw new Error("Falha nas operações: " + 
-            (data.email?.error || "Erro no email") + ", " + 
-            (data.database?.error || "Erro na base de dados"));
-        } else {
-          throw new Error("Resposta inesperada da função");
-        }
+        // Handle unexpected response format
+        console.error("Resposta inesperada:", data);
+        throw new Error("Resposta inesperada do servidor");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro detalhado ao enviar formulário:", error);
       toast.error("Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente mais tarde.");
     } finally {
