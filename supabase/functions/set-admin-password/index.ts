@@ -67,7 +67,7 @@ serve(async (req) => {
 
     // Si nous avons un token de récupération, il s'agit d'un flux de réinitialisation de mot de passe
     if (recoveryToken) {
-      console.log("Réinitialisation de mot de passe via token personnalisé");
+      console.log("Réinitialisation de mot de passe via token personnalisé:", recoveryToken);
       
       // Vérifier si le token est valide
       // Dans un système de production réel, nous vérifierions que le token existe dans une table dédiée

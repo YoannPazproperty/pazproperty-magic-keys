@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +30,7 @@ const AuthCallback = () => {
         // Différentes façons dont le paramètre de réinitialisation peut être passé
         const isReset = urlParams.get("reset") === "true";
         const type = urlParams.get("type") || hashParams.get("type");
-        const accessToken = hashParams.get("access_token");
+        const accessToken = urlParams.get("access_token") || hashParams.get("access_token");
         
         console.log("Debug paramètres URL:", { 
           isReset, 
@@ -46,7 +47,7 @@ const AuthCallback = () => {
           
           // Stocker le token pour l'utiliser lors de la réinitialisation
           if (accessToken) {
-            console.log("Token de réinitialisation trouvé dans l'URL");
+            console.log("Token de réinitialisation trouvé dans l'URL:", accessToken);
             setToken(accessToken);
           }
           
