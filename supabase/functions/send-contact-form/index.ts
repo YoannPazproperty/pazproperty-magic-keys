@@ -40,39 +40,34 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log("📥 Request received, attempting to parse body...");
-    
-    // Vérifier le Content-Type
-    const contentType = req.headers.get("Content-Type") || "";
-    console.log("📄 Content-Type:", contentType);
-
-    // Read the request body as text
-    const bodyText = await req.text();
-    console.log("📄 Raw request body:", bodyText);
+    console.log("📥 Request received");
     
     let formData: ContactFormData;
     
     try {
-      // Attempt to parse the body as JSON
-      if (bodyText && bodyText.trim()) {
-        formData = JSON.parse(bodyText);
-        console.log("📝 Form data parsed successfully:", formData);
-      } else {
-        throw new Error("Empty request body");
-      }
+      // Log request headers for debugging
+      console.log("📋 Request headers:", Object.fromEntries(req.headers.entries()));
+      
+      // Try to parse request body directly - supabase already handles JSON parsing
+      formData = await req.json();
+      console.log("📝 Form data:", formData);
       
       // Basic validation
-      if (!formData.nome || !formData.email || !formData.mensagem) {
-        throw new Error("Required fields missing: name, email or message");
+      if (!formData || !formData.nome || !formData.email || !formData.mensagem) {
+        throw new Error("Required fields missing");
       }
     } catch (parseError) {
       console.error("❌ Failed to parse request body:", parseError);
+      
+      // Try reading raw body for debugging
+      const rawBody = await req.text();
+      console.log("📄 Raw body:", rawBody);
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Invalid request body: ${parseError.message}`,
-          receivedContentType: contentType,
-          receivedBody: bodyText 
+          error: `Invalid request format: ${parseError.message}`,
+          headers: Object.fromEntries(req.headers.entries())
         }),
         {
           status: 400,
@@ -93,7 +88,6 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
-    console.log("✅ Resend API key found");
     
     // Initialize Resend
     const resend = new Resend(resendApiKey);
@@ -103,7 +97,7 @@ const handler = async (req: Request): Promise<Response> => {
     const recipient2 = "yoann@pazproperty.pt";
     const recipients = [recipient1, recipient2];
     
-    console.log("📧 Attempting to send email to:", recipients);
+    console.log("📧 Sending email to:", recipients);
     
     // Email template to company
     const html = `
@@ -118,8 +112,6 @@ const handler = async (req: Request): Promise<Response> => {
     
     try {
       // Send email to company
-      console.log("🔄 Sending email to company...");
-      
       const emailResponse = await resend.emails.send({
         from: "PAZ Property <onboarding@resend.dev>",
         to: recipients,
@@ -128,16 +120,9 @@ const handler = async (req: Request): Promise<Response> => {
         reply_to: formData.email,
       });
       
-      console.log("✅ Email response:", emailResponse);
-      
-      if ("error" in emailResponse && emailResponse.error) {
-        console.error("❌ Email sending error:", emailResponse.error);
-        throw new Error(`Resend error: ${JSON.stringify(emailResponse.error)}`);
-      }
+      console.log("✅ Email sent, response:", emailResponse);
       
       // Send confirmation to customer
-      console.log("🔄 Sending confirmation to customer...");
-      
       const confirmationResponse = await resend.emails.send({
         from: "PAZ Property <onboarding@resend.dev>",
         to: [formData.email],
@@ -149,16 +134,12 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
       
-      console.log("✅ Confirmation email response:", confirmationResponse);
-      
-      if ("error" in confirmationResponse && confirmationResponse.error) {
-        console.error("❌ Confirmation email sending error:", confirmationResponse.error);
-      }
+      console.log("✅ Confirmation email sent, response:", confirmationResponse);
       
       return new Response(
         JSON.stringify({
           success: true,
-          message: "Emails envoyés avec succès",
+          message: "Emails sent successfully",
         }),
         {
           status: 200,
@@ -166,12 +147,12 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     } catch (emailError: any) {
-      console.error("❌ Erreur lors de l'envoi des emails:", emailError);
+      console.error("❌ Email sending error:", emailError);
       
       return new Response(
         JSON.stringify({
           success: false,
-          error: emailError.message || "Erreur inconnue",
+          error: emailError.message || "Unknown error",
           details: JSON.stringify(emailError)
         }),
         {
@@ -181,11 +162,11 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
   } catch (error: any) {
-    console.error("❌ Erreur générale dans la fonction edge:", error);
+    console.error("❌ General error:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || "Erreur inconnue",
+        error: error.message || "Unknown error",
         stack: error.stack
       }),
       {
