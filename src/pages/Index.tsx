@@ -123,8 +123,7 @@ const Index = () => {
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Por Que Escolher a Pazproperty?</h2>
               <p className="text-gray-600 mb-8">
-                Com anos de experiência no mercado imobiliário lisboeta, oferecemos um serviço completo 
-                e personalizado para proprietários que valorizam a tranquilidade e a eficiência.
+                Com anos de experiência no mercado imobiliário lisboeta, oferecemos um serviço completo e personalizado para proprietários que valorizam tranquilidade, eficiência e confiança.
               </p>
               
               <div className="space-y-4">
@@ -135,7 +134,7 @@ const Index = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">Equipe Local</h3>
+                    <h3 className="text-lg font-semibold">Equipa Local</h3>
                     <p className="text-gray-600">Conhecemos Lisboa como a palma da nossa mão.</p>
                   </div>
                 </div>
@@ -148,7 +147,7 @@ const Index = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Disponibilidade 24/7</h3>
-                    <p className="text-gray-600">Sempre disponíveis para qualquer emergência.</p>
+                    <p className="text-gray-600">Sempre prontos para responder a qualquer emergência.</p>
                   </div>
                 </div>
                 
