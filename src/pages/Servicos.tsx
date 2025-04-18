@@ -103,7 +103,7 @@ const Servicos = () => {
         { text: "Consultoria para escolha das melhores coberturas" }
       ],
       icon: <FileCheck className="h-10 w-10 text-primary" />,
-      imageSrc: "/lovable-uploads/d20a4191-fdd9-4942-aa96-08213664d652.png",
+      imageSrc: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
       imageAlt: "Seguros imobiliários",
       reverse: true
     }
