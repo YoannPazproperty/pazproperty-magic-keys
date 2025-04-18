@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -44,22 +45,6 @@ const Servicos = () => {
       reverse: true
     },
     {
-      id: "optimizacao-fiscal",
-      title: "Optimização Fiscal",
-      description: "Oferecemos serviços especializados de optimização fiscal para proprietários de imóveis, ajudando-o a maximizar os seus benefícios fiscais de forma legal e eficiente.",
-      features: [
-        { text: "Análise detalhada da situação fiscal" },
-        { text: "Identificação de benefícios fiscais aplicáveis" },
-        { text: "Planeamento fiscal para proprietários" },
-        { text: "Assessoria na declaração de impostos" },
-        { text: "Optimização de despesas dedutíveis" }
-      ],
-      icon: <Calculator className="h-10 w-10 text-primary" />,
-      imageSrc: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-      imageAlt: "Optimização fiscal para proprietários",
-      reverse: false
-    },
-    {
       id: "consultoria",
       title: "Consultoria",
       description: "Nossos especialistas oferecem consultoria personalizada para ajudá-lo a tomar as melhores decisões sobre o seu património imobiliário em Lisboa.",
@@ -73,6 +58,22 @@ const Servicos = () => {
       icon: <Settings className="h-10 w-10 text-primary" />,
       imageSrc: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1171&q=80",
       imageAlt: "Consultoria imobiliária",
+      reverse: false
+    },
+    {
+      id: "optimizacao-fiscal",
+      title: "Optimização Fiscal",
+      description: "Oferecemos serviços especializados de optimização fiscal para proprietários de imóveis, ajudando-o a maximizar os seus benefícios fiscais de forma legal e eficiente.",
+      features: [
+        { text: "Análise detalhada da situação fiscal" },
+        { text: "Identificação de benefícios fiscais aplicáveis" },
+        { text: "Planeamento fiscal para proprietários" },
+        { text: "Assessoria na declaração de impostos" },
+        { text: "Optimização de despesas dedutíveis" }
+      ],
+      icon: <Calculator className="h-10 w-10 text-primary" />,
+      imageSrc: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
+      imageAlt: "Optimização fiscal para proprietários",
       reverse: true
     }
   ];
