@@ -93,17 +93,17 @@ const Servicos = () => {
       linkText: "Detalhes"
     },
     {
-      icon: <Calculator className="h-8 w-8 text-primary mb-4" />,
-      title: "Optimização Fiscal",
-      description: "Maximização de benefícios fiscais para proprietários.",
-      linkTo: "#optimizacao-fiscal",
-      linkText: "Detalhes"
-    },
-    {
       icon: <Settings className="h-8 w-8 text-primary mb-4" />,
       title: "Consultoria",
       description: "Aconselhamento profissional para o seu património.",
       linkTo: "#consultoria",
+      linkText: "Detalhes"
+    },
+    {
+      icon: <Calculator className="h-8 w-8 text-primary mb-4" />,
+      title: "Optimização Fiscal",
+      description: "Maximização de benefícios fiscais para proprietários.",
+      linkTo: "#optimizacao-fiscal",
       linkText: "Detalhes"
     },
     {
