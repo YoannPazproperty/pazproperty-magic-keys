@@ -26,7 +26,7 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                Gestão de Arrendamentos <span className="text-gradient">Simplificada</span> em Lisboa
+                Gestão de Arrendamentos <span className="text-gradient">Simplificada</span> em Lisboa, Grande Lisboa e Margem Sul
               </h1>
               <div className="text-xl text-gray-600 mb-8">
                 <p><em>Your keys, our responsibilities</em></p>
