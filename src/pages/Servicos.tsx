@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -103,8 +104,8 @@ const Servicos = () => {
         { text: "Consultoria para escolha das melhores coberturas" }
       ],
       icon: <FileCheck className="h-10 w-10 text-primary" />,
-      imageSrc: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-      imageAlt: "Seguros imobiliários",
+      imageSrc: "/lovable-uploads/a0732f4e-6a81-4f3c-9dc6-8a05689b0161.png",
+      imageAlt: "Seguros e proteção de imóveis",
       reverse: true
     }
   ];
