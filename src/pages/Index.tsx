@@ -64,9 +64,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Home className="h-8 w-8 text-primary" color="#ffb100" />
-                </div>
+                <Home className="h-8 w-8" color="#ffb100" />
                 <h3 className="text-xl font-bold">Gestão de Arrendamentos</h3>
               </div>
               <p className="text-gray-600 mb-4">
@@ -79,9 +77,7 @@ const Index = () => {
             
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Wrench className="h-8 w-8 text-primary" color="#ffb100" />
-                </div>
+                <Wrench className="h-8 w-8" color="#ffb100" />
                 <h3 className="text-xl font-bold">Manutenção</h3>
               </div>
               <p className="text-gray-600 mb-4">
@@ -94,9 +90,7 @@ const Index = () => {
             
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Settings className="h-8 w-8 text-primary" color="#ffb100" />
-                </div>
+                <Settings className="h-8 w-8" color="#ffb100" />
                 <h3 className="text-xl font-bold">Consultoria</h3>
               </div>
               <p className="text-gray-600 mb-4">
@@ -129,9 +123,7 @@ const Index = () => {
               <div className="space-y-4">
                 <div className="flex items-start">
                   <div className="mr-4 mt-1">
-                    <div className="bg-green-100 p-1 rounded-full">
-                      <Check className="h-5 w-5 text-green-600" color="#ffb100" />
-                    </div>
+                    <Check className="h-5 w-5" color="#ffb100" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Equipa Local</h3>
@@ -141,9 +133,7 @@ const Index = () => {
                 
                 <div className="flex items-start">
                   <div className="mr-4 mt-1">
-                    <div className="bg-green-100 p-1 rounded-full">
-                      <Check className="h-5 w-5 text-green-600" color="#ffb100" />
-                    </div>
+                    <Check className="h-5 w-5" color="#ffb100" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Disponibilidade 24/7</h3>
@@ -153,9 +143,7 @@ const Index = () => {
                 
                 <div className="flex items-start">
                   <div className="mr-4 mt-1">
-                    <div className="bg-green-100 p-1 rounded-full">
-                      <Check className="h-5 w-5 text-green-600" color="#ffb100" />
-                    </div>
+                    <Check className="h-5 w-5" color="#ffb100" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Tecnologia Avançada</h3>
@@ -165,9 +153,7 @@ const Index = () => {
                 
                 <div className="flex items-start">
                   <div className="mr-4 mt-1">
-                    <div className="bg-green-100 p-1 rounded-full">
-                      <Check className="h-5 w-5 text-green-600" color="#ffb100" />
-                    </div>
+                    <Check className="h-5 w-5" color="#ffb100" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Transparência Total</h3>
