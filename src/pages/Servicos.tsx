@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -13,8 +12,8 @@ const Servicos = () => {
   const serviceData = [
     {
       id: "gestao",
-      title: "Gestão Locativa",
-      description: "Nossa gestão locativa cobre todos os aspectos do arrendamento do seu imóvel, garantindo que você receba o máximo retorno com o mínimo de preocupações.",
+      title: "Gestão de Arrendamentos",
+      description: "Nossa gestão de arrendamentos cobre todos os aspectos do arrendamento do seu imóvel, garantindo que você receba o máximo retorno com o mínimo de preocupações.",
       features: [
         { text: "Promoção do imóvel nos principais portais e redes sociais" },
         { text: "Seleção rigorosa de inquilinos com verificação de referências" },
@@ -83,7 +82,7 @@ const Servicos = () => {
   const gridServices = [
     {
       icon: <Home className="h-8 w-8 text-primary mb-4" />,
-      title: "Gestão Locativa",
+      title: "Gestão de Arrendamentos",
       description: "Gestão completa do seu imóvel para arrendamento.",
       linkTo: "#gestao",
       linkText: "Detalhes"

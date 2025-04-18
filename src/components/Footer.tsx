@@ -51,7 +51,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link to="/servicos#gestao" className="text-gray-600 hover:text-primary transition-colors">
-                  Gestão Locativa
+                  Gestão de Arrendamentos
                 </Link>
               </li>
               <li>

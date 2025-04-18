@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -27,7 +26,7 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                Gestão Locativa <span className="text-gradient">Simplificada</span> em Lisboa
+                Gestão de Arrendamentos <span className="text-gradient">Simplificada</span> em Lisboa
               </h1>
               <div className="text-xl text-gray-600 mb-8">
                 <p><em>Your keys, our responsibilities</em></p>
@@ -69,7 +68,7 @@ const Index = () => {
               <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <Home className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-4">Gestão Locativa</h3>
+              <h3 className="text-xl font-bold mb-4">Gestão de Arrendamentos</h3>
               <p className="text-gray-600 mb-4">
                 Gerimos todo o processo, desde a promoção do imóvel, seleção de inquilinos, 
                 contratos, até à gestão diária.
