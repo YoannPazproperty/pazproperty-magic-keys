@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Home, Wrench, ClipboardCheck, Settings, Search, Shield } from "lucide-react";
+import { Home, Wrench, Calculator, Settings, Search, Shield } from "lucide-react";
 import HeroSection from "@/components/servicos/HeroSection";
 import ServiceSection from "@/components/servicos/ServiceSection";
 import ServiceGrid from "@/components/servicos/ServiceGrid";
@@ -44,19 +44,19 @@ const Servicos = () => {
       reverse: true
     },
     {
-      id: "limpeza",
-      title: "Serviços de Limpeza",
-      description: "Oferecemos serviços de limpeza profissional para garantir que o seu imóvel esteja sempre impecável, seja para novos inquilinos ou para manutenção regular.",
+      id: "optimizacao-fiscal",
+      title: "Optimização Fiscal",
+      description: "Oferecemos serviços especializados de optimização fiscal para proprietários de imóveis, ajudando-o a maximizar os seus benefícios fiscais de forma legal e eficiente.",
       features: [
-        { text: "Limpeza profunda entre inquilinos" },
-        { text: "Limpeza regular agendada" },
-        { text: "Limpeza de vidros e fachadas" },
-        { text: "Limpeza de áreas comuns em prédios" },
-        { text: "Produtos ecológicos e hipoalergénicos" }
+        { text: "Análise detalhada da situação fiscal" },
+        { text: "Identificação de benefícios fiscais aplicáveis" },
+        { text: "Planeamento fiscal para proprietários" },
+        { text: "Assessoria na declaração de impostos" },
+        { text: "Optimização de despesas dedutíveis" }
       ],
-      icon: <ClipboardCheck className="h-10 w-10 text-primary" />,
-      imageSrc: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-      imageAlt: "Serviços de limpeza",
+      icon: <Calculator className="h-10 w-10 text-primary" />,
+      imageSrc: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
+      imageAlt: "Optimização fiscal para proprietários",
       reverse: false
     },
     {
@@ -93,10 +93,10 @@ const Servicos = () => {
       linkText: "Detalhes"
     },
     {
-      icon: <ClipboardCheck className="h-8 w-8 text-primary mb-4" />,
-      title: "Limpeza",
-      description: "Serviços de limpeza profissional para o seu imóvel.",
-      linkTo: "#limpeza",
+      icon: <Calculator className="h-8 w-8 text-primary mb-4" />,
+      title: "Optimização Fiscal",
+      description: "Maximização de benefícios fiscais para proprietários.",
+      linkTo: "#optimizacao-fiscal",
       linkText: "Detalhes"
     },
     {
