@@ -74,6 +74,40 @@ const Servicos = () => {
       imageSrc: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
       imageAlt: "Optimização fiscal para proprietários",
       reverse: true
+    },
+    {
+      id: "analise-mercado",
+      title: "Análise de Mercado",
+      description: "Fornecemos análises detalhadas e insights valiosos sobre o mercado imobiliário em Lisboa, permitindo-lhe tomar decisões informadas sobre seus investimentos.",
+      features: [
+        { text: "Análise de tendências de mercado" },
+        { text: "Avaliação comparativa de propriedades" },
+        { text: "Estudos de viabilidade" },
+        { text: "Relatórios personalizados de mercado" },
+        { text: "Previsões de valorização imobiliária" },
+        { text: "Identificação de oportunidades de investimento" }
+      ],
+      icon: <Search className="h-10 w-10 text-primary" />,
+      imageSrc: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1015&q=80",
+      imageAlt: "Análise de mercado imobiliário",
+      reverse: true
+    },
+    {
+      id: "seguranca",
+      title: "Segurança",
+      description: "Garantimos a proteção e segurança do seu imóvel com soluções abrangentes e monitoramento constante, proporcionando tranquilidade total aos proprietários e inquilinos.",
+      features: [
+        { text: "Sistemas de vigilância 24/7" },
+        { text: "Controle de acesso avançado" },
+        { text: "Monitoramento remoto" },
+        { text: "Resposta rápida a emergências" },
+        { text: "Manutenção preventiva de sistemas de segurança" },
+        { text: "Relatórios de segurança periódicos" }
+      ],
+      icon: <Shield className="h-10 w-10 text-primary" />,
+      imageSrc: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
+      imageAlt: "Segurança de imóveis",
+      reverse: false
     }
   ];
 
