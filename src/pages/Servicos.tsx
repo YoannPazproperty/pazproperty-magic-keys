@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -96,14 +95,13 @@ const Servicos = () => {
     {
       id: "seguros",
       title: "Seguros",
-      description: "Oferecemos soluções completas de seguros para proteger o seu investimento imobiliário, garantindo tranquilidade e cobertura adequada para todas as suas necessidades.",
+      description: "Ajudamos na gestão de seguros associados ao seu imóvel, propondo seguros negociados tanto para o proprietário como para o inquilino.",
       features: [
-        { text: "Seguro multirriscos habitação" },
-        { text: "Seguro de condomínio" },
-        { text: "Seguro de responsabilidade civil" },
-        { text: "Seguro contra acidentes" },
-        { text: "Assistência 24/7" },
-        { text: "Gestão de sinistros" }
+        { text: "Contratação e gestão de seguros multiriscos" },
+        { text: "Seguros de proteção de renda (em caso de incumprimento)" },
+        { text: "Seguros de responsabilidade civil para inquilinos" },
+        { text: "Acompanhamento de sinistros e pedidos de indemnização" },
+        { text: "Consultoria para escolha das melhores coberturas" }
       ],
       icon: <FileCheck className="h-10 w-10 text-primary" />,
       imageSrc: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
