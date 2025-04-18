@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,6 @@ const Index = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Processar o formulário de contacto
     console.log("E-mail enviado:", email);
     setEmail("");
     alert("Obrigado pelo seu contacto! Responderemos em breve.");
@@ -239,7 +239,7 @@ const Index = () => {
           <div className="mt-8 flex justify-center">
             <Link to="/contacto" className="flex items-center text-white hover:underline">
               <Phone className="mr-2 h-5 w-5" />
-              +351 912 345 678
+              Alexa: +351 962 093 401 | Yoann: +33 6 09 95 12 84
             </Link>
           </div>
         </div>
