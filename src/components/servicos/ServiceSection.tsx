@@ -35,10 +35,12 @@ const ServiceSection = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {!reverse && (
             <div>
-              <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
-                {icon}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">
+                  {icon}
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold">{title}</h2>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">{title}</h2>
               <p className="text-lg text-gray-600 mb-6">
                 {description}
               </p>
@@ -68,10 +70,12 @@ const ServiceSection = ({
 
           {reverse && (
             <div className="order-2 lg:order-2">
-              <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
-                {icon}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center">
+                  {icon}
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold">{title}</h2>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">{title}</h2>
               <p className="text-lg text-gray-600 mb-6">
                 {description}
               </p>
