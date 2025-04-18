@@ -216,7 +216,7 @@ const Index = () => {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Pronto para simplificar a gestão do seu imóvel?</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Entre em contacto connosco hoje mesmo e descubra como podemos ajudar a maximizar o retorno do seu investimento.
+            Ligue já para nós e transforme o seu imóvel num rendimento seguro!
           </p>
           
           <form onSubmit={handleSubmit} className="max-w-md mx-auto">
