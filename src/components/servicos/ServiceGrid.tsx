@@ -1,6 +1,7 @@
 
 import React, { ReactNode } from "react";
 import ServiceCard from "./ServiceCard";
+import { ArrowRight } from "lucide-react";
 
 interface ServiceGridItem {
   icon: ReactNode;
@@ -8,6 +9,7 @@ interface ServiceGridItem {
   description: string;
   linkTo: string;
   linkText: string;
+  linkStyle?: string;
 }
 
 interface ServiceGridProps {
@@ -36,6 +38,7 @@ const ServiceGrid = ({ title, description, services }: ServiceGridProps) => {
               description={service.description}
               linkTo={service.linkTo}
               linkText={service.linkText}
+              linkStyle={service.linkStyle}
             />
           ))}
         </div>

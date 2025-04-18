@@ -9,9 +9,17 @@ interface ServiceCardProps {
   description: string;
   linkTo: string;
   linkText: string;
+  linkStyle?: string;
 }
 
-const ServiceCard = ({ icon, title, description, linkTo, linkText }: ServiceCardProps) => {
+const ServiceCard = ({ 
+  icon, 
+  title, 
+  description, 
+  linkTo, 
+  linkText,
+  linkStyle = "text-[#ffb100] hover:underline"
+}: ServiceCardProps) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-100">
       {icon}
@@ -19,7 +27,7 @@ const ServiceCard = ({ icon, title, description, linkTo, linkText }: ServiceCard
       <p className="text-gray-600 mb-4">{description}</p>
       <Link 
         to={linkTo} 
-        className="text-[#ffb100] hover:underline inline-flex items-center"
+        className={`${linkStyle} inline-flex items-center`}
       >
         {linkText} <ArrowRight className="ml-1 h-4 w-4" color="#ffb100" />
       </Link>
