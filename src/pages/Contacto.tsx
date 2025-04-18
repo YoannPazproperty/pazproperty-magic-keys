@@ -6,7 +6,7 @@ import HeroSection from "@/components/contacto/HeroSection";
 import ContactInfo from "@/components/contacto/ContactInfo";
 import BusinessHours from "@/components/contacto/BusinessHours";
 import ContactForm from "@/components/contacto/ContactForm";
-import LocationMap from "@/components/contacto/LocationMap";
+// Suppression de l'import de LocationMap
 
 const Contacto = () => {
   return (
@@ -31,7 +31,7 @@ const Contacto = () => {
         </div>
       </section>
       
-      <LocationMap />
+      {/* Suppression de <LocationMap /> */}
       
       <Footer />
     </div>
@@ -39,3 +39,4 @@ const Contacto = () => {
 };
 
 export default Contacto;
+
