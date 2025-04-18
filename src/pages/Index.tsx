@@ -63,10 +63,12 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
-                <Home className="h-8 w-8 text-primary" />
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Home className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold">Gestão de Arrendamentos</h3>
               </div>
-              <h3 className="text-xl font-bold mb-4">Gestão de Arrendamentos</h3>
               <p className="text-gray-600 mb-4">
                 Gerimos todo o processo, desde a promoção do imóvel, seleção de inquilinos, 
                 contratos, até à gestão diária.
@@ -77,10 +79,12 @@ const Index = () => {
             </div>
             
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
-                <Wrench className="h-8 w-8 text-primary" />
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Wrench className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold">Manutenção</h3>
               </div>
-              <h3 className="text-xl font-bold mb-4">Manutenção</h3>
               <p className="text-gray-600 mb-4">
                 Equipe de profissionais prontos para resolver qualquer problema de manutenção, 
                 desde pequenos reparos até renovações.
@@ -91,10 +95,12 @@ const Index = () => {
             </div>
             
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
-                <Settings className="h-8 w-8 text-primary" />
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Settings className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold">Consultoria</h3>
               </div>
-              <h3 className="text-xl font-bold mb-4">Consultoria</h3>
               <p className="text-gray-600 mb-4">
                 Aconselhamento especializado sobre o mercado imobiliário em Lisboa, oportunidades 
                 de investimento e otimização de rendimentos.
