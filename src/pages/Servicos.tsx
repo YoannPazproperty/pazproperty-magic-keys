@@ -8,7 +8,6 @@ import ServiceGrid from "@/components/servicos/ServiceGrid";
 import CTASection from "@/components/servicos/CTASection";
 
 const Servicos = () => {
-  // Updated service data with new text
   const serviceData = [
     {
       id: "gestao",
@@ -30,13 +29,13 @@ const Servicos = () => {
     {
       id: "manutencao",
       title: "Manutenção",
-      description: "Nossa equipa de profissionais qualificados está pronta para garantir que o seu imóvel esteja sempre em perfeitas condições, resolvendo problemas rapidamente.",
+      description: "Nossa equipa de profissionais qualificados está pronta para garantir que o seu imóvel se mantenha sempre em perfeitas condições, resolvendo qualquer problema com rapidez e eficiência.",
       features: [
         { text: "Serviços de emergência 24/7" },
         { text: "Manutenção preventiva e inspeções regulares" },
         { text: "Reparações gerais (canalização, eletricidade, etc.)" },
         { text: "Renovações e melhorias" },
-        { text: "Serviços de limpeza profissional" },
+        { text: "Limpezas profissionais" },
         { text: "Coordenação com técnicos e fornecedores" }
       ],
       icon: <Wrench className="h-10 w-10 text-primary" />,
@@ -78,7 +77,6 @@ const Servicos = () => {
     }
   ];
 
-  // Données pour la grille de services
   const gridServices = [
     {
       icon: <Home className="h-8 w-8 text-primary mb-4" />,
