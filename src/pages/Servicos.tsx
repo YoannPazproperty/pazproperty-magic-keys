@@ -8,17 +8,17 @@ import ServiceGrid from "@/components/servicos/ServiceGrid";
 import CTASection from "@/components/servicos/CTASection";
 
 const Servicos = () => {
-  // Données pour les sections de service
+  // Updated service data with new text
   const serviceData = [
     {
       id: "gestao",
       title: "Gestão de Arrendamentos",
-      description: "Nossa gestão de arrendamentos cobre todos os aspectos do arrendamento do seu imóvel, garantindo que você receba o máximo retorno com o mínimo de preocupações.",
+      description: "A nossa gestão de arrendamentos cobre todos os aspetos do arrendamento do seu imóvel, garantindo-lhe o máximo retorno com o mínimo de preocupações.",
       features: [
         { text: "Promoção do imóvel nos principais portais e redes sociais" },
         { text: "Seleção rigorosa de inquilinos com verificação de referências" },
-        { text: "Preparação e gestão de contratos de arrendamento" },
-        { text: "Cobrança de rendas e gestão de pagamentos" },
+        { text: "Preparação e gestão dos contratos de arrendamento" },
+        { text: "Cobrança das rendas e gestão de pagamentos" },
         { text: "Inspeções regulares ao imóvel" },
         { text: "Relatórios financeiros mensais detalhados" }
       ],
