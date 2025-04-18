@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -70,8 +71,11 @@ const Index = () => {
               <p className="text-gray-600 mb-4">
                 Gerimos todo o processo — desde a promoção do imóvel até à gestão diária, passando pela seleção de inquilinos e contratos.
               </p>
-              <Link to="/servicos#gestao" className="inline-flex items-center text-primary hover:underline">
-                Saber mais <ArrowRight className="ml-2 h-4 w-4" />
+              <Link 
+                to="/servicos#gestao" 
+                className="text-[#ffb100] hover:text-[#ffa500] inline-flex items-center"
+              >
+                Saber mais <ArrowRight className="ml-2 h-4 w-4" color="#ffb100" />
               </Link>
             </div>
             
@@ -83,8 +87,11 @@ const Index = () => {
               <p className="text-gray-600 mb-4">
                 Equipa de profissionais pronta para resolver qualquer questão de manutenção — desde pequenos reparos até grandes renovações.
               </p>
-              <Link to="/servicos#manutencao" className="inline-flex items-center text-primary hover:underline">
-                Saber mais <ArrowRight className="ml-2 h-4 w-4" />
+              <Link 
+                to="/servicos#manutencao" 
+                className="text-[#ffb100] hover:text-[#ffa500] inline-flex items-center"
+              >
+                Saber mais <ArrowRight className="ml-2 h-4 w-4" color="#ffb100" />
               </Link>
             </div>
             
@@ -96,8 +103,11 @@ const Index = () => {
               <p className="text-gray-600 mb-4">
                 Aconselhamento especializado sobre o mercado imobiliário em Lisboa, com foco em oportunidades de investimento e na otimização de rendimentos.
               </p>
-              <Link to="/servicos#consultoria" className="inline-flex items-center text-primary hover:underline">
-                Saber mais <ArrowRight className="ml-2 h-4 w-4" />
+              <Link 
+                to="/servicos#consultoria" 
+                className="text-[#ffb100] hover:text-[#ffa500] inline-flex items-center"
+              >
+                Saber mais <ArrowRight className="ml-2 h-4 w-4" color="#ffb100" />
               </Link>
             </div>
           </div>
