@@ -17,8 +17,11 @@ const ServiceCard = ({ icon, title, description, linkTo, linkText }: ServiceCard
       {icon}
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
       <p className="text-gray-600 mb-4">{description}</p>
-      <Link to={linkTo} className="text-primary hover:underline inline-flex items-center">
-        {linkText} <ArrowRight className="ml-1 h-4 w-4" />
+      <Link 
+        to={linkTo} 
+        className="text-[#ffb100] hover:underline inline-flex items-center"
+      >
+        {linkText} <ArrowRight className="ml-1 h-4 w-4" color="#ffb100" />
       </Link>
     </div>
   );
