@@ -21,32 +21,30 @@ const Index = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                Gestão de Arrendamentos <span className="text-gradient">Simplificada</span> em Lisboa, Grande Lisboa e Margem Sul
-              </h1>
-              <div className="text-xl text-gray-600 mb-8">
-                <p><em>Your keys, our responsibilities</em></p>
-                <p><em>As suas chaves, a nossa missão</em></p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className="bg-brand-blue hover:bg-primary/90">
-                  <Link to="/contacto">Fale Connosco</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link to="/servicos">Nossos Serviços</Link>
-                </Button>
-              </div>
+      <section className="relative h-[80vh] w-full">
+        <div className="absolute inset-0">
+          <img 
+            src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1296&q=80" 
+            alt="Lisboa vista panorâmica" 
+            className="w-full h-full object-cover brightness-50"
+          />
+        </div>
+        <div className="relative z-10 container mx-auto h-full flex items-center justify-center px-4">
+          <div className="text-center text-white max-w-4xl">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+              Gestão de Arrendamentos <span className="text-gradient">Simplificada</span> em Lisboa, Grande Lisboa e Margem Sul
+            </h1>
+            <div className="text-xl mb-8">
+              <p><em>Your keys, our responsibilities</em></p>
+              <p><em>As suas chaves, a nossa missão</em></p>
             </div>
-            <div className="rounded-lg overflow-hidden shadow-xl">
-              <img 
-                src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1296&q=80" 
-                alt="Lisboa vista panorâmica" 
-                className="w-full h-full object-cover"
-              />
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" className="bg-brand-blue hover:bg-primary/90">
+                <Link to="/contacto">Fale Connosco</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="bg-white/10 hover:bg-white/20 border-white">
+                <Link to="/servicos">Nossos Serviços</Link>
+              </Button>
             </div>
           </div>
         </div>
