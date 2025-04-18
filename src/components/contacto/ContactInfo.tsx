@@ -14,7 +14,8 @@ const ContactInfo = () => {
           </div>
           <div>
             <h3 className="text-xl font-semibold mb-2">Telefone</h3>
-            <p className="text-gray-600">+351 912 345 678</p>
+            <p className="text-gray-600">Alexa: +351 962 093 401</p>
+            <p className="text-gray-600">Yoann: +33 6 09 95 12 84</p>
             <p className="text-gray-500 text-sm mt-1">Seg-Sex: 9:00 - 18:00</p>
           </div>
         </div>

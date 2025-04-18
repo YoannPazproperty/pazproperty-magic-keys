@@ -15,9 +15,9 @@ const ContactInformation: React.FC = () => {
           </div>
           <div>
             <h3 className="text-lg font-semibold mb-3">Contatos de Emergência</h3>
-            <p className="text-gray-600 mb-2">Telefone: +351 912 345 678</p>
-            <p className="text-gray-600 mb-2">Email: emergencia@pazproperty.pt</p>
-            <p className="text-gray-600">Fora do horário de expediente: +351 912 987 654</p>
+            <p className="text-gray-600 mb-2">Alexa: +351 962 093 401</p>
+            <p className="text-gray-600 mb-2">Yoann: +33 6 09 95 12 84</p>
+            <p className="text-gray-600">Email: emergencia@pazproperty.pt</p>
           </div>
         </div>
       </div>
