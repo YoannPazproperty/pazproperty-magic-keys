@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Home, Wrench, Calculator, Settings, Search, Shield } from "lucide-react";
+import { Home, Wrench, Calculator, Settings, Search, FileCheck } from "lucide-react";
 import HeroSection from "@/components/servicos/HeroSection";
 import ServiceSection from "@/components/servicos/ServiceSection";
 import ServiceGrid from "@/components/servicos/ServiceGrid";
@@ -93,20 +93,20 @@ const Servicos = () => {
       reverse: false
     },
     {
-      id: "seguranca",
-      title: "Segurança",
-      description: "Garantimos a proteção e segurança do seu imóvel com soluções abrangentes e monitoramento constante, proporcionando tranquilidade total aos proprietários e inquilinos.",
+      id: "seguros",
+      title: "Seguros",
+      description: "Oferecemos soluções completas de seguros para proteger o seu investimento imobiliário, garantindo tranquilidade e cobertura adequada para todas as suas necessidades.",
       features: [
-        { text: "Sistemas de vigilância 24/7" },
-        { text: "Controle de acesso avançado" },
-        { text: "Monitoramento remoto" },
-        { text: "Resposta rápida a emergências" },
-        { text: "Manutenção preventiva de sistemas de segurança" },
-        { text: "Relatórios de segurança periódicos" }
+        { text: "Seguro multirriscos habitação" },
+        { text: "Seguro de condomínio" },
+        { text: "Seguro de responsabilidade civil" },
+        { text: "Seguro contra acidentes" },
+        { text: "Assistência 24/7" },
+        { text: "Gestão de sinistros" }
       ],
-      icon: <Shield className="h-10 w-10 text-primary" />,
+      icon: <FileCheck className="h-10 w-10 text-primary" />,
       imageSrc: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
-      imageAlt: "Segurança de imóveis",
+      imageAlt: "Seguros imobiliários",
       reverse: true
     }
   ];
@@ -144,15 +144,15 @@ const Servicos = () => {
       icon: <Search className="h-8 w-8 text-primary mb-4" />,
       title: "Análise de Mercado",
       description: "Estudos detalhados sobre o mercado imobiliário em Lisboa.",
-      linkTo: "/contacto",
-      linkText: "Contactar"
+      linkTo: "#analise-mercado",
+      linkText: "Detalhes"
     },
     {
-      icon: <Shield className="h-8 w-8 text-primary mb-4" />,
-      title: "Segurança",
-      description: "Sistemas de segurança e vigilância para o seu imóvel.",
-      linkTo: "/contacto",
-      linkText: "Contactar"
+      icon: <FileCheck className="h-8 w-8 text-primary mb-4" />,
+      title: "Seguros",
+      description: "Proteção completa para o seu investimento imobiliário.",
+      linkTo: "#seguros",
+      linkText: "Detalhes"
     }
   ];
 
