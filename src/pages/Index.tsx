@@ -70,8 +70,7 @@ const Index = () => {
                 <h3 className="text-xl font-bold">Gestão de Arrendamentos</h3>
               </div>
               <p className="text-gray-600 mb-4">
-                Gerimos todo o processo, desde a promoção do imóvel, seleção de inquilinos, 
-                contratos, até à gestão diária.
+                Gerimos todo o processo — desde a promoção do imóvel até à gestão diária, passando pela seleção de inquilinos e contratos.
               </p>
               <Link to="/servicos#gestao" className="inline-flex items-center text-primary hover:underline">
                 Saber mais <ArrowRight className="ml-2 h-4 w-4" />
@@ -86,8 +85,7 @@ const Index = () => {
                 <h3 className="text-xl font-bold">Manutenção</h3>
               </div>
               <p className="text-gray-600 mb-4">
-                Equipe de profissionais prontos para resolver qualquer problema de manutenção, 
-                desde pequenos reparos até renovações.
+                Equipa de profissionais pronta para resolver qualquer questão de manutenção — desde pequenos reparos até grandes renovações.
               </p>
               <Link to="/servicos#manutencao" className="inline-flex items-center text-primary hover:underline">
                 Saber mais <ArrowRight className="ml-2 h-4 w-4" />
@@ -102,8 +100,7 @@ const Index = () => {
                 <h3 className="text-xl font-bold">Consultoria</h3>
               </div>
               <p className="text-gray-600 mb-4">
-                Aconselhamento especializado sobre o mercado imobiliário em Lisboa, oportunidades 
-                de investimento e otimização de rendimentos.
+                Aconselhamento especializado sobre o mercado imobiliário em Lisboa, com foco em oportunidades de investimento e na otimização de rendimentos.
               </p>
               <Link to="/servicos#consultoria" className="inline-flex items-center text-primary hover:underline">
                 Saber mais <ArrowRight className="ml-2 h-4 w-4" />
