@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -10,8 +9,7 @@ const TeamSection = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Nossa Equipa</h2>
           <p className="text-xl text-gray-600">
-            Conheça os profissionais dedicados que fazem da Pazproperty a empresa de gestão 
-            locativa de referência em Lisboa.
+            Conheça os profissionais dedicados que tornam a PazProperty uma referência em gestão de arrendamentos em Lisboa — com proximidade, experiência e paixão pelo que fazem.
           </p>
         </div>
         
