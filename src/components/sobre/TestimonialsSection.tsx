@@ -8,8 +8,8 @@ const TestimonialsSection = () => {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">O Que Dizem os Nossos Clientes</h2>
           <p className="text-xl text-gray-600">
-            A satisfação dos nossos clientes é o nosso maior orgulho. Conheça algumas das opiniões 
-            de quem confia na Pazproperty para a gestão dos seus imóveis.
+            A satisfação dos nossos clientes é o nosso maior motivo de orgulho.
+            Conheça algumas opiniões de quem já confia na PazProperty para gerir o seu imóvel com tranquilidade, proximidade e profissionalismo.
           </p>
         </div>
         
