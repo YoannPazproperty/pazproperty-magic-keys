@@ -19,12 +19,12 @@ const TeamSection = () => {
             <div className="h-64 overflow-hidden">
               <img 
                 src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=761&q=80" 
-                alt="Ana Silva" 
+                alt="Alexa Uzzan" 
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-1">Ana Silva</h3>
+              <h3 className="text-xl font-bold mb-1">Alexa Uzzan</h3>
               <p className="text-primary font-medium mb-4">CEO & Fundadora</p>
               <p className="text-gray-600">
                 Com mais de 15 anos de experiência no mercado imobiliário lisboeta, Ana fundou a 
@@ -37,12 +37,12 @@ const TeamSection = () => {
             <div className="h-64 overflow-hidden">
               <img 
                 src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
-                alt="Miguel Santos" 
+                alt="Yoann Uzzan" 
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-1">Miguel Santos</h3>
+              <h3 className="text-xl font-bold mb-1">Yoann Uzzan</h3>
               <p className="text-primary font-medium mb-4">Diretor de Operações</p>
               <p className="text-gray-600">
                 Miguel coordena toda a equipa operacional, garantindo que cada propriedade 
@@ -63,3 +63,4 @@ const TeamSection = () => {
 };
 
 export default TeamSection;
+
