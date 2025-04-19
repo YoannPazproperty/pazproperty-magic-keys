@@ -1,0 +1,82 @@
+
+import React from 'react';
+
+const TestimonialsSection = () => {
+  return (
+    <section className="py-20">
+      <div className="container mx-auto px-4">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">O Que Dizem os Nossos Clientes</h2>
+          <p className="text-xl text-gray-600">
+            A satisfação dos nossos clientes é o nosso maior orgulho. Conheça algumas das opiniões 
+            de quem confia na Pazproperty para a gestão dos seus imóveis.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-100">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
+                <img 
+                  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
+                  alt="João Pereira" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="font-bold">João Pereira</h3>
+                <p className="text-gray-600 text-sm">Proprietário em Alfama</p>
+              </div>
+            </div>
+            <p className="text-gray-600 italic">
+              "Desde que entreguei a gestão do meu apartamento à Pazproperty, a minha vida mudou. 
+              Não tenho de me preocupar com nada e a rentabilidade aumentou significativamente."
+            </p>
+          </div>
+          
+          <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-100">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
+                <img 
+                  src="https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=689&q=80" 
+                  alt="Maria Costa" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="font-bold">Maria Costa</h3>
+                <p className="text-gray-600 text-sm">Proprietária em Belém</p>
+              </div>
+            </div>
+            <p className="text-gray-600 italic">
+              "A equipa da Pazproperty é extremamente profissional e atenciosa. Sempre que surge 
+              algum problema, eles resolvem rapidamente e com eficiência. Recomendo vivamente."
+            </p>
+          </div>
+          
+          <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-100">
+            <div className="flex items-center mb-6">
+              <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
+                <img 
+                  src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
+                  alt="Pedro Oliveira" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="font-bold">Pedro Oliveira</h3>
+                <p className="text-gray-600 text-sm">Proprietário no Chiado</p>
+              </div>
+            </div>
+            <p className="text-gray-600 italic">
+              "Como proprietário que vive no estrangeiro, a Pazproperty é os meus olhos e mãos em 
+              Lisboa. O nível de detalhe nos relatórios mensais é impressionante."
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default TestimonialsSection;
