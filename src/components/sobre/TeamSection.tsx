@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -43,7 +42,7 @@ const TeamSection = () => {
             </div>
             <div className="p-6">
               <h3 className="text-xl font-bold mb-1">Yoann Uzzan</h3>
-              <p className="text-primary font-medium mb-4">Diretor de Operações</p>
+              <p className="text-primary font-medium mb-4">Co-fundador da PazProperty · Especialista em inovação imobiliária</p>
               <p className="text-gray-600">
                 Miguel coordena toda a equipa operacional, garantindo que cada propriedade 
                 receba o nível de serviço excepcional que a Pazproperty promete.
@@ -63,4 +62,3 @@ const TeamSection = () => {
 };
 
 export default TeamSection;
-
