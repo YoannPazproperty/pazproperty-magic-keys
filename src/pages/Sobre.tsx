@@ -70,8 +70,7 @@ const Sobre = () => {
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-6">Nossa Missão e Valores</h2>
             <p className="text-xl text-gray-600">
-              Estamos comprometidos em transformar a gestão imobiliária em Lisboa, oferecendo tranquilidade 
-              e rentabilidade aos proprietários através de serviços inovadores e confiáveis.
+              Transformar a gestão de imóveis em Lisboa numa experiência simples, segura e rentável — com proximidade, transparência e eficiência.
             </p>
           </div>
           
