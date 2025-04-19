@@ -46,8 +46,7 @@ const MissionSection = () => {
               <h3 className="text-xl font-bold">Personalização</h3>
             </div>
             <p className="text-gray-600">
-              Reconhecemos que cada propriedade e proprietário têm necessidades únicas, 
-              e adaptamos os nossos serviços para atender a essas necessidades específicas.
+              Adaptamos os nossos serviços a cada imóvel e a cada cliente — porque nenhuma gestão deve ser igual à outra.
             </p>
           </div>
         </div>
@@ -57,3 +56,4 @@ const MissionSection = () => {
 };
 
 export default MissionSection;
+
