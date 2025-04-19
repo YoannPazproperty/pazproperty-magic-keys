@@ -9,7 +9,7 @@ const ContactInfo = () => {
       
       <div className="space-y-8">
         <div className="flex items-start">
-          <div className="mt-1 mr-4 bg-primary/10 p-3 rounded-full">
+          <div className="mt-1 mr-4">
             <Phone className="h-6 w-6 text-[#ffb100]" />
           </div>
           <div>
@@ -21,7 +21,7 @@ const ContactInfo = () => {
         </div>
         
         <div className="flex items-start">
-          <div className="mt-1 mr-4 bg-primary/10 p-3 rounded-full">
+          <div className="mt-1 mr-4">
             <Mail className="h-6 w-6 text-[#ffb100]" />
           </div>
           <div>
@@ -32,7 +32,7 @@ const ContactInfo = () => {
         </div>
         
         <div className="flex items-start">
-          <div className="mt-1 mr-4 bg-primary/10 p-3 rounded-full">
+          <div className="mt-1 mr-4">
             <MapPin className="h-6 w-6 text-[#ffb100]" />
           </div>
           <div>
