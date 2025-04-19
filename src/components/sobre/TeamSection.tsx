@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -13,7 +14,7 @@ const TeamSection = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="h-64 overflow-hidden">
               <img 
@@ -46,24 +47,6 @@ const TeamSection = () => {
               <p className="text-gray-600">
                 Miguel coordena toda a equipa operacional, garantindo que cada propriedade 
                 receba o nível de serviço excepcional que a Pazproperty promete.
-              </p>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="h-64 overflow-hidden">
-              <img 
-                src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
-                alt="Sofia Martins" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-6">
-              <h3 className="text-xl font-bold mb-1">Sofia Martins</h3>
-              <p className="text-primary font-medium mb-4">Gestora de Clientes</p>
-              <p className="text-gray-600">
-                Sofia é o ponto de contacto principal para os nossos clientes, assegurando uma 
-                comunicação clara e eficiente em todos os momentos.
               </p>
             </div>
           </div>
