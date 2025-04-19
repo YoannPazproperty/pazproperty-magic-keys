@@ -19,13 +19,13 @@ const TestimonialsSection = () => {
               <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
                 <img 
                   src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
-                  alt="João Pereira" 
+                  alt="João M." 
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
-                <h3 className="font-bold">João Pereira</h3>
-                <p className="text-gray-600 text-sm">Proprietário em Alfama</p>
+                <h3 className="font-bold">João M.</h3>
+                <p className="text-gray-600 text-sm">Lisboa</p>
               </div>
             </div>
             <p className="text-gray-600 italic">
@@ -39,13 +39,13 @@ const TestimonialsSection = () => {
               <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
                 <img 
                   src="https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=689&q=80" 
-                  alt="Maria Costa" 
+                  alt="Claire B." 
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
-                <h3 className="font-bold">Maria Costa</h3>
-                <p className="text-gray-600 text-sm">Proprietária em Belém</p>
+                <h3 className="font-bold">Claire B.</h3>
+                <p className="text-gray-600 text-sm">Paris / Lisboa</p>
               </div>
             </div>
             <p className="text-gray-600 italic">
@@ -59,13 +59,13 @@ const TestimonialsSection = () => {
               <div className="w-12 h-12 rounded-full overflow-hidden mr-4">
                 <img 
                   src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
-                  alt="Pedro Oliveira" 
+                  alt="Tiago R." 
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
-                <h3 className="font-bold">Pedro Oliveira</h3>
-                <p className="text-gray-600 text-sm">Proprietário no Chiado</p>
+                <h3 className="font-bold">Tiago R.</h3>
+                <p className="text-gray-600 text-sm">Investidor</p>
               </div>
             </div>
             <p className="text-gray-600 italic">
@@ -80,3 +80,4 @@ const TestimonialsSection = () => {
 };
 
 export default TestimonialsSection;
+
