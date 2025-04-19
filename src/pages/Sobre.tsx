@@ -81,8 +81,7 @@ const Sobre = () => {
               </div>
               <h3 className="text-xl font-bold mb-4">Integridade</h3>
               <p className="text-gray-600">
-                Atuamos com total transparência e honestidade em todas as nossas interações, 
-                construindo relações de confiança duradouras com os nossos clientes.
+                Agimos com transparência e honestidade, construindo relações de confiança duradouras.
               </p>
             </div>
             
