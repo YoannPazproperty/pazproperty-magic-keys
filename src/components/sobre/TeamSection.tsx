@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -26,8 +27,11 @@ const TeamSection = () => {
               <h3 className="text-xl font-bold mb-1">Alexa Uzzan</h3>
               <p className="text-primary font-medium mb-4">Co-fundadora da PazProperty · Consultora imobiliária internacional</p>
               <p className="text-gray-600">
-                Com mais de 15 anos de experiência no mercado imobiliário lisboeta, Ana fundou a 
-                Pazproperty com a visão de revolucionar a gestão locativa na cidade.
+                Francesa de origem, com um percurso internacional, trouxe para o mercado imobiliário português a minha paixão pelo serviço ao cliente, visão estratégica e atenção ao detalhe.
+                Depois de experiências na hotelaria e no empreendedorismo, dedico-me hoje a acompanhar cada cliente com proximidade e total dedicação — seja para comprar, vender ou investir.
+                Foi no contacto diário com proprietários que nasceu a PazProperty: uma solução de gestão pensada para quem quer rentabilizar os seus imóveis com tranquilidade.
+                A PazProperty nasceu para simplificar a vida dos proprietários, com um serviço completo, transparente e humano.
+                Trabalho com clientes de várias origens, em Lisboa e arredores, e estou sempre disponível para ajudar.
               </p>
             </div>
           </div>
@@ -44,8 +48,11 @@ const TeamSection = () => {
               <h3 className="text-xl font-bold mb-1">Yoann Uzzan</h3>
               <p className="text-primary font-medium mb-4">Co-fundador da PazProperty · Especialista em inovação imobiliária</p>
               <p className="text-gray-600">
-                Miguel coordena toda a equipa operacional, garantindo que cada propriedade 
-                receba o nível de serviço excepcional que a Pazproperty promete.
+                Com mais de 27 anos de experiência no setor imobiliário, acompanhei de perto a evolução tecnológica das agências e das ferramentas de gestão em França.
+                Sou responsável pela transformação digital do maior grupo imobiliário francês, onde lidero a renovação completa do seu ecossistema tecnológico.
+                Apaixonado por inovação e eficiência, decidi cofundar a PazProperty para aplicar esse know-how à gestão de imóveis em Lisboa — com processos claros, tecnologia inteligente e soluções à medida.
+                Na PazProperty, contribuo com uma visão estratégica e uma abordagem orientada para resultados, sempre com foco no cliente.
+                Domino o português, o francês e o inglês, e trabalho para que cada proprietário tenha total confiança na gestão do seu património.
               </p>
             </div>
           </div>
@@ -62,3 +69,4 @@ const TeamSection = () => {
 };
 
 export default TeamSection;
+
