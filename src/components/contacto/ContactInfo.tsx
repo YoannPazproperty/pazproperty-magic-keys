@@ -10,7 +10,7 @@ const ContactInfo = () => {
       <div className="space-y-8">
         <div className="flex items-start">
           <div className="mt-1 mr-4 bg-primary/10 p-3 rounded-full">
-            <Phone className="h-6 w-6 text-primary" />
+            <Phone className="h-6 w-6 text-[#ffb100]" />
           </div>
           <div>
             <h3 className="text-xl font-semibold mb-2">Telefone</h3>
@@ -22,7 +22,7 @@ const ContactInfo = () => {
         
         <div className="flex items-start">
           <div className="mt-1 mr-4 bg-primary/10 p-3 rounded-full">
-            <Mail className="h-6 w-6 text-primary" />
+            <Mail className="h-6 w-6 text-[#ffb100]" />
           </div>
           <div>
             <h3 className="text-xl font-semibold mb-2">Email</h3>
@@ -33,7 +33,7 @@ const ContactInfo = () => {
         
         <div className="flex items-start">
           <div className="mt-1 mr-4 bg-primary/10 p-3 rounded-full">
-            <MapPin className="h-6 w-6 text-primary" />
+            <MapPin className="h-6 w-6 text-[#ffb100]" />
           </div>
           <div>
             <h3 className="text-xl font-semibold mb-2">Morada</h3>
