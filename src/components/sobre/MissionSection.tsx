@@ -16,8 +16,8 @@ const MissionSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Shield className="h-8 w-8 text-primary" />
+              <div className="w-14 h-14 bg-[#ffb100]/10 rounded-lg flex items-center justify-center">
+                <Shield className="h-8 w-8 text-[#ffb100]" />
               </div>
               <h3 className="text-xl font-bold">Integridade</h3>
             </div>
@@ -28,8 +28,8 @@ const MissionSection = () => {
           
           <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Award className="h-8 w-8 text-primary" />
+              <div className="w-14 h-14 bg-[#ffb100]/10 rounded-lg flex items-center justify-center">
+                <Award className="h-8 w-8 text-[#ffb100]" />
               </div>
               <h3 className="text-xl font-bold">Excelência</h3>
             </div>
@@ -40,8 +40,8 @@ const MissionSection = () => {
           
           <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Users className="h-8 w-8 text-primary" />
+              <div className="w-14 h-14 bg-[#ffb100]/10 rounded-lg flex items-center justify-center">
+                <Users className="h-8 w-8 text-[#ffb100]" />
               </div>
               <h3 className="text-xl font-bold">Personalização</h3>
             </div>
@@ -56,4 +56,3 @@ const MissionSection = () => {
 };
 
 export default MissionSection;
-
