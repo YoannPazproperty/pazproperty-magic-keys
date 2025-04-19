@@ -95,8 +95,7 @@ const Sobre = () => {
                 <h3 className="text-xl font-bold">Excelência</h3>
               </div>
               <p className="text-gray-600">
-                Buscamos constantemente a excelência em tudo o que fazemos, oferecendo serviços 
-                de alta qualidade que superam as expectativas dos nossos clientes.
+                Procuramos sempre a máxima qualidade, superando as expectativas em cada detalhe.
               </p>
             </div>
             
