@@ -24,7 +24,7 @@ const TeamSection = () => {
             </div>
             <div className="p-6">
               <h3 className="text-xl font-bold mb-1">Alexa Uzzan</h3>
-              <p className="text-primary font-medium mb-4">CEO & Fundadora</p>
+              <p className="text-primary font-medium mb-4">Co-fundadora da PazProperty · Consultora imobiliária internacional</p>
               <p className="text-gray-600">
                 Com mais de 15 anos de experiência no mercado imobiliário lisboeta, Ana fundou a 
                 Pazproperty com a visão de revolucionar a gestão locativa na cidade.
