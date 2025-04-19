@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -39,7 +38,7 @@ const TeamSection = () => {
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="h-64 overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80" 
+                src="/lovable-uploads/fc706da8-2663-498a-8b87-e0644ba41709.png" 
                 alt="Yoann Uzzan" 
                 className="w-full h-full object-cover"
               />
@@ -69,4 +68,3 @@ const TeamSection = () => {
 };
 
 export default TeamSection;
-
