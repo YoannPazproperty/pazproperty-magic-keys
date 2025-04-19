@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const TestimonialsSection = () => {
@@ -29,8 +28,7 @@ const TestimonialsSection = () => {
               </div>
             </div>
             <p className="text-gray-600 italic">
-              "Desde que entreguei a gestão do meu apartamento à Pazproperty, a minha vida mudou. 
-              Não tenho de me preocupar com nada e a rentabilidade aumentou significativamente."
+              "Com a PazProperty deixei de me preocupar com chamadas de última hora ou reparações inesperadas. A equipa trata de tudo com profissionalismo e rapidez. Finalmente sinto que o meu imóvel está mesmo bem entregue."
             </p>
           </div>
           
@@ -49,8 +47,7 @@ const TestimonialsSection = () => {
               </div>
             </div>
             <p className="text-gray-600 italic">
-              "A equipa da Pazproperty é extremamente profissional e atenciosa. Sempre que surge 
-              algum problema, eles resolvem rapidamente e com eficiência. Recomendo vivamente."
+              "Vivo em França e tenho um apartamento arrendado em Lisboa. Antes da PazProperty, gerir tudo à distância era um pesadelo. Agora recebo relatórios mensais, tudo funciona, e sei que posso confiar plenamente."
             </p>
           </div>
           
@@ -69,8 +66,7 @@ const TestimonialsSection = () => {
               </div>
             </div>
             <p className="text-gray-600 italic">
-              "Como proprietário que vive no estrangeiro, a Pazproperty é os meus olhos e mãos em 
-              Lisboa. O nível de detalhe nos relatórios mensais é impressionante."
+              "Tenho um imóvel em Lisboa e precisava de uma gestão eficiente e transparente. A Alexa e o Yoann entendem realmente o que é ser proprietário — e tratam de tudo como se fossem os donos. Recomendo sem hesitar."
             </p>
           </div>
         </div>
@@ -80,4 +76,3 @@ const TestimonialsSection = () => {
 };
 
 export default TestimonialsSection;
-
