@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -103,7 +104,7 @@ const Servicos = () => {
         { text: "Consultoria para escolha das melhores coberturas" }
       ],
       icon: <FileCheck className="h-10 w-10 text-primary" />,
-      imageSrc: "/lovable-uploads/b9db3fa5-8135-4c48-a0d4-dfa14b7907fa.png",
+      imageSrc: "/lovable-uploads/f127fcb8-c9b4-434e-850b-782d96e50ad7.png", // Updated image source
       imageAlt: "Seguros imobiliários e proteção de propriedades",
       reverse: true
     }
@@ -202,3 +203,4 @@ const Servicos = () => {
 };
 
 export default Servicos;
+
