@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -104,7 +103,7 @@ const Servicos = () => {
         { text: "Consultoria para escolha das melhores coberturas" }
       ],
       icon: <FileCheck className="h-10 w-10 text-primary" />,
-      imageSrc: "/lovable-uploads/f127fcb8-c9b4-434e-850b-782d96e50ad7.png", // Updated image source
+      imageSrc: "/lovable-uploads/800c90ed-ca05-45d2-b607-bea84ece7d1d.png",
       imageAlt: "Seguros imobiliários e proteção de propriedades",
       reverse: true
     }
@@ -167,7 +166,6 @@ const Servicos = () => {
       
       <HeroSection />
       
-      {/* Service Sections */}
       {serviceData.map((service) => (
         <ServiceSection
           key={service.id}
@@ -182,14 +180,12 @@ const Servicos = () => {
         />
       ))}
       
-      {/* All Services Grid */}
       <ServiceGrid
         title="Todos os Nossos Serviços"
         description="Conheça a gama completa de serviços que oferecemos para garantir uma gestão imobiliária sem complicações."
         services={gridServices}
       />
       
-      {/* CTA Section */}
       <CTASection
         title="Pronto para começar?"
         description="Entre em contacto connosco para discutir as suas necessidades e como podemos ajudar a maximizar o valor do seu imóvel em Lisboa."
@@ -203,4 +199,3 @@ const Servicos = () => {
 };
 
 export default Servicos;
-
