@@ -1,0 +1,154 @@
+import { Home, Wrench, Calculator, Settings, Search, FileCheck } from "lucide-react";
+import { ServiceDataItem, GridServiceItem } from "./types";
+
+export const serviceData: ServiceDataItem[] = [
+  {
+    id: "gestao",
+    title: "Gestão de Arrendamentos",
+    description: "A nossa gestão de arrendamentos cobre todos os aspetos do arrendamento do seu imóvel, garantindo-lhe o máximo retorno com o mínimo de preocupações.",
+    features: [
+      { text: "Promoção do imóvel nos principais portais e redes sociais" },
+      { text: "Seleção rigorosa de inquilinos com verificação de referências" },
+      { text: "Preparação e gestão dos contratos de arrendamento" },
+      { text: "Cobrança das rendas e gestão de pagamentos" },
+      { text: "Inspeções regulares ao imóvel" },
+      { text: "Relatórios financeiros mensais detalhados" }
+    ],
+    icon: <Home className="h-10 w-10 text-primary" />,
+    imageSrc: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1296&q=80",
+    imageAlt: "Gestão locativa em Lisboa",
+    reverse: false
+  },
+  {
+    id: "manutencao",
+    title: "Manutenção",
+    description: "Nossa equipa de profissionais qualificados está pronta para garantir que o seu imóvel se mantenha sempre em perfeitas condições, resolvendo qualquer problema com rapidez e eficiência.",
+    features: [
+      { text: "Serviços de emergência 24/7" },
+      { text: "Manutenção preventiva e inspeções regulares" },
+      { text: "Reparações gerais (canalização, eletricidade, etc.)" },
+      { text: "Renovações e melhorias" },
+      { text: "Limpezas profissionais" },
+      { text: "Coordenação com técnicos e fornecedores" }
+    ],
+    icon: <Wrench className="h-10 w-10 text-primary" />,
+    imageSrc: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
+    imageAlt: "Manutenção de imóveis",
+    reverse: true
+  },
+  {
+    id: "consultoria",
+    title: "Consultoria",
+    description: "Nossos especialistas oferecem consultoria personalizada para ajudá-lo a tomar as melhores decisões sobre o seu património imobiliário em Lisboa.",
+    features: [
+      { text: "Análise de mercado e avaliação de propriedades" },
+      { text: "Estratégias de otimização de rendimento" },
+      { text: "Aconselhamento sobre investimentos imobiliários" },
+      { text: "Orientação sobre regulamentos e legislação" },
+      { text: "Planeamento fiscal para proprietários" }
+    ],
+    icon: <Settings className="h-10 w-10 text-primary" />,
+    imageSrc: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1171&q=80",
+    imageAlt: "Consultoria imobiliária",
+    reverse: false
+  },
+  {
+    id: "optimizacao-fiscal",
+    title: "Optimização Fiscal",
+    description: "Oferecemos serviços especializados de optimização fiscal para proprietários de imóveis, ajudando-o a maximizar os seus benefícios fiscais de forma legal e eficiente.",
+    features: [
+      { text: "Análise detalhada da situação fiscal" },
+      { text: "Identificação de benefícios fiscais aplicáveis" },
+      { text: "Planeamento fiscal para proprietários" },
+      { text: "Assessoria na declaração de impostos" },
+      { text: "Optimização de despesas dedutíveis" }
+    ],
+    icon: <Calculator className="h-10 w-10 text-primary" />,
+    imageSrc: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
+    imageAlt: "Optimização fiscal para proprietários",
+    reverse: true
+  },
+  {
+    id: "analise-mercado",
+    title: "Análise de Mercado",
+    description: "Realizamos estudos aprofundados sobre o mercado imobiliário em Lisboa, fornecendo dados e insights que ajudam os proprietários a tomar decisões informadas e estratégicas sobre os seus imóveis.",
+    features: [
+      { text: "Avaliação comparativa de imóveis na zona" },
+      { text: "Acompanhamento das tendências de preços e procura" },
+      { text: "Análise do potencial de valorização a médio e longo prazo" },
+      { text: "Identificação das melhores zonas para investimento" },
+      { text: "Relatórios personalizados com base no seu perfil de património" }
+    ],
+    icon: <Search className="h-10 w-10 text-primary" />,
+    imageSrc: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1015&q=80",
+    imageAlt: "Análise de mercado imobiliário",
+    reverse: false
+  },
+  {
+    id: "seguros",
+    title: "Seguros",
+    description: "Ajudamos na gestão de seguros associados ao seu imóvel, propondo seguros negociados tanto para o proprietário como para o inquilino.",
+    features: [
+      { text: "Contratação e gestão de seguros multiriscos" },
+      { text: "Seguros de proteção de renda (em caso de incumprimento)" },
+      { text: "Seguros de responsabilidade civil para inquilinos" },
+      { text: "Acompanhamento de sinistros e pedidos de indemnização" },
+      { text: "Consultoria para escolha das melhores coberturas" }
+    ],
+    icon: <FileCheck className="h-10 w-10 text-primary" />,
+    imageSrc: "/lovable-uploads/800c90ed-ca05-45d2-b607-bea84ece7d1d.png",
+    imageAlt: "Seguros imobiliários e proteção de propriedades",
+    reverse: true
+  }
+];
+
+export const gridServices: GridServiceItem[] = [
+  {
+    icon: <Home className="h-8 w-8 text-primary mb-4" />,
+    title: "Gestão de Arrendamentos",
+    description: "Gestão completa do seu imóvel para arrendamento.",
+    linkTo: "#gestao",
+    linkText: "Saber mais",
+    linkStyle: "text-[#ffb100] hover:text-[#ffa500]"
+  },
+  {
+    icon: <Wrench className="h-8 w-8 text-primary mb-4" />,
+    title: "Manutenção",
+    description: "Serviços de manutenção e reparação para o seu imóvel.",
+    linkTo: "#manutencao",
+    linkText: "Saber mais",
+    linkStyle: "text-[#ffb100] hover:text-[#ffa500]"
+  },
+  {
+    icon: <Settings className="h-8 w-8 text-primary mb-4" />,
+    title: "Consultoria",
+    description: "Aconselhamento profissional para o seu património.",
+    linkTo: "#consultoria",
+    linkText: "Saber mais",
+    linkStyle: "text-[#ffb100] hover:text-[#ffa500]"
+  },
+  {
+    icon: <Calculator className="h-8 w-8 text-primary mb-4" />,
+    title: "Optimização Fiscal",
+    description: "Maximização de benefícios fiscais para proprietários.",
+    linkTo: "#optimizacao-fiscal",
+    linkText: "Saber mais",
+    linkStyle: "text-[#ffb100] hover:text-[#ffa500]"
+  },
+  {
+    icon: <Search className="h-8 w-8 text-primary mb-4" />,
+    title: "Análise de Mercado",
+    description: "Estudos detalhados sobre o mercado imobiliário em Lisboa.",
+    linkTo: "#analise-mercado",
+    linkText: "Saber mais",
+    linkStyle: "text-[#ffb100] hover:text-[#ffa500]"
+  },
+  {
+    icon: <FileCheck className="h-8 w-8 text-primary mb-4" />,
+    title: "Seguros",
+    description: "Proteção completa para o seu investimento imobiliário.",
+    linkTo: "#seguros",
+    linkText: "Saber mais",
+    linkStyle: "text-[#ffb100] hover:text-[#ffa500]"
+  }
+];
