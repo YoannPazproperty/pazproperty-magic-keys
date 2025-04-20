@@ -1,9 +1,9 @@
-
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 const Footer = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const currentYear = new Date().getFullYear();
 
@@ -16,6 +16,11 @@ const Footer = () => {
       }
     }
   }, [location]);
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  };
 
   return (
     <footer className="bg-gray-50 border-t border-gray-100 pt-16 pb-8">
@@ -38,24 +43,36 @@ const Footer = () => {
             <h3 className="font-medium text-gray-900 mb-4">Navegação</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-gray-600 hover:text-primary transition-colors">
+                <button 
+                  onClick={() => handleNavigation("/")} 
+                  className="text-gray-600 hover:text-primary transition-colors"
+                >
                   Início
-                </Link>
+                </button>
               </li>
               <li>
-                <Link to="/servicos" className="text-gray-600 hover:text-primary transition-colors">
+                <button 
+                  onClick={() => handleNavigation("/servicos")} 
+                  className="text-gray-600 hover:text-primary transition-colors"
+                >
                   Serviços
-                </Link>
+                </button>
               </li>
               <li>
-                <Link to="/propriedades" className="text-gray-600 hover:text-primary transition-colors">
+                <button 
+                  onClick={() => handleNavigation("/propriedades")} 
+                  className="text-gray-600 hover:text-primary transition-colors"
+                >
                   Propriedades
-                </Link>
+                </button>
               </li>
               <li>
-                <Link to="/sobre" className="text-gray-600 hover:text-primary transition-colors">
+                <button 
+                  onClick={() => handleNavigation("/sobre")} 
+                  className="text-gray-600 hover:text-primary transition-colors"
+                >
                   Sobre Nós
-                </Link>
+                </button>
               </li>
             </ul>
           </div>
