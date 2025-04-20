@@ -1,7 +1,21 @@
+
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 const Footer = () => {
+  const location = useLocation();
   const currentYear = new Date().getFullYear();
+
+  // Scroll to section if URL contains a hash
+  useEffect(() => {
+    if (location.hash) {
+      const element = document.getElementById(location.hash.slice(1));
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [location]);
 
   return (
     <footer className="bg-gray-50 border-t border-gray-100 pt-16 pb-8">
