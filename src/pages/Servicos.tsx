@@ -6,7 +6,7 @@ import HeroSection from "@/components/servicos/HeroSection";
 import ServiceSection from "@/components/servicos/ServiceSection";
 import ServiceGrid from "@/components/servicos/ServiceGrid";
 import CTASection from "@/components/servicos/CTASection";
-import { serviceData, gridServices } from "@/components/servicos/serviceData";
+import { serviceData, gridServices } from "@/components/servicos/services";
 
 const Servicos = () => {
   return (
