@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Home, Wrench, Settings, Phone, Check } from "lucide-react";
@@ -9,12 +8,18 @@ import Footer from "@/components/Footer";
 
 const Index = () => {
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("E-mail enviado:", email);
     setEmail("");
     alert("Obrigado pelo seu contacto! Responderemos em breve.");
+  };
+
+  const handleServiceNavigation = (path: string) => {
+    navigate(path);
+    window.scrollTo(0, 0);
   };
 
   return (
@@ -71,12 +76,12 @@ const Index = () => {
               <p className="text-gray-600 mb-4">
                 Gerimos todo o processo — desde a promoção do imóvel até à gestão diária, passando pela seleção de inquilinos e contratos.
               </p>
-              <Link 
-                to="/servicos#gestao" 
+              <button 
+                onClick={() => handleServiceNavigation("/servicos#gestao")} 
                 className="text-[#ffb100] hover:text-[#ffa500] inline-flex items-center"
               >
                 Saber mais <ArrowRight className="ml-2 h-4 w-4" color="#ffb100" />
-              </Link>
+              </button>
             </div>
             
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
@@ -87,12 +92,12 @@ const Index = () => {
               <p className="text-gray-600 mb-4">
                 Equipa de profissionais pronta para resolver qualquer questão de manutenção — desde pequenos reparos até grandes renovações.
               </p>
-              <Link 
-                to="/servicos#manutencao" 
+              <button 
+                onClick={() => handleServiceNavigation("/servicos#manutencao")} 
                 className="text-[#ffb100] hover:text-[#ffa500] inline-flex items-center"
               >
                 Saber mais <ArrowRight className="ml-2 h-4 w-4" color="#ffb100" />
-              </Link>
+              </button>
             </div>
             
             <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow">
@@ -103,12 +108,12 @@ const Index = () => {
               <p className="text-gray-600 mb-4">
                 Aconselhamento especializado sobre o mercado imobiliário em Lisboa, com foco em oportunidades de investimento e na otimização de rendimentos.
               </p>
-              <Link 
-                to="/servicos#consultoria" 
+              <button 
+                onClick={() => handleServiceNavigation("/servicos#consultoria")} 
                 className="text-[#ffb100] hover:text-[#ffa500] inline-flex items-center"
               >
                 Saber mais <ArrowRight className="ml-2 h-4 w-4" color="#ffb100" />
-              </Link>
+              </button>
             </div>
           </div>
           
