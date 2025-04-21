@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -18,7 +17,7 @@ const TeamSection = () => {
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="h-64 overflow-hidden">
               <img 
-                src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=761&q=80" 
+                src="/lovable-uploads/cc0e2f8d-eeb6-4138-8e17-e293d74158ff.png" 
                 alt="Alexa Uzzan" 
                 className="w-full h-full object-cover"
               />
