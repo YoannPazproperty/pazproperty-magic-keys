@@ -7,6 +7,7 @@ import Servicos from "../pages/Servicos";
 import Sobre from "../pages/Sobre";
 import Contacto from "../pages/Contacto";
 import Propriedades from "../pages/Propriedades";
+import PropertyDetail from "../pages/PropertyDetail";
 import AreaCliente from "../pages/AreaCliente";
 import Admin from "../pages/Admin";
 import ExtranetTechnique from "../pages/ExtranetTechnique";
@@ -30,6 +31,7 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
           <Route path="/sobre" element={<Sobre />} />
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/propriedades" element={<Propriedades />} />
+          <Route path="/propriedades/:id" element={<PropertyDetail />} />
           <Route path="/area-cliente" element={<AreaCliente connectionStatus={connectionStatus} />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
