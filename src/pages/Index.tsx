@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,11 @@ const Index = () => {
 
   const handleServiceNavigation = (path: string) => {
     navigate(path);
+    window.scrollTo(0, 0);
+  };
+
+  const handleAllServicesNavigation = () => {
+    navigate("/servicos");
     window.scrollTo(0, 0);
   };
 
@@ -118,8 +124,12 @@ const Index = () => {
           </div>
           
           <div className="text-center mt-12">
-            <Button asChild variant="outline" size="lg">
-              <Link to="/servicos">Ver Todos os Serviços</Link>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={handleAllServicesNavigation}
+            >
+              Ver Todos os Serviços
             </Button>
           </div>
         </div>
