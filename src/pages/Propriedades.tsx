@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -6,12 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { Search, BedDouble, Bath, Square, MapPin } from "lucide-react";
 
-// Dados de exemplo de propriedades
 const propriedadesData = [
   {
     id: 1,
     titulo: "Apartamento Renovado Arroios",
-    descricao: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa. Possibilidade de arrendar com ou sem mobília.",
+    descricao: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa. Situado na rua mais pitoresca de Penha de França, este imóvel combina o charme tradicional com todas as comodidades modernas, ideal para quem valoriza a harmonia entre a vida urbana e o conforto doméstico. Possibilidade de arrendar com ou sem mobília. Este apartamento de 2 quartos destaca-se pelo seu pé direito alto que amplia a sensação de espaço.",
     preco: 1600,
     localizacao: "Anjos, Lisboa",
     quartos: 2,

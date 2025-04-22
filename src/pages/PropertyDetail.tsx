@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 
-// Dados de exemplo de propriedades
 const propriedadesData = [
   {
     id: 1,
@@ -79,8 +78,38 @@ const PropertyDetail = () => {
     );
   }
 
-  // Format description with paragraphs and justify text
-  const formattedDescription = property.descricaoCompleta.split('\n\n').map((paragraph: string, i: number) => (
+  const descricaoCompleta = `Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa. Situado na rua mais pitoresca de Penha de França, este imóvel combina o charme tradicional com todas as comodidades modernas, ideal para quem valoriza a harmonia entre a vida urbana e o conforto doméstico. Possibilidade de arrendar com ou sem mobília. 
+
+Este apartamento de 2 quartos destaca-se pelo seu pé direito alto que amplia a sensação de espaço. Ao entrar, é recebido por um hall que abre para uma sala de estar espaçosa e uma varanda transformada em agradável área de refeições com vidros duplos oscilo-batentes. A cozinha, moderna e totalmente equipada, complementa este ambiente acolhedor.
+
+O apartamento dispõe de dois quartos, sendo um deles uma suíte com closet e casa de banho moderna equipada com base de duche. Existe ainda uma segunda casa de banho completa, também com duche, servindo o segundo quarto.
+
+Características adicionais incluem:
+- Pisos em madeira
+- Aquecimento elétrico
+- Totalmente mobiliado (camas, sofa, cadeiras, mesas, tudo o que for necessário para um conforto de um casa)
+- Totalmente equipado (televisão, eletrodomésticos, utensílios e louças de cozinha, lençóis, toalhas, tudo o que for necessário para sentir-se em casa)
+- Decoração moderna
+
+O imóvel encontra-se a uma curta distância a pé de uma vasta gama de serviços, restaurantes e comércio variado e a menos de 10 minutos do metro Anjos, linha verde.
+
+Condições de arrendamento:
+- Duas rendas de caução
+- Uma renda adiantada
+- Uma renda do mês de início de contrato
+- Comprovativo de rendimentos e documentação pessoal
+- Contrato de três anos
+
+Licença de Utilização nº285 de 24-12-1933
+
+Interessado em fazer deste apartamento o seu novo lar? Contacte-nos para marcar uma visita e venha sentir a atmosfera acolhedora que o espera. Não perca esta oportunidade única de viver num espaço encantador, decorado e mobilado.`;
+
+  const propriedade = {
+    ...property,
+    descricaoCompleta,
+  };
+
+  const formattedDescription = propriedade.descricaoCompleta.split('\n\n').map((paragraph: string, i: number) => (
     <p key={i} className="mb-4 text-justify">{paragraph}</p>
   ));
 
