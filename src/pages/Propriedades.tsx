@@ -11,7 +11,7 @@ const propriedadesData = [
   {
     id: 1,
     titulo: "Apartamento Renovado Arroios",
-    descricao: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa. POSSIBILIDADE DE ARRENDAR COM OU SEM MOBILIA.",
+    descricao: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa. Possibilidade de arrendar com ou sem mobília.",
     preco: 1600,
     localizacao: "Anjos, Lisboa",
     quartos: 2,
