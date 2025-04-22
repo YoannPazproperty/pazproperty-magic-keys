@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -157,7 +156,7 @@ const Propriedades = () => {
                         <Bath className="h-4 w-4 mr-1" />
                         <span className="text-sm mr-3">{propriedade.banheiros} WC</span>
                         <Square className="h-4 w-4 mr-1" />
-                        <span className="text-sm">{propriedade.area} m²</span>
+                        <span className="text-sm">{propriedade.areaTotal} m²</span>
                       </div>
                     </div>
                     
