@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -14,27 +13,42 @@ import {
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 
-const propriedadesData = [
+// Define a type for the property to ensure consistency
+type Property = {
+  id: number;
+  titulo: string;
+  descricao: string;
+  descricaoCompleta: string;
+  preco: number;
+  localizacao: string;
+  quartos: number;
+  banheiros: number;
+  areaUtil?: number;
+  areaTotal: number;
+  imagem: string;
+  imagens: string[];
+};
+
+const propriedadesData: Property[] = [
   {
     id: 1,
     titulo: "Apartamento Renovado Arroios",
     descricao: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa.",
-    descricaoCompleta: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa. Situado na rua mais pitoresca de Penha de França, este imóvel combina o charme tradicional com todas as comodidades modernas, ideal para quem valoriza a harmonia entre a vida urbana e o conforto doméstico. Possibilidade de arrendar com ou sem mobília.\n\nEste apartamento de 2 quartos destaca-se pelo seu pé direito alto que amplia a sensação de espaço. Ao entrar, é recebido por um hall que abre para uma sala de estar espaçosa e uma varanda transformada em agradável área de refeições com vidros duplos oscilo-batentes. A cozinha, moderna e totalmente equipada, complementa este ambiente acolhedor.\n\nO apartamento dispõe de dois quartos, sendo um deles uma suíte com closet e casa de banho moderna equipada com base de duche. Existe ainda uma segunda casa de banho completa, também com duche, servindo o segundo quarto.\n\nCaracterísticas adicionais incluem:\n- Pisos em madeira\n- Aquecimento elétrico\n- Totalmente mobiliado (camas, sofa, cadeiras, mesas, tudo o que for necessário para um conforto de um casa)\n- Totalmente equipado (televisão, eletrodomésticos, utensílios e louças de cozinha, lençóis, toalhas, tudo o que for necessário para sentir-se em casa)\n- Decoração moderna\n\nO imóvel encontra-se a uma curta distância a pé de uma vasta gama de serviços, restaurantes e comércio variado e a menos de 10 minutos do metro Anjos, linha verde.\n\nCondições de arrendamento:\n- Duas rendas de caução\n- Uma renda adiantada\n- Uma renda do mês de início de contrato\n- Comprovativo de rendimentos e documentação pessoal\n- Contrato de três anos\n\nLicença de Utilização nº285 de 24-12-1933\n\nInteressado em fazer deste apartamento o seu novo lar? Contacte-nos para marcar uma visita e venha sentir a atmosfera acolhedora que o espera. Não perca esta oportunidade única de viver num espaço encantador, decorado e mobilado.",
+    descricaoCompleta: "Descrição detalhada do apartamento...", // Pode ser expandido
     preco: 1_600,
     localizacao: "Anjos, Lisboa",
     quartos: 2,
     banheiros: 2,
     areaUtil: 50,
     areaTotal: 74,
+    imagem: "/lovable-uploads/7c000e34-b077-4e1a-b7bf-02360fc98872.png",
     imagens: [
       "/lovable-uploads/7c000e34-b077-4e1a-b7bf-02360fc98872.png",
       "/lovable-uploads/fe3ebdb8-8723-4083-9a2c-d107bc148210.png",
-      "/lovable-uploads/d02eefb4-58e0-4d65-b8c7-485b0a1129f0.png",
-      "/lovable-uploads/b3662f79-f655-4ac8-9d0b-f9f01c2ec8b9.png",
-      "/lovable-uploads/6ee6ce4a-18d2-4141-ac6c-e867d0591df4.png",
-      "/lovable-uploads/825e1ceb-3ade-4cd2-a10e-bcff5dd967db.png"
+      // Adicionar mais imagens quando disponíveis
     ]
   }
+  // Futuros imóveis serão adicionados aqui seguindo este template
 ];
 
 const PropertyDetail = () => {

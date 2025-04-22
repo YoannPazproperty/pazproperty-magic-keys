@@ -7,18 +7,41 @@ import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { Search, BedDouble, Bath, Square, MapPin } from "lucide-react";
 
-const propriedadesData = [
+// Define a type for the property to ensure consistency
+type Property = {
+  id: number;
+  titulo: string;
+  descricao: string;
+  descricaoCompleta?: string;
+  preco: number;
+  localizacao: string;
+  quartos: number;
+  banheiros: number;
+  areaUtil?: number;
+  areaTotal: number;
+  imagem: string;
+  imagens?: string[];
+};
+
+const propriedadesData: Property[] = [
   {
     id: 1,
     titulo: "Apartamento Renovado Arroios",
     descricao: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa. Situado na rua mais pitoresca de Penha de França, este imóvel combina o charme tradicional com todas as comodidades modernas, ideal para quem valoriza a harmonia entre a vida urbana e o conforto doméstico. Possibilidade de arrendar com ou sem mobília. Este apartamento de 2 quartos destaca-se pelo seu pé direito alto que amplia a sensação de espaço.",
+    descricaoCompleta: "Detalhes completos do apartamento...", // Pode ser adicionado mais tarde
     preco: 1_600,
     localizacao: "Anjos, Lisboa",
     quartos: 2,
     banheiros: 2,
-    area: 74,
-    imagem: "/lovable-uploads/7c000e34-b077-4e1a-b7bf-02360fc98872.png"
+    areaUtil: 50,
+    areaTotal: 74,
+    imagem: "/lovable-uploads/7c000e34-b077-4e1a-b7bf-02360fc98872.png",
+    imagens: [
+      "/lovable-uploads/7c000e34-b077-4e1a-b7bf-02360fc98872.png",
+      // Adicionar mais imagens quando disponíveis
+    ]
   }
+  // Futuros imóveis serão adicionados aqui seguindo este template
 ];
 
 const Propriedades = () => {
