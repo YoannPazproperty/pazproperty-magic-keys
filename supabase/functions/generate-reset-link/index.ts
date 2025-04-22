@@ -182,8 +182,46 @@ serve(async (req) => {
       const baseUrl = "https://22c7e654-f304-419f-a370-324064acafb0.lovableproject.com";
       const resetLink = `${baseUrl}/auth/callback#type=recovery&access_token=${token}`;
       
-      // En parallèle, essayer aussi la méthode Supabase
+      // NOUVELLE FONCTIONNALITÉ: Envoyer un email avec le lien de réinitialisation
       try {
+        // Tenter d'envoyer l'email via l'API Resend si configurée
+        const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+        
+        if (RESEND_API_KEY) {
+          console.log("Tentative d'envoi d'email via Resend API");
+          try {
+            // Importer la bibliothèque Resend
+            const { Resend } = await import("https://esm.sh/resend@1.0.0");
+            const resend = new Resend(RESEND_API_KEY);
+            
+            const emailResult = await resend.emails.send({
+              from: "Pazproperty <noreply@pazproperty.pt>",
+              to: email,
+              subject: "Réinitialisation de votre mot de passe Pazproperty",
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h2 style="color: #333;">Réinitialisation de votre mot de passe</h2>
+                  <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte Pazproperty.</p>
+                  <p>Cliquez sur le lien ci-dessous pour définir un nouveau mot de passe :</p>
+                  <p>
+                    <a href="${resetLink}" style="display: inline-block; padding: 10px 20px; background-color: #4A90E2; color: white; text-decoration: none; border-radius: 4px;">
+                      Réinitialiser mon mot de passe
+                    </a>
+                  </p>
+                  <p>Ce lien expirera dans 24 heures.</p>
+                  <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.</p>
+                  <p>Cordialement,<br>L'équipe Pazproperty</p>
+                </div>
+              `,
+            });
+            
+            console.log("Email envoyé via Resend:", emailResult);
+          } catch (resendError) {
+            console.error("Erreur lors de l'envoi de l'email via Resend:", resendError);
+          }
+        }
+        
+        // En parallèle, toujours essayer la méthode native Supabase 
         const { error: supaResetError } = await adminClient.auth.admin.generateLink({
           type: 'recovery',
           email: email,
@@ -197,8 +235,8 @@ serve(async (req) => {
         } else {
           console.log("Lien de réinitialisation Supabase généré avec succès");
         }
-      } catch (supaErr) {
-        console.error("Exception lors de la génération du lien Supabase:", supaErr);
+      } catch (emailErr) {
+        console.error("Exception lors de l'envoi de l'email:", emailErr);
       }
       
       console.log("Lien de réinitialisation personnalisé généré:", resetLink);
