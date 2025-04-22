@@ -27,6 +27,7 @@ const propriedadesData = [
     areaUtil: 50,
     areaTotal: 74,
     imagens: [
+      "/lovable-uploads/7c000e34-b077-4e1a-b7bf-02360fc98872.png",
       "/lovable-uploads/fe3ebdb8-8723-4083-9a2c-d107bc148210.png",
       "/lovable-uploads/d02eefb4-58e0-4d65-b8c7-485b0a1129f0.png",
       "/lovable-uploads/b3662f79-f655-4ac8-9d0b-f9f01c2ec8b9.png",

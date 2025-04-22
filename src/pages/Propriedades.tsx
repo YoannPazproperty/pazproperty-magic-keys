@@ -17,7 +17,7 @@ const propriedadesData = [
     quartos: 2,
     banheiros: 2,
     area: 74,
-    imagem: "/lovable-uploads/fe3ebdb8-8723-4083-9a2c-d107bc148210.png"
+    imagem: "/lovable-uploads/7c000e34-b077-4e1a-b7bf-02360fc98872.png"
   }
 ];
 
