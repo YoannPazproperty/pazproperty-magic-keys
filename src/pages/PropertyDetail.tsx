@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { BedDouble, Bath, Square, Ruler, ArrowLeft } from "lucide-react";
-import { 
+import {
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -17,110 +17,21 @@ import { Card, CardContent } from "@/components/ui/card";
 const propriedadesData = [
   {
     id: 1,
-    titulo: "Apartamento Moderno no Chiado",
-    descricao: "Fantástico apartamento T2 totalmente renovado no coração do Chiado, a curta distância de restaurantes e lojas.",
-    descricaoCompleta: "Este fantástico apartamento T2 localizado no coração do Chiado foi completamente renovado com acabamentos de alta qualidade. O imóvel dispõe de ampla sala de estar com muita luz natural, uma cozinha moderna totalmente equipada com eletrodomésticos de primeira linha, dois quartos confortáveis e uma elegante casa de banho.\n\nA localização é imbatível, com acesso fácil aos principais pontos de interesse cultural, restaurantes premiados, cafés históricos e as melhores lojas de Lisboa. A proximidade dos transportes públicos (metro e elétrico) facilita a mobilidade para qualquer parte da cidade.\n\nDestaca-se ainda pelas suas características originais preservadas, como os tectos altos e as janelas tradicionais, que conferem um charme especial a este apartamento no bairro mais cosmopolita de Lisboa.",
-    preco: 1200,
-    localizacao: "Chiado, Lisboa",
-    quartos: 2,
-    banheiros: 1,
-    areaUtil: 70,
-    areaTotal: 75,
-    imagens: [
-      "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1554995207-c18c203602cb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1556912172-45b7abe8b7e1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-    ]
-  },
-  {
-    id: 2,
-    titulo: "Espaçoso T3 em Alfama",
-    descricao: "Charmoso apartamento T3 no bairro histórico de Alfama, com varandas e vista parcial para o rio Tejo.",
-    descricaoCompleta: "Este charmoso apartamento T3 está localizado no bairro histórico de Alfama e oferece varandas com vista parcial para o rio Tejo. O imóvel possui uma espaçosa sala de estar, três quartos confortáveis e duas casas de banho completas.\n\nA localização é ideal para quem aprecia a autenticidade de Lisboa, com fácil acesso a restaurantes tradicionais, casas de fado e os principais pontos turísticos de Alfama. A proximidade dos transportes públicos (elétrico e autocarro) facilita a mobilidade para outras partes da cidade.\n\nO apartamento destaca-se pela sua luminosidade natural e pelos detalhes arquitetónicos típicos do bairro, como os azulejos e as janelas de sacada.",
-    preco: 1500,
-    localizacao: "Alfama, Lisboa",
-    quartos: 3,
-    banheiros: 2,
-    areaUtil: 100,
-    areaTotal: 110,
-    imagens: [
-      "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1519710164239-da123140ef3a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1541167760496-1628856ab77f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-    ]
-  },
-  {
-    id: 3,
-    titulo: "Estúdio Moderno em Belém",
-    descricao: "Estúdio contemporâneo em Belém, acabamentos de alta qualidade e proximidade aos principais pontos turísticos.",
-    descricaoCompleta: "Este estúdio contemporâneo está situado em Belém, com acabamentos de alta qualidade e uma localização privilegiada perto dos principais pontos turísticos. O imóvel dispõe de uma área de estar em open space com muita luz natural, uma cozinha moderna totalmente equipada e uma casa de banho elegante.\n\nA localização é ideal para quem procura um estilo de vida moderno e prático, com fácil acesso a museus, monumentos históricos e espaços de lazer. A proximidade dos transportes públicos (comboio e autocarro) facilita a mobilidade para outras partes da cidade.\n\nO estúdio destaca-se pelo seu design minimalista e funcional, com detalhes que valorizam o conforto e a praticidade.",
-    preco: 850,
-    localizacao: "Belém, Lisboa",
-    quartos: 0,
-    banheiros: 1,
-    areaUtil: 40,
-    areaTotal: 45,
-    imagens: [
-      "https://images.unsplash.com/photo-1536376072261-38c75010e6c9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1519710164239-da123140ef3a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1551523851-6f16b4e9d3e1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-    ]
-  },
-  {
-    id: 4,
-    titulo: "Apartamento T2 no Parque das Nações",
-    descricao: "Moderno T2 no Parque das Nações, com vista para o rio, estacionamento e acesso a todas as comodidades.",
-    descricaoCompleta: "Este moderno T2 está localizado no Parque das Nações, com vista para o rio, estacionamento e acesso a todas as comodidades. O imóvel dispõe de uma ampla sala de estar com muita luz natural, uma cozinha moderna totalmente equipada, dois quartos confortáveis e duas casas de banho completas.\n\nA localização é ideal para quem procura um estilo de vida moderno e sofisticado, com fácil acesso a espaços de lazer, restaurantes e centros comerciais. A proximidade dos transportes públicos (metro e autocarro) facilita a mobilidade para outras partes da cidade.\n\nO apartamento destaca-se pela sua vista panorâmica sobre o rio Tejo e pela qualidade dos acabamentos.",
-    preco: 1300,
-    localizacao: "Parque das Nações, Lisboa",
+    titulo: "Apartamento Renovado Arroios",
+    descricao: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa.",
+    descricaoCompleta: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa. Situado na rua mais pitoresca de Penha de França, este imóvel combina o charme tradicional com todas as comodidades modernas, ideal para quem valoriza a harmonia entre a vida urbana e o conforto dom��stico. POSSIBILIDADE DE ARRENDAR COM OU SEM MOBILIA.\n\nEste apartamento de 2 quartos destaca-se pelo seu pé direito alto que amplia a sensação de espaço. Ao entrar, é recebido por um hall que abre para uma sala de estar espaçosa e uma varanda transformada em agradável área de refeições com vidros duplos oscilo-batentes. A cozinha, moderna e totalmente equipada, complementa este ambiente acolhedor.\n\nO apartamento dispõe de dois quartos, sendo um deles uma suíte com closet e casa de banho moderna equipada com base de duche. Existe ainda uma segunda casa de banho completa, também com duche, servindo o segundo quarto.\n\nCaracterísticas adicionais incluem:\n- Pisos em madeira\n- Aquecimento elétrico\n- Totalmente mobiliado (camas, sofa, cadeiras, mesas, tudo o que for necessário para um conforto de um casa)\n- Totalmente equipado (televisão, eletrodomésticos, utensílios e louças de cozinha, lençóis, toalhas, tudo o que for necessário para sentir-se em casa)\n- Decoração moderna\n\nO imóvel encontra-se a uma curta distância a pé de uma vasta gama de serviços, restaurantes e comércio variado e a menos de 10 minutos do metro Anjos, linha verde.\n\nCondições de arrendamento:\n- Duas rendas de caução\n- Uma renda adiantada\n- Uma renda do mês de início de contrato\n- Comprovativo de rendimentos e documentação pessoal\n- Contrato de três anos\n\nLicença de Utilização nº285 de 24-12-1933\n\nInteressado em fazer deste apartamento o seu novo lar? Contacte-nos para marcar uma visita e venha sentir a atmosfera acolhedora que o espera. Não perca esta oportunidade única de viver num espaço encantador, decorado e mobilado.",
+    preco: 1600,
+    localizacao: "Anjos, Lisboa",
     quartos: 2,
     banheiros: 2,
-    areaUtil: 80,
-    areaTotal: 90,
+    areaUtil: 50,
+    areaTotal: 74,
     imagens: [
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1541167760496-1628856ab77f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-    ]
-  },
-  {
-    id: 5,
-    titulo: "Apartamento Clássico na Baixa",
-    descricao: "Apartamento de 1 quarto na Baixa Pombalina, recentemente renovado mantendo elementos originais do edifício.",
-    descricaoCompleta: "Este apartamento de 1 quarto está localizado na Baixa Pombalina e foi recentemente renovado, mantendo os elementos originais do edifício. O imóvel dispõe de uma sala de estar acolhedora, uma cozinha moderna totalmente equipada, um quarto confortável e uma casa de banho elegante.\n\nA localização é ideal para quem aprecia a história e a cultura de Lisboa, com fácil acesso a monumentos históricos, museus e espaços culturais. A proximidade dos transportes públicos (metro e autocarro) facilita a mobilidade para outras partes da cidade.\n\nO apartamento destaca-se pelos seus detalhes arquitetónicos originais, como os azulejos e as janelas de sacada.",
-    preco: 1100,
-    localizacao: "Baixa, Lisboa",
-    quartos: 1,
-    banheiros: 1,
-    areaUtil: 60,
-    areaTotal: 65,
-    imagens: [
-      "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1519710164239-da123140ef3a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1541167760496-1628856ab77f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-    ]
-  },
-  {
-    id: 6,
-    titulo: "Espaçosa Moradia em Alvalade",
-    descricao: "Moradia de 4 quartos em Alvalade, com jardim, garagem e excelente para famílias que procuram tranquilidade.",
-    descricaoCompleta: "Esta espaçosa moradia de 4 quartos está localizada em Alvalade, com jardim, garagem e é excelente para famílias que procuram tranquilidade. O imóvel dispõe de uma ampla sala de estar com muita luz natural, uma cozinha moderna totalmente equipada, quatro quartos confortáveis e três casas de banho completas.\n\nA localização é ideal para quem procura um estilo de vida familiar e tranquilo, com fácil acesso a escolas, parques e espaços de lazer. A proximidade dos transportes públicos (metro e autocarro) facilita a mobilidade para outras partes da cidade.\n\nA moradia destaca-se pelo seu jardim espaçoso e pela qualidade dos acabamentos.",
-    preco: 2500,
-    localizacao: "Alvalade, Lisboa",
-    quartos: 4,
-    banheiros: 3,
-    areaUtil: 180,
-    areaTotal: 200,
-    imagens: [
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1519710164239-da123140ef3a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1541167760496-1628856ab77f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80",
-      "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
+      "/lovable-uploads/fe3ebdb8-8723-4083-9a2c-d107bc148210.png",
+      "/lovable-uploads/d02eefb4-58e0-4d65-b8c7-485b0a1129f0.png",
+      "/lovable-uploads/b3662f79-f655-4ac8-9d0b-f9f01c2ec8b9.png",
+      "/lovable-uploads/6ee6ce4a-18d2-4141-ac6c-e867d0591df4.png",
+      "/lovable-uploads/825e1ceb-3ade-4cd2-a10e-bcff5dd967db.png"
     ]
   }
 ];

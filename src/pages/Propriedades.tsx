@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,69 +10,14 @@ import { Search, BedDouble, Bath, Square, MapPin } from "lucide-react";
 const propriedadesData = [
   {
     id: 1,
-    titulo: "Apartamento Moderno no Chiado",
-    descricao: "Fantástico apartamento T2 totalmente renovado no coração do Chiado, a curta distância de restaurantes e lojas.",
-    preco: 1200,
-    localizacao: "Chiado, Lisboa",
-    quartos: 2,
-    banheiros: 1,
-    area: 75,
-    imagem: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-  },
-  {
-    id: 2,
-    titulo: "Espaçoso T3 em Alfama",
-    descricao: "Charmoso apartamento T3 no bairro histórico de Alfama, com varandas e vista parcial para o rio Tejo.",
-    preco: 1500,
-    localizacao: "Alfama, Lisboa",
-    quartos: 3,
-    banheiros: 2,
-    area: 110,
-    imagem: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-  },
-  {
-    id: 3,
-    titulo: "Estúdio Moderno em Belém",
-    descricao: "Estúdio contemporâneo em Belém, acabamentos de alta qualidade e proximidade aos principais pontos turísticos.",
-    preco: 850,
-    localizacao: "Belém, Lisboa",
-    quartos: 0,
-    banheiros: 1,
-    area: 45,
-    imagem: "https://images.unsplash.com/photo-1536376072261-38c75010e6c9?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-  },
-  {
-    id: 4,
-    titulo: "Apartamento T2 no Parque das Nações",
-    descricao: "Moderno T2 no Parque das Nações, com vista para o rio, estacionamento e acesso a todas as comodidades.",
-    preco: 1300,
-    localizacao: "Parque das Nações, Lisboa",
+    titulo: "Apartamento Renovado Arroios",
+    descricao: "Descubra este encantador apartamento T2, um refúgio de tranquilidade e estilo no coração do bairro dos Anjos, em Lisboa. POSSIBILIDADE DE ARRENDAR COM OU SEM MOBILIA.",
+    preco: 1600,
+    localizacao: "Anjos, Lisboa",
     quartos: 2,
     banheiros: 2,
-    area: 90,
-    imagem: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-  },
-  {
-    id: 5,
-    titulo: "Apartamento Clássico na Baixa",
-    descricao: "Apartamento de 1 quarto na Baixa Pombalina, recentemente renovado mantendo elementos originais do edifício.",
-    preco: 1100,
-    localizacao: "Baixa, Lisboa",
-    quartos: 1,
-    banheiros: 1,
-    area: 65,
-    imagem: "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
-  },
-  {
-    id: 6,
-    titulo: "Espaçosa Moradia em Alvalade",
-    descricao: "Moradia de 4 quartos em Alvalade, com jardim, garagem e excelente para famílias que procuram tranquilidade.",
-    preco: 2500,
-    localizacao: "Alvalade, Lisboa",
-    quartos: 4,
-    banheiros: 3,
-    area: 200,
-    imagem: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1080&q=80"
+    area: 74,
+    imagem: "/lovable-uploads/fe3ebdb8-8723-4083-9a2c-d107bc148210.png"
   }
 ];
 
@@ -150,12 +94,7 @@ const Propriedades = () => {
                     onChange={(e) => setFiltroLocalizacao(e.target.value)}
                   >
                     <option value="">Localização</option>
-                    <option value="Chiado">Chiado</option>
-                    <option value="Alfama">Alfama</option>
-                    <option value="Belém">Belém</option>
-                    <option value="Baixa">Baixa</option>
-                    <option value="Parque das Nações">Parque das Nações</option>
-                    <option value="Alvalade">Alvalade</option>
+                    <option value="Anjos">Anjos</option>
                   </select>
                 </div>
               </div>
