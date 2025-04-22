@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,9 +146,7 @@ const AuthCallback = () => {
         return;
       }
 
-      // Dans ce cas, nous avons un token généré par notre fonction Edge personnalisée
-      // Nous allons utiliser directement l'endpoint de l'API pour définir un nouveau mot de passe
-      
+      // Utiliser notre fonction Edge personnalisée pour réinitialiser le mot de passe
       const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
       const response = await fetch(
         `${supabaseUrl}/functions/v1/set-admin-password`,
@@ -159,9 +156,8 @@ const AuthCallback = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            email: '', // L'email est déterminé côté serveur via le token
             password: newPassword,
-            recoveryToken: token // Passer le token pour identification
+            recoveryToken: token
           })
         }
       );
