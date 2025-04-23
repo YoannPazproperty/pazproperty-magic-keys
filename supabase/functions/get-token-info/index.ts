@@ -53,6 +53,22 @@ serve(async (req) => {
       );
     }
 
+    // Nettoyer les tokens expirés pour éviter tout conflit
+    try {
+      const { data: cleanupData, error: cleanupError } = await adminClient
+        .from('password_reset_tokens')
+        .delete()
+        .lt('expires_at', new Date().toISOString());
+      
+      if (cleanupError) {
+        console.error("Erreur lors du nettoyage des tokens expirés:", cleanupError);
+      } else {
+        console.log("Nettoyage des tokens expirés effectué");
+      }
+    } catch (cleanupErr) {
+      console.error("Exception lors du nettoyage des tokens:", cleanupErr);
+    }
+
     // Utiliser notre fonction SQL pour vérifier le token
     try {
       const { data: tokenData, error: tokenError } = await adminClient.rpc(
@@ -78,9 +94,31 @@ serve(async (req) => {
 
       if (!tokenData || tokenData.length === 0) {
         console.log("Token invalide ou expiré - aucune donnée retournée");
+        
+        // Vérifier si le token existe mais est peut-être expiré
+        const { data: expiredTokenCheck } = await adminClient
+          .from('password_reset_tokens')
+          .select('*')
+          .eq('token', token)
+          .single();
+          
+        if (expiredTokenCheck) {
+          console.log("Token trouvé mais probablement expiré:", expiredTokenCheck);
+          return new Response(
+            JSON.stringify({ 
+              error: "Token expiré",
+              details: "Ce token de réinitialisation a expiré"
+            }),
+            {
+              status: 410, // Gone - ressource n'est plus disponible
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            }
+          );
+        }
+        
         return new Response(
           JSON.stringify({ 
-            error: "Token invalide ou expiré",
+            error: "Token invalide",
             details: "Aucun utilisateur associé à ce token" 
           }),
           {

@@ -1,15 +1,17 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Info, Wrench } from "lucide-react";
 import { testLogin } from "@/services/supabase/auth";
+import { Button } from "@/components/ui/button";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -21,11 +23,13 @@ const AuthCallback = () => {
   const [debugInfo, setDebugInfo] = useState<any | null>(null);
   const [testLoginResult, setTestLoginResult] = useState<any | null>(null);
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
+  const [processingComplete, setProcessingComplete] = useState(false);
 
   useEffect(() => {
     // Traiter le callback d'authentification
     const handleAuthCallback = async () => {
       try {
+        setLoading(true);
         console.log("Traitement du callback d'authentification");
         console.log("URL actuelle:", window.location.href);
         
@@ -128,6 +132,7 @@ const AuthCallback = () => {
             setUserEmail(email);
           }
           
+          setLoading(false);
           return; // Attendre que l'utilisateur entre un nouveau mot de passe
         }
         
@@ -190,13 +195,16 @@ const AuthCallback = () => {
         setError(err.message || "Une erreur est survenue lors de l'authentification");
         toast.error("Une erreur est survenue lors de l'authentification");
         setTimeout(() => navigate("/auth"), 3000);
+      } finally {
+        setLoading(false);
+        setProcessingComplete(true);
       }
     };
 
-    if (!isPasswordReset) {
+    if (!isPasswordReset && !processingComplete) {
       handleAuthCallback();
     }
-  }, [navigate, isPasswordReset]);
+  }, [navigate, isPasswordReset, processingComplete]);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,6 +284,9 @@ const AuthCallback = () => {
           console.log("Tentative de connexion automatique avec l'email:", resetEmail);
           
           try {
+            // Attendre un court instant pour que les modifications soient appliquées
+            await new Promise(r => setTimeout(r, 500));
+            
             const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
               email: resetEmail,
               password: newPassword,
@@ -283,22 +294,35 @@ const AuthCallback = () => {
             
             if (signInError) {
               console.error("Échec de la connexion automatique:", signInError);
-              toast.error("Authentification échouée", {
-                description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe. " + 
-                             (signInError.message || "")
-              });
               
-              // Ajouter des détails de débogage pour comprendre l'échec
-              setDebugInfo({
-                ...debugInfo,
-                signInError: signInError.message,
-                authResponse: signInData
-              });
-              
-              // Retourner à la page de connexion après un délai
-              setTimeout(() => {
-                navigate("/auth");
-              }, 3000);
+              // Vérifier si c'est un problème de timing
+              setTimeout(async () => {
+                try {
+                  console.log("Seconde tentative de connexion après délai...");
+                  const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                    email: resetEmail,
+                    password: newPassword,
+                  });
+                  
+                  if (retryError) {
+                    console.error("Seconde tentative de connexion échouée:", retryError);
+                    toast.error("Authentification échouée", {
+                      description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe."
+                    });
+                    
+                    // Rediriger vers la page de connexion avec l'email pré-rempli
+                    setTimeout(() => {
+                      navigate(`/auth?email=${encodeURIComponent(resetEmail)}`);
+                    }, 2000);
+                  } else {
+                    console.log("Connexion réussie après seconde tentative!");
+                    toast.success("Connexion réussie!");
+                    navigate("/admin");
+                  }
+                } catch (retryErr) {
+                  console.error("Erreur lors de la seconde tentative:", retryErr);
+                }
+              }, 1500);
             } else {
               console.log("Connexion automatique réussie");
               toast.success("Connexion réussie!");
@@ -313,7 +337,7 @@ const AuthCallback = () => {
             toast.error("Erreur technique", {
               description: "Connexion impossible: " + (err.message || "erreur inconnue")
             });
-            setTimeout(() => navigate("/auth"), 3000);
+            setTimeout(() => navigate(`/auth?email=${encodeURIComponent(resetEmail)}`), 3000);
           }
         } else {
           // Si pas d'email disponible pour la connexion automatique
@@ -332,8 +356,37 @@ const AuthCallback = () => {
     }
   };
 
+  // Fonction pour tester manuellement la connexion
+  const handleTestLogin = async () => {
+    if (!userEmail || !newPassword) {
+      toast.error("Email ou mot de passe manquant pour le test");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const result = await testLogin(userEmail, newPassword);
+      setTestLoginResult(result);
+      
+      if (result.success) {
+        toast.success("Test de connexion réussi", {
+          description: "La connexion fonctionne correctement, vous allez être redirigé."
+        });
+        setTimeout(() => navigate("/admin"), 2000);
+      } else {
+        toast.error("Échec du test de connexion", {
+          description: result.message || "La connexion a échoué pour une raison inconnue."
+        });
+      }
+    } catch (err) {
+      console.error("Erreur lors du test de connexion:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="h-screen flex items-center justify-center">
+    <div className="h-screen flex items-center justify-center p-4">
       {isPasswordReset ? (
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-6 text-center">Réinitialisation de mot de passe</h2>
@@ -371,7 +424,7 @@ const AuthCallback = () => {
                 placeholder="Minimum 8 caractères"
                 required
                 minLength={8}
-                disabled={tokenValid === false}
+                disabled={tokenValid === false || loading}
               />
             </div>
             
@@ -388,7 +441,7 @@ const AuthCallback = () => {
                 placeholder="Répétez votre mot de passe"
                 required
                 minLength={8}
-                disabled={tokenValid === false}
+                disabled={tokenValid === false || loading}
               />
             </div>
             
@@ -402,7 +455,7 @@ const AuthCallback = () => {
             <button
               type="submit"
               className={`w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors ${
-                tokenValid === false ? 'opacity-50 cursor-not-allowed' : ''
+                tokenValid === false || loading ? 'opacity-50 cursor-not-allowed' : ''
               }`}
               disabled={loading || tokenValid === false}
             >
@@ -418,16 +471,28 @@ const AuthCallback = () => {
                 Demander un nouveau lien de réinitialisation
               </button>
             )}
+            
+            {userEmail && newPassword.length >= 8 && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mt-2"
+                onClick={handleTestLogin}
+                disabled={loading}
+              >
+                Tester la connexion directement
+              </Button>
+            )}
           </form>
           
-          {process.env.NODE_ENV === 'development' && debugInfo && (
+          {(process.env.NODE_ENV === 'development' || window.location.hostname.includes('localhost')) && debugInfo && (
             <div className="mt-4 bg-gray-100 p-3 rounded text-xs overflow-auto max-h-48">
               <p className="font-bold mb-1">Informations de débogage:</p>
               <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
             </div>
           )}
           
-          {process.env.NODE_ENV === 'development' && testLoginResult && (
+          {(process.env.NODE_ENV === 'development' || window.location.hostname.includes('localhost')) && testLoginResult && (
             <div className="mt-4 bg-gray-100 p-3 rounded text-xs overflow-auto max-h-48">
               <p className="font-bold mb-1">Résultat du test de connexion:</p>
               <pre>{JSON.stringify(testLoginResult, null, 2)}</pre>
@@ -447,7 +512,7 @@ const AuthCallback = () => {
             </Alert>
           )}
           
-          {process.env.NODE_ENV === 'development' && debugInfo && (
+          {(process.env.NODE_ENV === 'development' || window.location.hostname.includes('localhost')) && debugInfo && (
             <div className="bg-gray-100 p-3 rounded text-xs overflow-auto max-w-md max-h-48">
               <p className="font-bold mb-1">Informations de débogage:</p>
               <pre>{JSON.stringify(debugInfo, null, 2)}</pre>

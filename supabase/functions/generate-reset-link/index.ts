@@ -77,6 +77,19 @@ serve(async (req) => {
     console.log("Email de l'utilisateur:", userEmail);
     console.log("Date d'expiration du token:", expiresAt.toISOString());
 
+    // Nettoyer les anciens tokens pour cet utilisateur avant d'en stocker un nouveau
+    try {
+      const { data: deleteResult } = await adminClient
+        .from('password_reset_tokens')
+        .delete()
+        .eq('user_id', userId);
+      
+      console.log("Anciens tokens supprimés pour l'utilisateur:", userId);
+    } catch (cleanErr) {
+      console.error("Erreur lors du nettoyage des anciens tokens:", cleanErr);
+      // Continuer même en cas d'erreur de nettoyage
+    }
+
     // Stocker le token
     const { data: tokenData, error: tokenError } = await adminClient.rpc(
       'store_password_reset_token',
@@ -112,6 +125,17 @@ serve(async (req) => {
         console.error("Erreur lors de la vérification du token après création:", verifyError);
       } else {
         console.log("Vérification du token après création:", verifyData);
+        
+        // Double-check que le token est associé au bon utilisateur
+        if (verifyData && verifyData.length > 0) {
+          const foundUserId = verifyData[0].user_id;
+          const foundEmail = verifyData[0].user_email;
+          
+          if (foundUserId !== userId || foundEmail !== userEmail) {
+            console.error("ALERTE: Incohérence détectée dans les données du token!");
+            console.error(`Token associé à: ${foundEmail}, mais demandé pour: ${userEmail}`);
+          }
+        }
       }
     } catch (verifyErr) {
       console.error("Exception lors de la vérification du token après création:", verifyErr);
@@ -162,7 +186,7 @@ serve(async (req) => {
     }
 
     // Pour le développement, renvoyer le lien directement
-    console.log("Génération du lien de réinitialisation réussie: " + resetLink);
+    console.log("Génération du lien de réinitialisation réussie pour " + userEmail + ": " + resetLink);
     
     return new Response(
       JSON.stringify({

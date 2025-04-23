@@ -169,8 +169,46 @@ serve(async (req) => {
 
       console.log("Mot de passe mis à jour avec succès pour l'utilisateur:", userId, "avec email:", userEmail);
       
-      // Vérifier le rôle de l'utilisateur ou en créer un si nécessaire
+      // IMPORTANT: Vérifier le rôle de l'utilisateur ou en créer un si nécessaire
       try {
+        // Vérifier d'abord si le type enum user_role existe
+        const { data: enumExists } = await adminClient.rpc('run_sql', { 
+          query: "SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'user_role');" 
+        });
+        
+        const userRoleEnumExists = enumExists && enumExists[0] && enumExists[0].exists;
+        console.log("Type enum user_role existe:", userRoleEnumExists);
+        
+        if (!userRoleEnumExists) {
+          console.log("Création du type enum user_role");
+          await adminClient.rpc('run_sql', { 
+            query: "CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'user');" 
+          });
+        }
+        
+        // Vérifier si la table user_roles existe
+        const { data: tableExists } = await adminClient.rpc('run_sql', { 
+          query: "SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_roles');" 
+        });
+        
+        const userRolesTableExists = tableExists && tableExists[0] && tableExists[0].exists;
+        console.log("Table user_roles existe:", userRolesTableExists);
+        
+        if (!userRolesTableExists) {
+          console.log("Création de la table user_roles");
+          await adminClient.rpc('run_sql', { 
+            query: `
+              CREATE TABLE public.user_roles (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+                role user_role NOT NULL DEFAULT 'user'::user_role,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+              );
+              ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+            `
+          });
+        }
+        
         // Vérifier si l'utilisateur a déjà un rôle
         const { data: roleData, error: roleError } = await adminClient
           .from('user_roles')
@@ -194,6 +232,21 @@ serve(async (req) => {
           }
         } else {
           console.log("L'utilisateur a déjà un rôle:", roleData.role);
+          
+          // Si l'utilisateur n'est pas admin, le promouvoir en admin
+          if (roleData.role !== 'admin') {
+            console.log("Promotion de l'utilisateur au rôle admin");
+            const { error: updateRoleError } = await adminClient
+              .from('user_roles')
+              .update({ role: 'admin' })
+              .eq('user_id', userId);
+              
+            if (updateRoleError) {
+              console.error("Erreur lors de la mise à jour du rôle:", updateRoleError);
+            } else {
+              console.log("Rôle mis à jour avec succès pour l'utilisateur:", userId);
+            }
+          }
         }
       } catch (roleErr) {
         console.error("Exception lors de la gestion du rôle:", roleErr);
@@ -214,6 +267,22 @@ serve(async (req) => {
         }
       } catch (signInErr) {
         console.error("Erreur lors du test de connexion:", signInErr);
+      }
+      
+      // Supprimer le token utilisé pour éviter sa réutilisation
+      try {
+        const { error: deleteTokenError } = await adminClient
+          .from('password_reset_tokens')
+          .delete()
+          .eq('token', recoveryToken);
+          
+        if (deleteTokenError) {
+          console.error("Erreur lors de la suppression du token utilisé:", deleteTokenError);
+        } else {
+          console.log("Token de récupération supprimé avec succès après utilisation");
+        }
+      } catch (deleteErr) {
+        console.error("Erreur lors de la suppression du token:", deleteErr);
       }
 
       return new Response(
@@ -321,9 +390,41 @@ serve(async (req) => {
           }
         } else {
           console.log("L'utilisateur a déjà un rôle:", roleData.role);
+          
+          // Si l'utilisateur n'est pas admin, le promouvoir en admin
+          if (roleData.role !== 'admin') {
+            console.log("Promotion de l'utilisateur au rôle admin");
+            const { error: updateRoleError } = await adminClient
+              .from('user_roles')
+              .update({ role: 'admin' })
+              .eq('user_id', userId);
+              
+            if (updateRoleError) {
+              console.error("Erreur lors de la mise à jour du rôle:", updateRoleError);
+            } else {
+              console.log("Rôle mis à jour avec succès pour l'utilisateur:", userId);
+            }
+          }
         }
       } catch (roleErr) {
         console.error("Exception lors de la gestion du rôle:", roleErr);
+      }
+
+      // Pour le débogage, vérifier si nous pouvons nous connecter avec ces identifiants
+      try {
+        console.log("Test de connexion avec le nouveau mot de passe pour:", email);
+        const { data: signInData, error: signInError } = await adminClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+        
+        if (signInError) {
+          console.error("Échec du test de connexion après mise à jour:", signInError);
+        } else {
+          console.log("Test de connexion réussi après mise à jour pour:", email);
+        }
+      } catch (signInErr) {
+        console.error("Erreur lors du test de connexion:", signInErr);
       }
 
       console.log("Mot de passe administrateur mis à jour avec succès pour:", email);

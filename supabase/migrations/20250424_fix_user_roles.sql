@@ -1,4 +1,14 @@
 
+-- S'assurer que le type enum existe
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+    CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'user');
+  END IF;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END$$;
+
 -- Assurer que la table des rôles existe
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -7,22 +17,13 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
--- S'assurer que le type enum existe
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-    CREATE TYPE user_role AS ENUM ('admin', 'manager', 'user');
-  END IF;
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END$$;
-
 -- Activer RLS sur la table user_roles si elle ne l'est pas déjà
 ALTER TABLE IF EXISTS public.user_roles ENABLE ROW LEVEL SECURITY;
 
 -- Créer des politiques RLS pour protéger la table user_roles
 DO $$
 BEGIN
+  -- Politique pour permettre aux utilisateurs de voir leur propre rôle
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'user_roles' AND policyname = 'Users can view their own roles'
   ) THEN
@@ -30,10 +31,11 @@ BEGIN
       FOR SELECT USING (auth.uid() = user_id);
   END IF;
   
+  -- Politique pour permettre aux administrateurs de gérer tous les rôles
   IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'user_roles' AND policyname = 'Admins can manage user roles'
+    SELECT 1 FROM pg_policies WHERE tablename = 'user_roles' AND policyname = 'Admins can manage all roles'
   ) THEN
-    CREATE POLICY "Admins can manage user roles" ON public.user_roles
+    CREATE POLICY "Admins can manage all roles" ON public.user_roles
       USING (
         EXISTS (
           SELECT 1 FROM public.user_roles 
@@ -42,6 +44,7 @@ BEGIN
       );
   END IF;
   
+  -- Politique pour permettre au rôle de service d'accéder à tout
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'user_roles' AND policyname = 'Service role has full access'
   ) THEN
@@ -65,3 +68,38 @@ ALTER TABLE IF EXISTS public.logs ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Service role can manage logs" ON public.logs;
 CREATE POLICY "Service role can manage logs" ON public.logs
   FOR ALL TO service_role USING (true);
+
+-- Créer une fonction helper pour exécuter du SQL dynamique
+CREATE OR REPLACE FUNCTION public.run_sql(query text)
+RETURNS SETOF RECORD LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY EXECUTE query;
+EXCEPTION WHEN OTHERS THEN
+  RAISE;
+END;
+$$;
+
+-- Assurons-nous que tous les utilisateurs existants ont un rôle
+DO $$
+DECLARE
+  u RECORD;
+BEGIN
+  -- Pour chaque utilisateur sans rôle
+  FOR u IN 
+    SELECT au.id 
+    FROM auth.users au
+    LEFT JOIN public.user_roles ur ON au.id = ur.user_id
+    WHERE ur.user_id IS NULL
+  LOOP
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (u.id, 'user');
+  END LOOP;
+
+  -- Promouvoir alexa@pazproperty.pt et yoann@pazproperty.pt en admin s'ils existent
+  UPDATE public.user_roles
+  SET role = 'admin'
+  WHERE user_id IN (
+    SELECT id FROM auth.users 
+    WHERE email IN ('alexa@pazproperty.pt', 'yoann@pazproperty.pt')
+  );
+END$$;

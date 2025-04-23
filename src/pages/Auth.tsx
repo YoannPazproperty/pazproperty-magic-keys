@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,18 +44,26 @@ type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 const Auth = () => {
   const { signIn, signInWithGoogle } = useAuth();
-  const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot-password">("login");
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") as "login" | "register" | "forgot-password" || "login";
+  
+  const [activeTab, setActiveTab] = useState<"login" | "register" | "forgot-password">(
+    initialTab === "forgot-password" ? "forgot-password" : initialTab === "register" ? "register" : "login"
+  );
+  
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [isFixingTokens, setIsFixingTokens] = useState(false);
   const [resetLink, setResetLink] = useState<string | null>(null);
+  const [prefilledEmail] = useState<string | null>(searchParams.get("email"));
 
+  // Initialiser les formulaires
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      email: prefilledEmail || "",
       password: "",
     },
   });
@@ -62,7 +71,7 @@ const Auth = () => {
   const registerForm = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      email: "",
+      email: prefilledEmail || "",
       password: "",
       confirmPassword: "",
       fullName: "",
@@ -73,15 +82,28 @@ const Auth = () => {
   const forgotPasswordForm = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
-      email: "",
+      email: prefilledEmail || "",
     },
   });
+
+  // Effet pour pré-remplir les formulaires si l'email est fourni dans l'URL
+  useEffect(() => {
+    if (prefilledEmail) {
+      loginForm.setValue("email", prefilledEmail);
+      forgotPasswordForm.setValue("email", prefilledEmail);
+      registerForm.setValue("email", prefilledEmail);
+    }
+  }, [prefilledEmail, loginForm, forgotPasswordForm, registerForm]);
 
   const onLoginSubmit = async (values: LoginValues) => {
     setLoading(true);
     try {
+      console.log("Tentative de connexion avec:", values.email);
       const { success, error } = await signIn(values.email, values.password);
       if (success) {
+        toast.success("Connexion réussie", {
+          description: "Vous êtes maintenant connecté."
+        });
         navigate("/admin");
       } else if (error) {
         console.error("Erreur de connexion:", error);
@@ -182,7 +204,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-md">
-        <Card>
+        <Card className="shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Pazproperty Admin</CardTitle>
             <CardDescription className="text-center">

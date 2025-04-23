@@ -30,6 +30,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState<"admin" | "manager" | "user" | null>(null);
+  const [roleLoading, setRoleLoading] = useState(false);
+
+  // Fonction pour récupérer le rôle en utilisant l'ID utilisateur
+  const fetchUserRole = async (userId: string): Promise<"admin" | "manager" | "user" | null> => {
+    try {
+      setRoleLoading(true);
+      console.log("Récupération du rôle pour l'utilisateur:", userId);
+      
+      // Vérifier si la table user_roles existe
+      const { data: tableData, error: tableError } = await supabase
+        .from('user_roles')
+        .select('count(*)')
+        .limit(1);
+        
+      if (tableError) {
+        console.error("Erreur lors de la vérification de la table user_roles:", tableError);
+        return null;
+      }
+      
+      // Si la table existe, récupérer le rôle
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .single();
+        
+      if (error) {
+        console.error("Erreur lors de la récupération du rôle:", error);
+        
+        // Vérifier si l'erreur est due à l'absence d'enregistrements
+        if (error.code === 'PGRST116') {
+          console.log("Aucun rôle trouvé pour l'utilisateur, attribution du rôle par défaut");
+          
+          // Attribuer un rôle par défaut à l'utilisateur
+          const { error: insertError } = await supabase
+            .from('user_roles')
+            .insert({ 
+              user_id: userId,
+              role: 'user'
+            });
+            
+          if (insertError) {
+            console.error("Erreur lors de l'attribution du rôle par défaut:", insertError);
+          } else {
+            console.log("Rôle 'user' attribué avec succès");
+            return 'user';
+          }
+        }
+        
+        return null;
+      }
+      
+      console.log("Rôle récupéré pour l'utilisateur:", data?.role);
+      return data?.role as "admin" | "manager" | "user" || null;
+    } catch (err) {
+      console.error("Erreur inattendue lors de la récupération du rôle:", err);
+      return null;
+    } finally {
+      setRoleLoading(false);
+    }
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -43,32 +105,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (event === "SIGNED_OUT") {
             navigate("/auth");
+            setUserRole(null);
           } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
             console.log("Utilisateur connecté ou token rafraîchi");
             
-            // Vérifier si l'utilisateur doit être redirigé vers la zone admin
-            setTimeout(async () => {
-              try {
-                const { data } = await supabase
-                  .from('user_roles')
-                  .select('role')
-                  .eq('user_id', newSession?.user?.id)
-                  .maybeSingle();
+            // Vérifier le rôle de l'utilisateur pour la redirection
+            if (newSession?.user?.id) {
+              setTimeout(async () => {
+                try {
+                  const role = await fetchUserRole(newSession.user.id);
+                  setUserRole(role);
                   
-                const isAdmin = data?.role === 'admin';
-                console.log("Vérification du rôle:", data?.role, "Est admin:", isAdmin);
-                
-                // Rediriger vers la page admin si l'utilisateur a un rôle admin
-                if (isAdmin) {
-                  navigate("/admin");
-                } else if (data?.role) {
-                  // Si l'utilisateur a un autre rôle, rediriger vers une autre page selon le besoin
+                  // Rediriger vers la page admin si l'utilisateur a un rôle admin
+                  if (role === 'admin') {
+                    navigate("/admin");
+                  } else if (role === 'manager') {
+                    navigate("/");
+                  } else if (role === 'user') {
+                    navigate("/");
+                  } else {
+                    // Si pas de rôle, rediriger vers une page par défaut
+                    navigate("/");
+                  }
+                } catch (err) {
+                  console.error("Erreur lors de la vérification du rôle:", err);
+                  // Rediriger vers une page par défaut en cas d'erreur
                   navigate("/");
                 }
-              } catch (err) {
-                console.error("Erreur lors de la vérification du rôle:", err);
-              }
-            }, 0);
+              }, 0);
+            }
           } else if (event === "PASSWORD_RECOVERY") {
             navigate("/auth/callback?reset=true");
           }
@@ -82,10 +147,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (error) {
           console.error("Erreur lors de la récupération de la session initiale:", error);
+        } else {
+          setSession(data.session);
+          setUser(data.session?.user ?? null);
+          
+          // Récupérer le rôle si l'utilisateur est connecté
+          if (data.session?.user) {
+            const role = await fetchUserRole(data.session.user.id);
+            setUserRole(role);
+          }
         }
         
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
         setLoading(false);
       } catch (err) {
         console.error("Erreur inattendue lors de la récupération de la session:", err);
@@ -104,7 +176,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       console.log("Tentative de connexion avec:", email);
-      console.log("Longueur du mot de passe:", password.length);
+      
+      // Vérifier que l'email existe avant la tentative de connexion
+      const { data: userExists, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+        
+      if (checkError) {
+        console.warn("Erreur lors de la vérification de l'existence de l'utilisateur:", checkError);
+        // Continuer même si erreur - peut-être que l'utilisateur existe dans auth mais pas dans la table users
+      }
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -113,12 +196,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error("Erreur de connexion:", error);
-        console.log("Message d'erreur:", error.message);
         
         if (error.message.includes("Invalid login credentials")) {
-          console.log("Erreur d'identifiants invalides détectée");
-          console.log("L'utilisateur a entré des identifiants invalides. Soit l'utilisateur n'existe pas, soit le mot de passe est incorrect.");
-          
           toast.error("Identifiants invalides", {
             description: "Vérifiez votre adresse e-mail et votre mot de passe."
           });
@@ -135,39 +214,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error, success: false };
       }
 
-      // Vérifier le rôle de l'utilisateur
+      // Si la connexion réussit, vérifier/créer le rôle pour l'utilisateur
       try {
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user?.id)
-          .maybeSingle();
-          
-        // Si l'utilisateur n'a pas de rôle, lui attribuer le rôle 'user' par défaut
-        if (!roleData) {
-          console.log("Utilisateur sans rôle détecté, attribution du rôle par défaut");
-          const { error: insertError } = await supabase
-            .from('user_roles')
-            .insert({ 
-              user_id: data.user?.id,
-              role: 'user'
-            });
-            
-          if (insertError) {
-            console.error("Erreur lors de l'attribution du rôle par défaut:", insertError);
-          } else {
-            console.log("Rôle 'user' attribué avec succès");
-          }
+        const role = await fetchUserRole(data.user.id);
+        setUserRole(role);
+        
+        // Si aucun rôle n'a été trouvé ou créé, afficher un avertissement
+        if (!role) {
+          console.warn("Aucun rôle défini pour l'utilisateur après la connexion");
+          toast.warning("Problème d'autorisation", {
+            description: "Votre compte n'a pas de rôle défini. Contactez l'administrateur."
+          });
         } else {
-          console.log("Rôle utilisateur existant:", roleData.role);
+          console.log("Rôle de l'utilisateur après connexion:", role);
         }
       } catch (roleErr) {
         console.error("Erreur lors de la vérification ou attribution du rôle:", roleErr);
       }
 
-      console.log("Connexion réussie");
       toast.success("Connexion réussie");
-      
       return { error: null, success: true };
     } catch (err) {
       console.error("Erreur inattendue lors de la connexion:", err);
@@ -301,6 +366,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           description: error.message,
         });
       } else {
+        setUserRole(null);
         toast.success("Déconnexion réussie");
         // Ne pas naviguer ici - laisser le gestionnaire d'événements onAuthStateChange s'en charger
       }
@@ -315,23 +381,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getUserRole = async (): Promise<"admin" | "manager" | "user" | null> => {
     if (!user) return null;
     
-    try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
-        
-      if (error) {
-        console.error("Erreur lors de la récupération du rôle:", error);
-        return null;
-      }
-      
-      return data?.role as "admin" | "manager" | "user" || null;
-    } catch (err) {
-      console.error("Erreur inattendue lors de la récupération du rôle:", err);
-      return null;
+    // Si le rôle est déjà chargé et que nous ne sommes pas en train de le charger
+    if (userRole && !roleLoading) {
+      return userRole;
     }
+    
+    // Sinon, récupérer le rôle
+    const role = await fetchUserRole(user.id);
+    setUserRole(role);
+    return role;
   };
 
   return (
@@ -339,7 +397,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         session,
-        loading,
+        loading: loading || roleLoading,
         signIn,
         signInWithGoogle,
         signOut,
