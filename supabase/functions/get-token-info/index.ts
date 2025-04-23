@@ -41,9 +41,6 @@ serve(async (req) => {
 
     console.log("Recherche d'informations pour le token:", token);
     
-    // Log token pour debug
-    console.log("Token reçu:", token);
-    
     // Vérifier que le token est valide en format
     if (!token.match(/^[a-zA-Z0-9-]+$/)) {
       console.error("Format de token invalide");
@@ -92,9 +89,9 @@ serve(async (req) => {
       );
     }
 
-    // Vérifier la présence des données attendues
+    // The function now returns a table with user_id and user_email columns
     const userData = tokenData[0];
-    console.log("Données utilisateur extraites:", userData);
+    console.log("Données token extraites:", userData);
     
     if (!userData.user_id || !userData.user_email) {
       console.error("Données utilisateur incomplètes:", userData);

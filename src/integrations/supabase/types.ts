@@ -359,7 +359,7 @@ export type Database = {
         Args: {
           user_id_param: string
           token_param: string
-          expires_at_param: string
+          expires_at_param?: string
         }
         Returns: boolean
       }
@@ -369,7 +369,10 @@ export type Database = {
       }
       verify_password_reset_token: {
         Args: { token_param: string }
-        Returns: string
+        Returns: {
+          user_id: string
+          user_email: string
+        }[]
       }
       version: {
         Args: Record<PropertyKey, never>
