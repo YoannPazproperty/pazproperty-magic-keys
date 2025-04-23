@@ -75,54 +75,78 @@ serve(async (req) => {
         
         if (tokenError || !tokenData) {
           console.error("Token non trouvé:", tokenError);
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: "Token invalide ou expiré"
-            }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-              status: 400,
-            }
-          );
-        }
-        
-        // Vérifier si le token n'a pas expiré
-        if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
-          console.error("Token expiré:", tokenData.expires_at);
           
-          // Supprimer le token expiré
+          // Essayer une autre méthode si la première échoue - utiliser le token directement avec Supabase Auth
+          try {
+            console.log("Tentative de récupération de la session avec le token...");
+            const { data: verifyData, error: verifyError } = await adminClient.auth.verifyOtp({
+              token_hash: recoveryToken,
+              type: 'recovery'
+            });
+            
+            if (verifyError || !verifyData?.user?.id) {
+              console.error("Échec de la vérification OTP:", verifyError);
+              throw new Error("Token de récupération invalide");
+            }
+            
+            console.log("Token validé via API Auth, user ID:", verifyData.user.id);
+            userId = verifyData.user.id;
+            
+          } catch (otpError) {
+            console.error("Échec de la vérification OTP:", otpError);
+            return new Response(
+              JSON.stringify({ 
+                success: false, 
+                error: "Token invalide ou expiré",
+                details: "Le token n'a pas pu être validé"
+              }),
+              {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 400,
+              }
+            );
+          }
+        } else {
+          // Le token existe dans notre table personnalisée
+          console.log("Token trouvé dans la base de données:", tokenData);
+          
+          // Vérifier si le token n'a pas expiré
+          if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
+            console.error("Token expiré:", tokenData.expires_at);
+            
+            // Supprimer le token expiré
+            await adminClient
+              .from("password_reset_tokens")
+              .delete()
+              .eq("token", recoveryToken);
+            
+            return new Response(
+              JSON.stringify({ 
+                success: false, 
+                error: "Token expiré"
+              }),
+              {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 400,
+              }
+            );
+          }
+          
+          userId = tokenData.user_id;
+          
+          // Supprimer le token après utilisation
           await adminClient
             .from("password_reset_tokens")
             .delete()
             .eq("token", recoveryToken);
-          
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: "Token expiré"
-            }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-              status: 400,
-            }
-          );
         }
-        
-        userId = tokenData.user_id;
-        
-        // Supprimer le token après utilisation
-        await adminClient
-          .from("password_reset_tokens")
-          .delete()
-          .eq("token", recoveryToken);
-        
       } catch (tokenErr) {
         console.error("Erreur lors de la vérification du token:", tokenErr);
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: "Erreur lors de la vérification du token"
+            error: "Erreur lors de la vérification du token",
+            details: tokenErr instanceof Error ? tokenErr.message : String(tokenErr)
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -149,27 +173,55 @@ serve(async (req) => {
       }
       
       // Chercher l'utilisateur par email
-      const { data: userData, error: userError } = await adminClient
-        .from("users")
-        .select("id")
-        .eq("email", email)
-        .single();
-      
-      if (userError || !userData) {
-        console.error("Utilisateur non trouvé:", userError);
+      try {
+        // D'abord essayer via auth.admin
+        const { data: userData, error: userError } = await adminClient.auth.admin.listUsers({
+          filter: {
+            email: email
+          }
+        });
+        
+        if (userError || !userData || userData.users.length === 0) {
+          console.error("Utilisateur non trouvé via API Auth:", userError);
+          
+          // Essayer via la table public.users
+          const { data: publicUserData, error: publicUserError } = await adminClient
+            .from("users")
+            .select("id")
+            .eq("email", email)
+            .single();
+          
+          if (publicUserError || !publicUserData) {
+            console.error("Utilisateur non trouvé via table public:", publicUserError);
+            return new Response(
+              JSON.stringify({ 
+                success: false, 
+                error: "Utilisateur non trouvé"
+              }),
+              {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 404,
+              }
+            );
+          }
+          
+          userId = publicUserData.id;
+        } else {
+          userId = userData.users[0].id;
+        }
+      } catch (userErr) {
+        console.error("Erreur lors de la recherche de l'utilisateur:", userErr);
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: "Utilisateur non trouvé"
+            error: "Erreur lors de la recherche de l'utilisateur"
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 404,
+            status: 500,
           }
         );
       }
-      
-      userId = userData.id;
     }
     // Si nous avons juste un email sans clé admin, c'est une tentative non autorisée
     else if (email && !adminKey) {
@@ -201,24 +253,9 @@ serve(async (req) => {
     
     // Changer le mot de passe de l'utilisateur
     try {
-      // Vérifier que l'utilisateur existe bien dans auth.users
-      const { data: authUser, error: authUserError } = await adminClient.auth.admin.getUserById(userId);
+      console.log("Tentative de mise à jour du mot de passe pour l'utilisateur:", userId);
       
-      if (authUserError || !authUser) {
-        console.error("Utilisateur non trouvé dans auth:", authUserError);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: "Utilisateur non trouvé"
-          }),
-          {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 404,
-          }
-        );
-      }
-      
-      // Changer le mot de passe
+      // Changer le mot de passe avec l'API Admin
       const { error: updateError } = await adminClient.auth.admin.updateUserById(
         userId,
         { password: password }
@@ -226,17 +263,61 @@ serve(async (req) => {
       
       if (updateError) {
         console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: "Erreur lors de la mise à jour du mot de passe",
-            details: updateError.message
-          }),
-          {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 500,
+        
+        // Si c'est une erreur spécifique qu'on peut résoudre
+        if (updateError.message && updateError.message.includes("confirmation_token")) {
+          console.log("Tentative de réparation du token de confirmation...");
+          try {
+            // Réparation directe via SQL
+            await adminClient.rpc("fix_confirmation_tokens");
+            
+            // Nouvelle tentative après réparation
+            const { error: retryError } = await adminClient.auth.admin.updateUserById(
+              userId,
+              { password: password }
+            );
+            
+            if (retryError) {
+              console.error("Échec de la seconde tentative:", retryError);
+              return new Response(
+                JSON.stringify({ 
+                  success: false, 
+                  error: "Échec après tentative de réparation",
+                  details: retryError.message
+                }),
+                {
+                  headers: { ...corsHeaders, "Content-Type": "application/json" },
+                  status: 500,
+                }
+              );
+            }
+          } catch (repairError) {
+            console.error("Échec de la réparation:", repairError);
+            return new Response(
+              JSON.stringify({ 
+                success: false, 
+                error: "Échec de la réparation de la base de données",
+                details: repairError instanceof Error ? repairError.message : String(repairError)
+              }),
+              {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 500,
+              }
+            );
           }
-        );
+        } else {
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: "Erreur lors de la mise à jour du mot de passe",
+              details: updateError.message
+            }),
+            {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+              status: 500,
+            }
+          );
+        }
       }
       
       console.log("Mot de passe mis à jour avec succès pour l'utilisateur:", userId);

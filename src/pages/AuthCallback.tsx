@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,11 +23,11 @@ const AuthCallback = () => {
         console.log("Traitement du callback d'authentification");
         console.log("URL actuelle:", window.location.href);
         
-        // Vérifier si c'est un flux de réinitialisation de mot de passe
+        // Extraire tous les paramètres possibles - de l'URL et du hash
         const urlParams = new URL(window.location.href).searchParams;
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         
-        // Différentes façons dont le paramètre de réinitialisation peut être passé
+        // Vérifier tous les indicateurs possibles de réinitialisation de mot de passe
         const isReset = urlParams.get("reset") === "true";
         const type = urlParams.get("type") || hashParams.get("type");
         const accessToken = urlParams.get("access_token") || hashParams.get("access_token");
@@ -39,14 +40,14 @@ const AuthCallback = () => {
           search: window.location.search
         });
         
-        // Si c'est un reset de mot de passe ou si on a un token dans le hash
+        // Si c'est un reset de mot de passe ou si on a un token dans le hash/search
         if (isReset || type === "recovery" || accessToken) {
           console.log("Détection d'un flux de réinitialisation de mot de passe");
           setIsPasswordReset(true);
           
           // Stocker le token pour l'utiliser lors de la réinitialisation
           if (accessToken) {
-            console.log("Token de réinitialisation trouvé dans l'URL:", accessToken);
+            console.log("Token de réinitialisation trouvé:", accessToken);
             setToken(accessToken);
           }
           
@@ -137,7 +138,7 @@ const AuthCallback = () => {
     setLoading(true);
     
     try {
-      console.log("Tentative de réinitialisation du mot de passe avec token personnalisé");
+      console.log("Tentative de réinitialisation du mot de passe");
       
       if (!token) {
         console.error("Aucun token d'accès trouvé");
@@ -146,6 +147,32 @@ const AuthCallback = () => {
         return;
       }
 
+      // Essayer d'abord avec l'API de Supabase
+      try {
+        console.log("Tentative avec l'API native de Supabase");
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        
+        if (error) {
+          console.error("Erreur lors de la mise à jour via Supabase:", error);
+          // Si l'API Supabase échoue, utiliser notre fonction Edge personnalisée
+          throw error;
+        } else {
+          console.log("Mot de passe mis à jour avec succès via Supabase API");
+          toast.success("Mot de passe mis à jour avec succès");
+          
+          // Rediriger vers la page de connexion après un délai
+          setTimeout(() => {
+            navigate("/auth");
+          }, 2000);
+          return;
+        }
+      } catch (supabaseErr) {
+        console.error("Échec de l'API Supabase, tentative avec notre API personnalisée");
+      }
+
+      // Utiliser notre fonction Edge personnalisée en cas d'échec de Supabase
+      console.log("Utilisation de la fonction Edge personnalisée");
+      
       // Utiliser notre fonction Edge personnalisée pour réinitialiser le mot de passe
       const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
       const response = await fetch(
@@ -177,14 +204,12 @@ const AuthCallback = () => {
         // Rediriger vers la page de connexion après un délai
         setTimeout(() => {
           navigate("/auth");
-          // Rafraîchir la page pour s'assurer que l'état d'authentification est correctement mis à jour
-          window.location.reload();
         }, 2000);
       }
     } catch (err: any) {
       console.error("Exception lors de la réinitialisation:", err);
       setPasswordError(err.message || "Erreur technique");
-      toast.error("Erreur technique");
+      toast.error("Erreur technique lors de la réinitialisation du mot de passe");
     } finally {
       setLoading(false);
     }
