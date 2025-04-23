@@ -118,7 +118,7 @@ serve(async (req) => {
     }
 
     const baseUrl = "https://22c7e654-f304-419f-a370-324064acafb0.lovableproject.com";
-    const resetLink = `${baseUrl}/auth/callback?type=recovery&token=${token}&email=${encodeURIComponent(email)}`;
+    const resetLink = `${baseUrl}/auth/callback?type=recovery&token=${token}&email=${encodeURIComponent(userEmail)}`;
 
     // Envoyer l'email si Resend est configuré
     if (resendApiKey) {
@@ -131,7 +131,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             from: "Pazproperty <alexa@pazproperty.pt>",
-            to: email,
+            to: userEmail,
             subject: "Réinitialisation de votre mot de passe Pazproperty",
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -168,7 +168,8 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         message: "Instructions de réinitialisation envoyées par email",
-        resetLink: resetLink // Pour le développement uniquement
+        resetLink: resetLink, // Pour le développement uniquement
+        userEmail: userEmail  // Afficher l'email utilisé pour vérification
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -35,7 +35,7 @@ serve(async (req) => {
     console.log("Demande de définition/réinitialisation de mot de passe reçue");
     console.log("Méthode:", recoveryToken ? "Token de récupération" : email ? "Email direct" : "Clé admin");
     console.log("Email:", email || "Non fourni");
-    console.log("Recovery token présent:", !!recoveryToken);
+    console.log("Recovery token présent:", recoveryToken ? `${recoveryToken.substring(0, 8)}...` : "Non");
     console.log("Password fourni de longueur:", password ? password.length : 0);
 
     // Cas 1: Utilisation d'un token de récupération personnalisé
@@ -146,8 +146,6 @@ serve(async (req) => {
         );
       }
 
-      console.log("Email de l'utilisateur confirmé:", userEmail);
-
       // Mettre à jour le mot de passe
       console.log("Mise à jour du mot de passe pour l'utilisateur:", userId, "avec email:", userEmail);
       const { error: updateError } = await adminClient.auth.admin.updateUserById(
@@ -170,6 +168,36 @@ serve(async (req) => {
       }
 
       console.log("Mot de passe mis à jour avec succès pour l'utilisateur:", userId, "avec email:", userEmail);
+      
+      // Vérifier le rôle de l'utilisateur ou en créer un si nécessaire
+      try {
+        // Vérifier si l'utilisateur a déjà un rôle
+        const { data: roleData, error: roleError } = await adminClient
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (roleError) {
+          console.error("Erreur lors de la vérification du rôle:", roleError);
+        } else if (!roleData) {
+          // Créer un rôle admin pour l'utilisateur s'il n'en a pas
+          console.log("Création d'un rôle admin pour l'utilisateur:", userId);
+          const { error: insertRoleError } = await adminClient
+            .from('user_roles')
+            .insert({ user_id: userId, role: 'admin' });
+          
+          if (insertRoleError) {
+            console.error("Erreur lors de la création du rôle admin:", insertRoleError);
+          } else {
+            console.log("Rôle admin créé avec succès pour l'utilisateur:", userId);
+          }
+        } else {
+          console.log("L'utilisateur a déjà un rôle:", roleData.role);
+        }
+      } catch (roleErr) {
+        console.error("Exception lors de la gestion du rôle:", roleErr);
+      }
       
       // Pour le débogage, vérifier si nous pouvons nous connecter avec ces identifiants
       try {
@@ -266,6 +294,36 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           }
         );
+      }
+
+      // Vérifier le rôle de l'utilisateur ou en créer un si nécessaire
+      try {
+        // Vérifier si l'utilisateur a déjà un rôle
+        const { data: roleData, error: roleError } = await adminClient
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (roleError) {
+          console.error("Erreur lors de la vérification du rôle:", roleError);
+        } else if (!roleData) {
+          // Créer un rôle admin pour l'utilisateur s'il n'en a pas
+          console.log("Création d'un rôle admin pour l'utilisateur:", userId);
+          const { error: insertRoleError } = await adminClient
+            .from('user_roles')
+            .insert({ user_id: userId, role: 'admin' });
+          
+          if (insertRoleError) {
+            console.error("Erreur lors de la création du rôle admin:", insertRoleError);
+          } else {
+            console.log("Rôle admin créé avec succès pour l'utilisateur:", userId);
+          }
+        } else {
+          console.log("L'utilisateur a déjà un rôle:", roleData.role);
+        }
+      } catch (roleErr) {
+        console.error("Exception lors de la gestion du rôle:", roleErr);
       }
 
       console.log("Mot de passe administrateur mis à jour avec succès pour:", email);

@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Info } from "lucide-react";
+import { AlertCircle, Info, Wrench } from "lucide-react";
 import { testLogin } from "@/services/supabase/auth";
 
 const AuthCallback = () => {
@@ -272,55 +272,56 @@ const AuthCallback = () => {
         // Récupérer l'email de la réponse si disponible
         const resetEmail = data.userEmail || userEmail;
         
-        // Tenter de se connecter directement avec le nouveau mot de passe
         if (resetEmail) {
           console.log("Tentative de connexion automatique avec l'email:", resetEmail);
           
-          // Utiliser notre fonction de test de connexion améliorée
-          const testResult = await testLogin(resetEmail, newPassword);
-          setTestLoginResult(testResult);
-          
-          if (testResult.success) {
-            console.log("Test de connexion réussi:", testResult);
+          try {
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email: resetEmail,
+              password: newPassword,
+            });
             
-            // Tenter la connexion réelle
-            try {
-              const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: resetEmail,
-                password: newPassword,
+            if (signInError) {
+              console.error("Échec de la connexion automatique:", signInError);
+              toast.error("Authentification échouée", {
+                description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe. " + 
+                             (signInError.message || "")
               });
               
-              if (signInError) {
-                console.error("Échec de la connexion automatique réelle:", signInError);
-                toast.error("Mot de passe mis à jour, mais la connexion automatique a échoué", {
-                  description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe."
-                });
-              } else {
-                console.log("Connexion automatique réussie");
-                toast.success("Connexion automatique réussie");
+              // Ajouter des détails de débogage pour comprendre l'échec
+              setDebugInfo({
+                ...debugInfo,
+                signInError: signInError.message,
+                authResponse: signInData
+              });
+              
+              // Retourner à la page de connexion après un délai
+              setTimeout(() => {
+                navigate("/auth");
+              }, 3000);
+            } else {
+              console.log("Connexion automatique réussie");
+              toast.success("Connexion réussie!");
+              
+              // Redirection vers la page admin après un court délai
+              setTimeout(() => {
                 navigate("/admin");
-                return;
-              }
-            } catch (signInErr) {
-              console.error("Erreur lors de la tentative de connexion automatique:", signInErr);
+              }, 1000);
             }
-          } else {
-            console.error("Échec du test de connexion:", testResult);
-            toast.error("Mot de passe mis à jour, mais le test de connexion a échoué", {
-              description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe."
+          } catch (err: any) {
+            console.error("Exception lors de la tentative de connexion:", err);
+            toast.error("Erreur technique", {
+              description: "Connexion impossible: " + (err.message || "erreur inconnue")
             });
+            setTimeout(() => navigate("/auth"), 3000);
           }
+        } else {
+          // Si pas d'email disponible pour la connexion automatique
+          toast.info("Veuillez vous connecter avec votre nouveau mot de passe", {
+            duration: 5000,
+          });
+          setTimeout(() => navigate("/auth"), 2000);
         }
-        
-        // Si pas de connexion automatique, rediriger vers la page de connexion
-        toast.info("Veuillez vous connecter avec votre nouveau mot de passe", {
-          duration: 5000,
-        });
-        
-        // Rediriger vers la page de connexion après un délai
-        setTimeout(() => {
-          navigate("/auth");
-        }, 2000);
       }
     } catch (err: any) {
       console.error("Exception lors de la réinitialisation:", err);
@@ -419,14 +420,14 @@ const AuthCallback = () => {
             )}
           </form>
           
-          {debugInfo && (
+          {process.env.NODE_ENV === 'development' && debugInfo && (
             <div className="mt-4 bg-gray-100 p-3 rounded text-xs overflow-auto max-h-48">
               <p className="font-bold mb-1">Informations de débogage:</p>
               <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
             </div>
           )}
           
-          {testLoginResult && (
+          {process.env.NODE_ENV === 'development' && testLoginResult && (
             <div className="mt-4 bg-gray-100 p-3 rounded text-xs overflow-auto max-h-48">
               <p className="font-bold mb-1">Résultat du test de connexion:</p>
               <pre>{JSON.stringify(testLoginResult, null, 2)}</pre>
@@ -446,7 +447,7 @@ const AuthCallback = () => {
             </Alert>
           )}
           
-          {debugInfo && (
+          {process.env.NODE_ENV === 'development' && debugInfo && (
             <div className="bg-gray-100 p-3 rounded text-xs overflow-auto max-w-md max-h-48">
               <p className="font-bold mb-1">Informations de débogage:</p>
               <pre>{JSON.stringify(debugInfo, null, 2)}</pre>

@@ -99,8 +99,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             error: "Données de token incomplètes",
-            details: "ID utilisateur ou email manquant dans les données retournées",
-            tokenData: tokenData
+            details: "ID utilisateur ou email manquant dans les données retournées"
           }),
           {
             status: 500,

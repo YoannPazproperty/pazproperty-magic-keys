@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.email);
         
+        // Utiliser setTimeout pour éviter des blocages potentiels dans le callback
         setTimeout(() => {
           setSession(newSession);
           setUser(newSession?.user ?? null);
@@ -43,6 +45,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             navigate("/auth");
           } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
             console.log("Utilisateur connecté ou token rafraîchi");
+            
+            // Vérifier si l'utilisateur doit être redirigé vers la zone admin
+            setTimeout(async () => {
+              try {
+                const { data } = await supabase
+                  .from('user_roles')
+                  .select('role')
+                  .eq('user_id', newSession?.user?.id)
+                  .maybeSingle();
+                  
+                const isAdmin = data?.role === 'admin';
+                console.log("Vérification du rôle:", data?.role, "Est admin:", isAdmin);
+                
+                // Rediriger vers la page admin si l'utilisateur a un rôle admin
+                if (isAdmin) {
+                  navigate("/admin");
+                } else if (data?.role) {
+                  // Si l'utilisateur a un autre rôle, rediriger vers une autre page selon le besoin
+                  navigate("/");
+                }
+              } catch (err) {
+                console.error("Erreur lors de la vérification du rôle:", err);
+              }
+            }, 0);
           } else if (event === "PASSWORD_RECOVERY") {
             navigate("/auth/callback?reset=true");
           }
@@ -92,9 +118,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error.message.includes("Invalid login credentials")) {
           console.log("Erreur d'identifiants invalides détectée");
           console.log("L'utilisateur a entré des identifiants invalides. Soit l'utilisateur n'existe pas, soit le mot de passe est incorrect.");
+          
+          toast.error("Identifiants invalides", {
+            description: "Vérifiez votre adresse e-mail et votre mot de passe."
+          });
+        } else if (error.message.includes("Database error querying schema")) {
+          toast.error("Problème temporaire de connexion à la base de données", {
+            description: "Veuillez réessayer dans quelques instants."
+          });
+        } else {
+          toast.error("Échec de connexion", {
+            description: error.message || "Veuillez réessayer."
+          });
         }
         
         return { error, success: false };
+      }
+
+      // Vérifier le rôle de l'utilisateur
+      try {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user?.id)
+          .maybeSingle();
+          
+        // Si l'utilisateur n'a pas de rôle, lui attribuer le rôle 'user' par défaut
+        if (!roleData) {
+          console.log("Utilisateur sans rôle détecté, attribution du rôle par défaut");
+          const { error: insertError } = await supabase
+            .from('user_roles')
+            .insert({ 
+              user_id: data.user?.id,
+              role: 'user'
+            });
+            
+          if (insertError) {
+            console.error("Erreur lors de l'attribution du rôle par défaut:", insertError);
+          } else {
+            console.log("Rôle 'user' attribué avec succès");
+          }
+        } else {
+          console.log("Rôle utilisateur existant:", roleData.role);
+        }
+      } catch (roleErr) {
+        console.error("Erreur lors de la vérification ou attribution du rôle:", roleErr);
       }
 
       console.log("Connexion réussie");
@@ -103,6 +171,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null, success: true };
     } catch (err) {
       console.error("Erreur inattendue lors de la connexion:", err);
+      toast.error("Erreur de connexion", {
+        description: "Une erreur inattendue s'est produite. Veuillez réessayer."
+      });
       return { error: err, success: false };
     } finally {
       setLoading(false);
