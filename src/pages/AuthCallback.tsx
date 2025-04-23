@@ -20,6 +20,7 @@ const AuthCallback = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any | null>(null);
   const [testLoginResult, setTestLoginResult] = useState<any | null>(null);
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
 
   useEffect(() => {
     // Traiter le callback d'authentification
@@ -52,6 +53,7 @@ const AuthCallback = () => {
           isReset, 
           type, 
           accessToken: accessToken ? "présent" : "absent",
+          token: accessToken ? accessToken.substring(0, 8) + "..." : null,
           email: email || "non spécifié",
           hash: window.location.hash,
           search: window.location.search,
@@ -68,42 +70,62 @@ const AuthCallback = () => {
           
           // Stocker le token pour l'utiliser lors de la réinitialisation
           if (accessToken) {
-            console.log("Token de réinitialisation trouvé:", accessToken);
+            console.log("Token de réinitialisation trouvé:", accessToken.substring(0, 8) + "...");
             setToken(accessToken);
+            
+            // Vérifier immédiatement la validité du token
+            try {
+              console.log("Vérification immédiate de la validité du token");
+              const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
+              const response = await fetch(
+                `${supabaseUrl}/functions/v1/get-token-info`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    token: accessToken
+                  })
+                }
+              );
+              
+              if (!response.ok) {
+                console.error("Le token est invalide:", await response.json());
+                setTokenValid(false);
+                const errorData = await response.json();
+                setDebugInfo(prev => ({
+                  ...prev,
+                  errorDetails: errorData.details || errorData.error,
+                  tokenValid: false
+                }));
+              } else {
+                const data = await response.json();
+                console.log("Token valide, informations récupérées:", data);
+                setTokenValid(true);
+                setUserEmail(data.userEmail);
+                setDebugInfo(prev => ({
+                  ...prev,
+                  userEmail: data.userEmail,
+                  userId: data.userId,
+                  tokenValid: true
+                }));
+              }
+            } catch (error) {
+              console.error("Erreur lors de la vérification du token:", error);
+              setTokenValid(false);
+              setDebugInfo(prev => ({
+                ...prev,
+                verificationError: error instanceof Error ? error.message : String(error),
+                tokenValid: false
+              }));
+            }
           }
           
           // Stocker l'email s'il est présent dans l'URL
           if (email) {
             console.log("Email trouvé dans l'URL:", email);
             setUserEmail(email);
-          } else {
-            // Tenter de récupérer l'email à partir du token
-            if (accessToken) {
-              try {
-                console.log("Tentative de récupération de l'email à partir du token");
-                const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
-                const response = await fetch(
-                  `${supabaseUrl}/functions/v1/get-token-info`,
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      token: accessToken
-                    })
-                  }
-                );
-                
-                const data = await response.json();
-                if (response.ok && data.userEmail) {
-                  console.log("Email récupéré à partir du token:", data.userEmail);
-                  setUserEmail(data.userEmail);
-                }
-              } catch (error) {
-                console.error("Erreur lors de la récupération des infos du token:", error);
-              }
-            }
           }
           
           return; // Attendre que l'utilisateur entre un nouveau mot de passe
@@ -204,7 +226,7 @@ const AuthCallback = () => {
       }
 
       // Utiliser notre fonction Edge personnalisée pour réinitialiser le mot de passe
-      console.log("Utilisation de la fonction Edge personnalisée avec le token:", token);
+      console.log("Utilisation de la fonction Edge personnalisée avec le token:", token.substring(0, 8) + "...");
       console.log("Email utilisateur (si disponible):", userEmail);
       
       const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
@@ -314,6 +336,17 @@ const AuthCallback = () => {
       {isPasswordReset ? (
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-6 text-center">Réinitialisation de mot de passe</h2>
+          
+          {tokenValid === false && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Le token de réinitialisation est invalide ou a expiré. 
+                Veuillez demander un nouveau lien de réinitialisation.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {userEmail && (
             <div className="mb-4 bg-blue-50 p-3 rounded">
               <p className="text-sm flex items-center text-blue-800">
@@ -322,6 +355,7 @@ const AuthCallback = () => {
               </p>
             </div>
           )}
+          
           <form onSubmit={handlePasswordReset} className="space-y-4">
             <div>
               <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
@@ -336,6 +370,7 @@ const AuthCallback = () => {
                 placeholder="Minimum 8 caractères"
                 required
                 minLength={8}
+                disabled={tokenValid === false}
               />
             </div>
             
@@ -352,6 +387,7 @@ const AuthCallback = () => {
                 placeholder="Répétez votre mot de passe"
                 required
                 minLength={8}
+                disabled={tokenValid === false}
               />
             </div>
             
@@ -389,11 +425,23 @@ const AuthCallback = () => {
             
             <button
               type="submit"
-              className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
-              disabled={loading}
+              className={`w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors ${
+                tokenValid === false ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+              disabled={loading || tokenValid === false}
             >
               {loading ? "Réinitialisation en cours..." : "Réinitialiser mon mot de passe"}
             </button>
+            
+            {tokenValid === false && (
+              <button
+                type="button"
+                className="w-full mt-2 border border-gray-300 py-2 px-4 rounded-md"
+                onClick={() => navigate("/auth?tab=forgot-password")}
+              >
+                Demander un nouveau lien de réinitialisation
+              </button>
+            )}
           </form>
         </div>
       ) : (

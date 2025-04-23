@@ -40,7 +40,7 @@ serve(async (req) => {
 
     // Cas 1: Utilisation d'un token de récupération personnalisé
     if (recoveryToken) {
-      console.log("Vérification du token de récupération:", recoveryToken);
+      console.log("Vérification du token de récupération:", recoveryToken.substring(0, 8) + "...");
       
       // Utiliser notre fonction SQL pour vérifier le token
       const { data: tokenData, error: verifyError } = await adminClient.rpc(
@@ -48,7 +48,7 @@ serve(async (req) => {
         { token_param: recoveryToken }
       );
 
-      console.log("Résultat de la vérification du token:", tokenData, verifyError);
+      console.log("Résultat brut de la vérification du token:", tokenData);
 
       if (verifyError) {
         console.error("Erreur lors de la vérification du token SQL:", verifyError);
@@ -65,7 +65,7 @@ serve(async (req) => {
       }
 
       if (!tokenData || tokenData.length === 0) {
-        console.error("Token invalide ou expiré:", recoveryToken);
+        console.error("Token invalide ou expiré:", recoveryToken.substring(0, 8) + "...");
         return new Response(
           JSON.stringify({ 
             error: "Token de réinitialisation invalide ou expiré",
@@ -79,13 +79,8 @@ serve(async (req) => {
       }
 
       // Extraire correctement les données du token (userId et userEmail)
-      const userId = tokenData[0].user_id;
-      const userEmail = tokenData[0].user_email;
-      
-      console.log("Token valide pour l'utilisateur:", userId);
-      console.log("Email de l'utilisateur associé au token:", userEmail);
-
-      if (!userId || !userEmail) {
+      const userData = tokenData[0];
+      if (!userData || !userData.user_id || !userData.user_email) {
         console.error("Données incomplètes retournées par verify_password_reset_token");
         console.error("Données reçues:", tokenData);
         return new Response(
@@ -100,6 +95,12 @@ serve(async (req) => {
           }
         );
       }
+      
+      const userId = userData.user_id;
+      const userEmail = userData.user_email;
+      
+      console.log("Token valide pour l'utilisateur:", userId);
+      console.log("Email de l'utilisateur associé au token:", userEmail);
 
       if (!password || password.length < 8) {
         return new Response(
@@ -114,9 +115,9 @@ serve(async (req) => {
       }
 
       // Vérifier que l'utilisateur existe toujours
-      const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(userId);
+      const { data: userData2, error: userError } = await adminClient.auth.admin.getUserById(userId);
       
-      if (userError || !userData?.user) {
+      if (userError || !userData2?.user) {
         console.error("Erreur lors de la récupération des données utilisateur:", userError);
         return new Response(
           JSON.stringify({ 
@@ -131,8 +132,8 @@ serve(async (req) => {
       }
       
       // Double vérification que l'email correspond
-      if (userData.user.email !== userEmail) {
-        console.error("Incohérence dans les données utilisateur. Email attendu:", userEmail, "Email trouvé:", userData.user.email);
+      if (userData2.user.email !== userEmail) {
+        console.error("Incohérence dans les données utilisateur. Email attendu:", userEmail, "Email trouvé:", userData2.user.email);
         return new Response(
           JSON.stringify({ 
             error: "Incohérence dans les données utilisateur",

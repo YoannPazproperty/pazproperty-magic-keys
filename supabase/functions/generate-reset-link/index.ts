@@ -66,11 +66,16 @@ serve(async (req) => {
     }
 
     const userId = authUser.users[0].id;
+    const userEmail = authUser.users[0].email;
     
     // Générer un token et une date d'expiration
     const token = crypto.randomUUID();
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // Expire dans 24h
+
+    console.log("Création du token pour l'utilisateur:", userId);
+    console.log("Email de l'utilisateur:", userEmail);
+    console.log("Date d'expiration du token:", expiresAt.toISOString());
 
     // Stocker le token
     const { data: tokenData, error: tokenError } = await adminClient.rpc(
@@ -85,7 +90,10 @@ serve(async (req) => {
     if (tokenError) {
       console.error("Erreur lors du stockage du token:", tokenError);
       return new Response(
-        JSON.stringify({ error: "Erreur lors de la génération du token" }),
+        JSON.stringify({ 
+          error: "Erreur lors de la génération du token",
+          details: tokenError.message
+        }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -93,8 +101,24 @@ serve(async (req) => {
       );
     }
 
+    // Vérification immédiate que le token a bien été stocké
+    try {
+      const { data: verifyData, error: verifyError } = await adminClient.rpc(
+        'verify_password_reset_token',
+        { token_param: token }
+      );
+      
+      if (verifyError) {
+        console.error("Erreur lors de la vérification du token après création:", verifyError);
+      } else {
+        console.log("Vérification du token après création:", verifyData);
+      }
+    } catch (verifyErr) {
+      console.error("Exception lors de la vérification du token après création:", verifyErr);
+    }
+
     const baseUrl = "https://22c7e654-f304-419f-a370-324064acafb0.lovableproject.com";
-    const resetLink = `${baseUrl}/auth/callback?type=recovery&token=${token}`;
+    const resetLink = `${baseUrl}/auth/callback?type=recovery&token=${token}&email=${encodeURIComponent(email)}`;
 
     // Envoyer l'email si Resend est configuré
     if (resendApiKey) {
@@ -138,6 +162,8 @@ serve(async (req) => {
     }
 
     // Pour le développement, renvoyer le lien directement
+    console.log("Génération du lien de réinitialisation réussie: " + resetLink);
+    
     return new Response(
       JSON.stringify({
         success: true,
@@ -153,7 +179,10 @@ serve(async (req) => {
   } catch (error) {
     console.error("Erreur inattendue:", error);
     return new Response(
-      JSON.stringify({ error: "Une erreur inattendue s'est produite" }),
+      JSON.stringify({ 
+        error: "Une erreur inattendue s'est produite",
+        details: error instanceof Error ? error.message : String(error)
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

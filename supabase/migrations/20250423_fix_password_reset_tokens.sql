@@ -29,6 +29,15 @@ BEGIN
   
   -- Si aucun token trouvé ou expiré, renvoyer NULL
   IF token_record IS NULL THEN
+    -- Ajouter du journalisation pour le débogage
+    INSERT INTO public.logs (message, data)
+    VALUES (
+      'Token de réinitialisation invalide ou expiré', 
+      jsonb_build_object(
+        'token', substring(token_param, 1, 8) || '...',
+        'timestamp', now()
+      )
+    );
     RETURN;
   END IF;
   
@@ -39,6 +48,15 @@ BEGIN
   
   -- Si l'utilisateur existe, renvoyer ses informations
   IF user_record IS NULL THEN
+    -- Ajouter du journalisation pour le débogage
+    INSERT INTO public.logs (message, data)
+    VALUES (
+      'Utilisateur non trouvé pour token valide', 
+      jsonb_build_object(
+        'token', substring(token_param, 1, 8) || '...',
+        'user_id', token_record.user_id
+      )
+    );
     RETURN;
   END IF;
   
@@ -50,7 +68,7 @@ BEGIN
   -- Ajouter du journalisation pour le débogage
   INSERT INTO public.logs (message, data)
   VALUES (
-    'Token de réinitialisation vérifié', 
+    'Token de réinitialisation vérifié avec succès', 
     jsonb_build_object(
       'token', substring(token_param, 1, 8) || '...',
       'user_id', user_record.id,
