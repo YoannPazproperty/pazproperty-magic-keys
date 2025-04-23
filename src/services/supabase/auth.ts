@@ -81,6 +81,7 @@ export const generatePasswordResetLink = async (email: string): Promise<{
       };
     }
 
+    console.log("Génération d'un lien de réinitialisation pour:", email);
     const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
     
     // Générer un token de réinitialisation directement via l'API Supabase
@@ -96,6 +97,7 @@ export const generatePasswordResetLink = async (email: string): Promise<{
     );
 
     const data = await response.json();
+    console.log("Réponse de la fonction generate-reset-link:", data);
     
     if (!response.ok) {
       console.error('Erreur lors de la génération du lien de réinitialisation:', data);
@@ -117,7 +119,7 @@ export const generatePasswordResetLink = async (email: string): Promise<{
     return { 
       success: true, 
       message: "Lien de réinitialisation généré avec succès.",
-      resetLink: data.resetLink
+      resetLink: data.resetLink // Pour la démonstration
     };
   } catch (error) {
     console.error('Erreur inattendue lors de la génération du lien:', error);
@@ -144,6 +146,7 @@ export const setAdminPassword = async (email: string, newPassword: string): Prom
       };
     }
 
+    console.log("Tentative de définition de mot de passe pour:", email);
     const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
     
     // Appeler notre fonction Edge pour définir directement le mot de passe
@@ -163,6 +166,7 @@ export const setAdminPassword = async (email: string, newPassword: string): Prom
     );
 
     const data = await response.json();
+    console.log("Réponse de set-admin-password:", data);
     
     if (!response.ok) {
       console.error('Erreur lors de la définition du mot de passe:', data);

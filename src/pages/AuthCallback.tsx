@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -8,6 +8,7 @@ import { AlertCircle, Info } from "lucide-react";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [isPasswordReset, setIsPasswordReset] = useState(false);
   const [newPassword, setNewPassword] = useState("");
@@ -27,12 +28,16 @@ const AuthCallback = () => {
         const urlParams = new URL(window.location.href).searchParams;
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         
+        // Enregistrer les paramètres importants dans la console pour le débogage
+        console.log("URL Search params:", Object.fromEntries(urlParams.entries()));
+        console.log("Hash params:", Object.fromEntries(hashParams.entries()));
+        
         // Vérifier tous les indicateurs possibles de réinitialisation de mot de passe
         const isReset = urlParams.get("reset") === "true";
         const type = urlParams.get("type") || hashParams.get("type");
         const accessToken = urlParams.get("access_token") || hashParams.get("access_token");
         
-        console.log("Debug paramètres URL:", { 
+        console.log("Debug paramètres:", { 
           isReset, 
           type, 
           accessToken: accessToken ? "présent" : "absent",
@@ -147,33 +152,9 @@ const AuthCallback = () => {
         return;
       }
 
-      // Essayer d'abord avec l'API de Supabase
-      try {
-        console.log("Tentative avec l'API native de Supabase");
-        const { error } = await supabase.auth.updateUser({ password: newPassword });
-        
-        if (error) {
-          console.error("Erreur lors de la mise à jour via Supabase:", error);
-          // Si l'API Supabase échoue, utiliser notre fonction Edge personnalisée
-          throw error;
-        } else {
-          console.log("Mot de passe mis à jour avec succès via Supabase API");
-          toast.success("Mot de passe mis à jour avec succès");
-          
-          // Rediriger vers la page de connexion après un délai
-          setTimeout(() => {
-            navigate("/auth");
-          }, 2000);
-          return;
-        }
-      } catch (supabaseErr) {
-        console.error("Échec de l'API Supabase, tentative avec notre API personnalisée");
-      }
-
-      // Utiliser notre fonction Edge personnalisée en cas d'échec de Supabase
-      console.log("Utilisation de la fonction Edge personnalisée");
-      
       // Utiliser notre fonction Edge personnalisée pour réinitialiser le mot de passe
+      console.log("Utilisation de la fonction Edge personnalisée avec le token:", token);
+      
       const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
       const response = await fetch(
         `${supabaseUrl}/functions/v1/set-admin-password`,
@@ -190,13 +171,43 @@ const AuthCallback = () => {
       );
 
       const data = await response.json();
+      console.log("Réponse de la réinitialisation:", data);
       
       if (!response.ok) {
-        console.error("Erreur lors de la réinitialisation avec le token personnalisé:", data);
-        setPasswordError(data.error || "Échec de la réinitialisation du mot de passe");
-        toast.error("Échec de la réinitialisation", {
-          description: data.error || "Une erreur s'est produite"
-        });
+        console.error("Erreur lors de la réinitialisation avec le token:", data);
+        
+        // Si c'est une erreur spécifique au token personnalisé, essayer avec l'API native de Supabase
+        if (data.error && (data.error.includes('token') || data.error.includes('introuvable'))) {
+          console.log("Tentative de fallback avec l'API Supabase...");
+          try {
+            // Essayer l'API Supabase comme fallback
+            const { error } = await supabase.auth.updateUser({ password: newPassword });
+            
+            if (error) {
+              console.error("Échec également avec l'API Supabase:", error);
+              setPasswordError(data.error || "Échec de la réinitialisation du mot de passe");
+              toast.error("Échec de la réinitialisation", {
+                description: data.error || "Une erreur s'est produite"
+              });
+            } else {
+              console.log("Mot de passe réinitialisé avec succès via l'API Supabase");
+              toast.success("Mot de passe mis à jour avec succès");
+              
+              // Rediriger vers la page de connexion après un délai
+              setTimeout(() => {
+                navigate("/auth");
+              }, 2000);
+            }
+          } catch (supaError: any) {
+            console.error("Exception lors de la tentative avec l'API Supabase:", supaError);
+            setPasswordError(data.error || "Échec de la réinitialisation du mot de passe");
+          }
+        } else {
+          setPasswordError(data.error || "Échec de la réinitialisation du mot de passe");
+          toast.error("Échec de la réinitialisation", {
+            description: data.error || "Une erreur s'est produite"
+          });
+        }
       } else {
         console.log("Mot de passe réinitialisé avec succès");
         toast.success("Mot de passe mis à jour avec succès");
