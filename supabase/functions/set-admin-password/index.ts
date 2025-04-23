@@ -16,249 +16,194 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    
+
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("Missing environment variables");
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Configuration incorrecte",
-          details: "Variables d'environnement manquantes"
+        JSON.stringify({
+          error: "Configuration incorrecte - Variables d'environnement manquantes"
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
 
-    // Create Supabase admin client with service role key
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-    
-    const requestData = await req.json();
-    
-    console.log("Requête de réinitialisation de mot de passe reçue:", {
-      email: requestData.email ? "présent" : "absent",
-      password: requestData.password ? "présent" : "absent",
-      adminKey: requestData.adminKey ? "présent" : "absent",
-      recoveryToken: requestData.recoveryToken ? "présent" : "absent"
-    });
-    
-    // Vérifier si les paramètres requis sont présents
-    if (!requestData.password || requestData.password.length < 8) {
-      console.log("Mot de passe invalide");
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Mot de passe invalide. Doit contenir au moins 8 caractères."
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        }
-      );
-    }
+    const body = await req.json();
+    const { email, password, adminKey, recoveryToken } = body;
 
-    // METHODE 1: Définir le mot de passe à l'aide d'un recoveryToken
-    if (requestData.recoveryToken) {
-      console.log("Réinitialisation via recoveryToken");
-      try {
-        // Essayer d'abord de vérifier si ce token existe dans notre table personnalisée
-        console.log("Vérification du token personnalisé");
-        
-        const { data: tokenData, error: tokenError } = await adminClient
-          .from('password_reset_tokens')
-          .select('*')
-          .eq('token', requestData.recoveryToken)
-          .single();
-          
-        if (tokenError || !tokenData) {
-          console.log("Token personnalisé introuvable:", tokenError);
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: "Token de réinitialisation invalide ou expiré."
-            }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-              status: 400,
-            }
-          );
-        }
-        
-        // Vérifier si le token est expiré
-        const now = new Date();
-        const expiresAt = new Date(tokenData.expires_at);
-        
-        if (now > expiresAt) {
-          console.log("Token expiré");
-          await adminClient
-            .from('password_reset_tokens')
-            .delete()
-            .eq('id', tokenData.id);
-            
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: "Le lien de réinitialisation a expiré. Veuillez demander un nouveau lien."
-            }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-              status: 400,
-            }
-          );
-        }
-        
-        // Mettre à jour le mot de passe de l'utilisateur
-        const { error: updateError } = await adminClient.auth.admin.updateUserById(
-          tokenData.user_id,
-          { password: requestData.password }
-        );
-        
-        if (updateError) {
-          console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
-          return new Response(
-            JSON.stringify({ 
-              success: false, 
-              error: "Erreur lors de la mise à jour du mot de passe: " + updateError.message
-            }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-              status: 500,
-            }
-          );
-        }
-        
-        // Supprimer le token utilisé
-        await adminClient
-          .from('password_reset_tokens')
-          .delete()
-          .eq('id', tokenData.id);
-        
-        console.log("Mot de passe mis à jour avec succès via token personnalisé");
-        
+    console.log("Demande de définition/réinitialisation de mot de passe reçue");
+    console.log("Méthode:", recoveryToken ? "Token de récupération" : email ? "Email direct" : "Clé admin");
+
+    // Cas 1: Utilisation d'un token de récupération personnalisé
+    if (recoveryToken) {
+      console.log("Vérification du token de récupération...");
+      
+      // Utiliser notre nouvelle fonction SQL pour vérifier le token
+      const { data: userId, error: verifyError } = await adminClient.rpc(
+        'verify_password_reset_token',
+        { token_param: recoveryToken }
+      );
+
+      if (verifyError || !userId) {
+        console.error("Erreur lors de la vérification du token:", verifyError);
         return new Response(
           JSON.stringify({ 
-            success: true, 
-            message: "Mot de passe mis à jour avec succès."
+            error: "Token de réinitialisation invalide ou expiré" 
           }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200,
-          }
-        );
-      } catch (tokenError) {
-        console.error("Erreur lors de la validation du token:", tokenError);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: "Erreur lors de la validation du token de réinitialisation."
-          }),
-          {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 500,
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
           }
         );
       }
-    }
-    // METHODE 2: Reset direct par un administrateur avec email et adminKey
-    else if (requestData.email && requestData.adminKey) {
-      console.log("Réinitialisation directe par administrateur");
-      // Vérifier la clé administrative simple (méthode basique pour la démo)
-      if (requestData.adminKey !== "supadmin2025") {
-        console.log("Clé d'administration invalide");
+
+      console.log("Token valide pour l'utilisateur:", userId);
+
+      if (!password || password.length < 8) {
         return new Response(
           JSON.stringify({ 
-            success: false, 
-            error: "Clé d'administration invalide"
+            error: "Le mot de passe doit contenir au moins 8 caractères" 
           }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 403,
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
           }
         );
       }
-      
-      // Rechercher l'utilisateur par email
-      const { data: users, error: userError } = await adminClient.auth.admin.listUsers({
-        filter: {
-          email: requestData.email
-        }
-      });
-      
-      if (userError || !users || users.users.length === 0) {
-        console.log("Utilisateur non trouvé:", userError);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: "Utilisateur non trouvé avec cette adresse e-mail"
-          }),
-          {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 404,
-          }
-        );
-      }
-      
-      const userId = users.users[0].id;
-      
+
       // Mettre à jour le mot de passe
       const { error: updateError } = await adminClient.auth.admin.updateUserById(
         userId,
-        { password: requestData.password }
+        { password: password }
       );
-      
+
       if (updateError) {
         console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
         return new Response(
           JSON.stringify({ 
-            success: false, 
-            error: "Erreur lors de la mise à jour du mot de passe: " + updateError.message
+            error: "Échec de la mise à jour du mot de passe" 
           }),
           {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
           }
         );
       }
-      
-      console.log("Mot de passe mis à jour avec succès par administrateur");
-      
+
+      console.log("Mot de passe mis à jour avec succès");
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "Mot de passe mis à jour avec succès par un administrateur."
+          message: "Mot de passe mis à jour avec succès"
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
-    else {
-      console.log("Paramètres insuffisants");
+    
+    // Cas 2: Administrateur utilisant une clé admin pour définir le mot de passe
+    else if (adminKey === "supadmin2025") {
+      if (!email || !email.includes("@")) {
+        return new Response(
+          JSON.stringify({ error: "Email invalide" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      if (!password || password.length < 8) {
+        return new Response(
+          JSON.stringify({ error: "Le mot de passe doit contenir au moins 8 caractères" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // Rechercher l'utilisateur par email
+      const { data: authUser, error: findUserError } = await adminClient.auth.admin.listUsers({
+        filter: {
+          email: email
+        }
+      });
+
+      if (findUserError || !authUser || authUser.users.length === 0) {
+        console.error("Utilisateur introuvable:", findUserError || "Aucun utilisateur trouvé");
+        return new Response(
+          JSON.stringify({ 
+            error: "Utilisateur introuvable" 
+          }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      const userId = authUser.users[0].id;
+      console.log("Utilisateur trouvé:", userId);
+
+      // Mettre à jour le mot de passe
+      const { error: updateError } = await adminClient.auth.admin.updateUserById(
+        userId,
+        { password: password }
+      );
+
+      if (updateError) {
+        console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
+        return new Response(
+          JSON.stringify({ 
+            error: "Échec de la mise à jour du mot de passe" 
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      console.log("Mot de passe administrateur mis à jour avec succès");
       return new Response(
         JSON.stringify({ 
-          success: false, 
-          error: "Paramètres insuffisants pour la réinitialisation du mot de passe"
+          success: true, 
+          message: "Mot de passe administrateur mis à jour avec succès"
         }),
         {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
+    
+    // Cas 3: Non autorisé
+    else {
+      return new Response(
+        JSON.stringify({ 
+          error: "Non autorisé à définir ou réinitialiser des mots de passe" 
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
         }
       );
     }
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error("Erreur inattendue:", error);
     return new Response(
       JSON.stringify({ 
-        success: false, 
         error: "Une erreur inattendue s'est produite",
         details: error instanceof Error ? error.message : String(error)
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       }
     );
   }

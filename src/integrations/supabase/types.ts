@@ -327,6 +327,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_auth_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       version: {
         Args: Record<PropertyKey, never>
         Returns: string

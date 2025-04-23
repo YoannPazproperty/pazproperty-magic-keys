@@ -177,39 +177,10 @@ const AuthCallback = () => {
       
       if (!response.ok) {
         console.error("Erreur lors de la réinitialisation avec le token:", data);
-        
-        // Si c'est une erreur spécifique au token personnalisé, essayer avec l'API native de Supabase
-        if (data.error && (data.error.includes('token') || data.error.includes('introuvable'))) {
-          console.log("Tentative de fallback avec l'API Supabase...");
-          try {
-            // Essayer l'API Supabase comme fallback
-            const { error } = await supabase.auth.updateUser({ password: newPassword });
-            
-            if (error) {
-              console.error("Échec également avec l'API Supabase:", error);
-              setPasswordError(data.error || "Échec de la réinitialisation du mot de passe");
-              toast.error("Échec de la réinitialisation", {
-                description: data.error || "Une erreur s'est produite"
-              });
-            } else {
-              console.log("Mot de passe réinitialisé avec succès via l'API Supabase");
-              toast.success("Mot de passe mis à jour avec succès");
-              
-              // Rediriger vers la page de connexion après un délai
-              setTimeout(() => {
-                navigate("/auth");
-              }, 2000);
-            }
-          } catch (supaError: any) {
-            console.error("Exception lors de la tentative avec l'API Supabase:", supaError);
-            setPasswordError(data.error || "Échec de la réinitialisation du mot de passe");
-          }
-        } else {
-          setPasswordError(data.error || "Échec de la réinitialisation du mot de passe");
-          toast.error("Échec de la réinitialisation", {
-            description: data.error || "Une erreur s'est produite"
-          });
-        }
+        setPasswordError(data.error || "Échec de la réinitialisation du mot de passe");
+        toast.error("Échec de la réinitialisation", {
+          description: data.error || "Une erreur s'est produite"
+        });
       } else {
         console.log("Mot de passe réinitialisé avec succès");
         toast.success("Mot de passe mis à jour avec succès");
