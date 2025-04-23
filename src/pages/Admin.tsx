@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -10,26 +9,25 @@ import { saveMondayConfig, validateMondayConfig, getMondayConfig } from "@/servi
 import { getDeclarations, updateDeclarationStatus } from "@/services/declarationService";
 import { useAuth } from "@/hooks/useAuth";
 import type { Declaration } from "@/services/types";
+import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
   const [activeTab, setActiveTab] = useState("declarations");
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Récupérer les configurations Monday.com
   const { apiKey, boardId, techBoardId } = getMondayConfig();
 
   useEffect(() => {
-    // Check API configuration status
     const checkApiStatus = async () => {
       const validation = await validateMondayConfig();
       setApiStatus(validation);
     };
     
     checkApiStatus();
-    // Load declarations
     loadDeclarations();
   }, []);
 
@@ -51,7 +49,7 @@ const Admin = () => {
     try {
       const updated = await updateDeclarationStatus(id, status);
       if (updated) {
-        await loadDeclarations(); // Reload declarations to reflect changes
+        await loadDeclarations();
         toast.success("Statut mis à jour");
       } else {
         toast.error("Erreur lors de la mise à jour du statut");
@@ -62,8 +60,15 @@ const Admin = () => {
     }
   };
 
-  const handleLogout = () => {
-    signOut();
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate("/");
+      toast.success("Vous avez été déconnecté");
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      toast.error("Une erreur est survenue lors de la déconnexion");
+    }
   };
 
   const handleTabChange = (value: string) => {
@@ -73,7 +78,6 @@ const Admin = () => {
   const handleSaveApiConfig = (apiKey: string, boardId: string, techBoardId: string) => {
     saveMondayConfig(apiKey, boardId, techBoardId);
     
-    // Validate the new configuration
     validateMondayConfig().then(validation => {
       setApiStatus(validation);
     });
