@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +24,7 @@ const AuthCallback = () => {
         console.log("URL actuelle:", window.location.href);
         
         // Extraire tous les paramètres possibles - de l'URL et du hash
-        const urlParams = new URL(window.location.href).searchParams;
+        const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         
         // Enregistrer les paramètres importants dans la console pour le débogage
@@ -35,12 +34,15 @@ const AuthCallback = () => {
         // Vérifier tous les indicateurs possibles de réinitialisation de mot de passe
         const isReset = urlParams.get("reset") === "true";
         const type = urlParams.get("type") || hashParams.get("type");
-        const accessToken = urlParams.get("access_token") || hashParams.get("access_token");
+        
+        // Récupérer le token soit des paramètres URL soit du hash
+        const accessToken = urlParams.get("token") || hashParams.get("access_token") || urlParams.get("access_token");
         
         console.log("Debug paramètres:", { 
           isReset, 
           type, 
           accessToken: accessToken ? "présent" : "absent",
+          token: accessToken,
           hash: window.location.hash,
           search: window.location.search
         });

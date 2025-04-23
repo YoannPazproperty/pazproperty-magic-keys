@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -117,7 +118,7 @@ export const generatePasswordResetLink = async (email: string): Promise<{
     
     return { 
       success: true, 
-      message: "Lien de réinitialisation généré avec succès. Vérifiez votre boîte de réception pour les instructions.",
+      message: "Si cette adresse existe dans notre système, vous recevrez un e-mail avec les instructions.",
       resetLink: data.resetLink // Pour la démonstration
     };
   } catch (error) {

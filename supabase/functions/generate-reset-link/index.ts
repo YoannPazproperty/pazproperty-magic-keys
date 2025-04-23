@@ -180,7 +180,10 @@ serve(async (req) => {
       }
       
       const baseUrl = "https://22c7e654-f304-419f-a370-324064acafb0.lovableproject.com";
-      const resetLink = `${baseUrl}/auth/callback#type=recovery&access_token=${token}`;
+      
+      // IMPORTANT: Changed link format to use query parameters instead of hash
+      // This format is more compatible with our AuthCallback component
+      const resetLink = `${baseUrl}/auth/callback?type=recovery&token=${token}`;
       
       // NOUVELLE FONCTIONNALITÉ: Envoyer un email avec le lien de réinitialisation
       try {
