@@ -66,7 +66,7 @@ serve(async (req) => {
     }
 
     const userId = authUser.users[0].id;
-    const userEmail = authUser.users[0].email;
+    const userEmail = email; // CORRECTION: Utiliser l'email fourni, pas celui de authUser pour éviter toute substitution
     
     // Générer un token et une date d'expiration
     const token = crypto.randomUUID();

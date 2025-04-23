@@ -39,10 +39,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRoleLoading(true);
       console.log("Récupération du rôle pour l'utilisateur:", userId);
       
-      // Vérifier si la table user_roles existe
+      // Vérifier si la table user_roles existe - CORRECTION: cette requête provoquait l'erreur
+      // Nous allons simplifier la requête pour éviter l'erreur de syntaxe
       const { data: tableData, error: tableError } = await supabase
         .from('user_roles')
-        .select('count(*)')
+        .select('id')
         .limit(1);
         
       if (tableError) {

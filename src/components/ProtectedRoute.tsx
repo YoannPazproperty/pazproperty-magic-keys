@@ -14,6 +14,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [checkingRole, setCheckingRole] = useState(!!requiredRole);
   const [checkAttempts, setCheckAttempts] = useState(0);
+  const [roleChecked, setRoleChecked] = useState(false); // Ajout pour éviter les vérifications en boucle
 
   useEffect(() => {
     if (!user) {
@@ -29,6 +30,11 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
       return;
     }
 
+    // Si on a déjà vérifié le rôle pour cet utilisateur et cette page, ne pas refaire la vérification
+    if (roleChecked) {
+      return;
+    }
+
     const checkRole = async () => {
       try {
         const userRole = await getUserRole();
@@ -39,6 +45,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         if (userRole === "admin") {
           setHasAccess(true);
           setCheckingRole(false);
+          setRoleChecked(true); // Marquer comme vérifié
           return;
         }
         
@@ -46,6 +53,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         if (userRole === "manager" && (requiredRole === "manager" || requiredRole === "user")) {
           setHasAccess(true);
           setCheckingRole(false);
+          setRoleChecked(true); // Marquer comme vérifié
           return;
         }
         
@@ -53,6 +61,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         if (userRole === "user" && requiredRole === "user") {
           setHasAccess(true);
           setCheckingRole(false);
+          setRoleChecked(true); // Marquer comme vérifié
           return;
         }
         
@@ -70,20 +79,26 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
           if (process.env.NODE_ENV === 'development' || window.location.hostname.includes('localhost')) {
             console.log("⚠️ Mode développement détecté - Accordons l'accès par défaut");
             setHasAccess(true);
+            setRoleChecked(true); // Marquer comme vérifié
             toast.warning("Aucun rôle défini", { 
-              description: "L'accès est accordé par défaut en mode développement" 
+              description: "L'accès est accordé par défaut en mode développement",
+              id: "role-warning" // Ajouter un ID pour éviter les toasts en double
             });
           } else {
             setHasAccess(false);
+            setRoleChecked(true); // Marquer comme vérifié
             toast.error("Erreur d'autorisation", { 
-              description: "Votre compte n'a pas de rôle assigné" 
+              description: "Votre compte n'a pas de rôle assigné",
+              id: "role-error" // Ajouter un ID pour éviter les toasts en double
             });
           }
         } else {
           // Utilisateur avec un rôle qui n'a pas la permission requise
           setHasAccess(false);
+          setRoleChecked(true); // Marquer comme vérifié
           toast.error("Accès refusé", { 
-            description: `Vous avez le rôle "${userRole}" mais cette page requiert le rôle "${requiredRole}"` 
+            description: `Vous avez le rôle "${userRole}" mais cette page requiert le rôle "${requiredRole}"`,
+            id: "access-denied" // Ajouter un ID pour éviter les toasts en double
           });
         }
         
@@ -95,11 +110,14 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
         if (process.env.NODE_ENV === 'development' || window.location.hostname.includes('localhost')) {
           console.log("⚠️ Mode développement détecté - Accordons l'accès malgré l'erreur");
           setHasAccess(true);
+          setRoleChecked(true); // Marquer comme vérifié
           toast.warning("Erreur de vérification des rôles", { 
-            description: "L'accès est accordé par défaut en mode développement malgré l'erreur" 
+            description: "L'accès est accordé par défaut en mode développement malgré l'erreur",
+            id: "role-error" // Ajouter un ID pour éviter les toasts en double
           });
         } else {
           setHasAccess(false);
+          setRoleChecked(true); // Marquer comme vérifié
         }
         
         setCheckingRole(false);
@@ -107,7 +125,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     };
 
     checkRole();
-  }, [user, requiredRole, getUserRole, checkAttempts]);
+  }, [user, requiredRole, getUserRole, checkAttempts, roleChecked]);
 
   // Afficher un écran de chargement pendant la vérification
   if (loading || checkingRole) {
