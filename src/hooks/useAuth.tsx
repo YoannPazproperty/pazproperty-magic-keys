@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
@@ -32,12 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // D'abord configurer l'écouteur d'événements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.email);
         
-        // Utiliser setTimeout pour éviter les deadlocks potentiels
         setTimeout(() => {
           setSession(newSession);
           setUser(newSession?.user ?? null);
@@ -53,7 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Ensuite récupérer la session existante
     const getInitialSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -93,21 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Erreur de connexion:", error);
         console.log("Message d'erreur:", error.message);
         
-        // Spécifique pour le débogage du problème de connexion
         if (error.message.includes("Invalid login credentials")) {
           console.log("Erreur d'identifiants invalides détectée");
-          
-          // Vérifier si l'utilisateur existe mais que le mot de passe est incorrect
-          try {
-            const { data: userData } = await supabase.auth.admin.getUserByEmail(email);
-            if (userData) {
-              console.log("L'utilisateur existe, mais le mot de passe est incorrect");
-            } else {
-              console.log("L'utilisateur n'existe pas dans la base de données");
-            }
-          } catch (adminErr) {
-            console.log("Impossible de vérifier si l'utilisateur existe (normal sans droits admin):", adminErr);
-          }
+          console.log("L'utilisateur a entré des identifiants invalides. Soit l'utilisateur n'existe pas, soit le mot de passe est incorrect.");
         }
         
         return { error, success: false };
@@ -148,8 +132,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           description: error.message,
         });
       }
-      // Pas besoin de naviguer - la redirection OAuth prendra le relais
-      
     } catch (err) {
       console.error("Erreur inattendue lors de l'authentification Google:", err);
       toast.error("Erreur de connexion Google");
@@ -163,7 +145,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       console.log("Demande de réinitialisation du mot de passe pour:", email);
       
-      // Vérification de base de l'adresse e-mail
       if (!email || !email.includes('@')) {
         return { 
           error: { message: "Veuillez fournir une adresse e-mail valide" }, 
@@ -171,7 +152,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      // Utiliser une URL spécifique pour le développement ou la production
       const baseUrl = window.location.origin;
       const redirectTo = `${baseUrl}/auth/callback`;
       
@@ -185,7 +165,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
           console.error("Erreur détaillée lors de la réinitialisation du mot de passe:", error);
           
-          // Erreurs spécifiques connues
           if (error.message && error.message.includes("rate limit")) {
             return { 
               error, 
@@ -199,12 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               message: "Adresse e-mail non reconnue dans notre système."
             };
           } else if (error.status === 500) {
-            // Gestion spécifique de l'erreur 500 (Internal Server Error)
             console.log("Détection d'une erreur 500 lors de la réinitialisation du mot de passe");
-            
-            // Nous retournons quand même un succès pour ne pas exposer d'erreurs internes au client
-            // Même si l'e-mail n'a pas été envoyé, nous indiquons que tout s'est bien passé
-            // pour des raisons de sécurité (ne pas exposer si l'adresse e-mail existe ou non)
             return { 
               error: null, 
               success: true,
@@ -227,11 +201,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       } catch (apiErr: any) {
         console.error("Erreur d'API lors de la réinitialisation:", apiErr);
-        
-        // En cas d'erreur d'API, nous ne révélons pas l'erreur technique à l'utilisateur
         return { 
           error: apiErr, 
-          success: true, // Nous indiquons quand même un succès pour des raisons de sécurité
+          success: true,
           message: "Si cette adresse existe dans notre système, vous recevrez un e-mail avec les instructions."
         };
       }
