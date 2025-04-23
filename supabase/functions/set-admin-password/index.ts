@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
 
@@ -33,6 +34,8 @@ serve(async (req) => {
 
     console.log("Demande de définition/réinitialisation de mot de passe reçue");
     console.log("Méthode:", recoveryToken ? "Token de récupération" : email ? "Email direct" : "Clé admin");
+    console.log("Email:", email || "Non fourni");
+    console.log("Recovery token présent:", !!recoveryToken);
 
     // Cas 1: Utilisation d'un token de récupération personnalisé
     if (recoveryToken) {
@@ -72,6 +75,7 @@ serve(async (req) => {
       }
 
       // Mettre à jour le mot de passe
+      console.log("Mise à jour du mot de passe pour l'utilisateur:", userId);
       const { error: updateError } = await adminClient.auth.admin.updateUserById(
         userId,
         { password: password }
@@ -81,7 +85,8 @@ serve(async (req) => {
         console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
         return new Response(
           JSON.stringify({ 
-            error: "Échec de la mise à jour du mot de passe" 
+            error: "Échec de la mise à jour du mot de passe",
+            details: updateError.message 
           }),
           {
             status: 500,
@@ -90,7 +95,18 @@ serve(async (req) => {
         );
       }
 
-      console.log("Mot de passe mis à jour avec succès");
+      console.log("Mot de passe mis à jour avec succès pour l'utilisateur:", userId);
+      
+      // Essayons de récupérer l'email associé à cet utilisateur pour le journal
+      try {
+        const { data: userData } = await adminClient.auth.admin.getUserById(userId);
+        if (userData?.user) {
+          console.log("Email de l'utilisateur dont le mot de passe a été réinitialisé:", userData.user.email);
+        }
+      } catch (e) {
+        console.log("Impossible de récupérer les détails de l'utilisateur:", e);
+      }
+
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -126,6 +142,7 @@ serve(async (req) => {
       }
 
       // Rechercher l'utilisateur par email
+      console.log("Recherche de l'utilisateur par email:", email);
       const { data: authUser, error: findUserError } = await adminClient.auth.admin.listUsers({
         filter: {
           email: email
@@ -149,6 +166,7 @@ serve(async (req) => {
       console.log("Utilisateur trouvé:", userId);
 
       // Mettre à jour le mot de passe
+      console.log("Mise à jour du mot de passe pour l'email:", email);
       const { error: updateError } = await adminClient.auth.admin.updateUserById(
         userId,
         { password: password }
@@ -158,7 +176,8 @@ serve(async (req) => {
         console.error("Erreur lors de la mise à jour du mot de passe:", updateError);
         return new Response(
           JSON.stringify({ 
-            error: "Échec de la mise à jour du mot de passe" 
+            error: "Échec de la mise à jour du mot de passe",
+            details: updateError.message
           }),
           {
             status: 500,
@@ -167,7 +186,7 @@ serve(async (req) => {
         );
       }
 
-      console.log("Mot de passe administrateur mis à jour avec succès");
+      console.log("Mot de passe administrateur mis à jour avec succès pour:", email);
       return new Response(
         JSON.stringify({ 
           success: true, 

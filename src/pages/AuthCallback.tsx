@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ const AuthCallback = () => {
   const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any | null>(null);
 
   useEffect(() => {
     // Traiter le callback d'authentification
@@ -38,14 +40,17 @@ const AuthCallback = () => {
         // Récupérer le token soit des paramètres URL soit du hash
         const accessToken = urlParams.get("token") || hashParams.get("access_token") || urlParams.get("access_token");
         
-        console.log("Debug paramètres:", { 
+        const debugData = { 
           isReset, 
           type, 
           accessToken: accessToken ? "présent" : "absent",
           token: accessToken,
           hash: window.location.hash,
           search: window.location.search
-        });
+        };
+        
+        console.log("Debug paramètres:", debugData);
+        setDebugInfo(debugData);
         
         // Si c'est un reset de mot de passe ou si on a un token dans le hash/search
         if (isReset || type === "recovery" || accessToken) {
@@ -185,6 +190,37 @@ const AuthCallback = () => {
         console.log("Mot de passe réinitialisé avec succès");
         toast.success("Mot de passe mis à jour avec succès");
         
+        // Tenter de se connecter directement avec le nouveau mot de passe
+        try {
+          // Récupérer l'email associé au token si disponible
+          const emailFromUrl = new URLSearchParams(window.location.search).get("email");
+          if (emailFromUrl) {
+            console.log("Tentative de connexion automatique avec l'email:", emailFromUrl);
+            
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email: emailFromUrl,
+              password: newPassword,
+            });
+            
+            if (signInError) {
+              console.error("Échec de la connexion automatique:", signInError);
+              // On continue avec la redirection normale même si la connexion automatique échoue
+            } else {
+              console.log("Connexion automatique réussie");
+              toast.success("Connexion automatique réussie");
+              navigate("/admin");
+              return;
+            }
+          }
+        } catch (signInErr) {
+          console.error("Erreur lors de la tentative de connexion automatique:", signInErr);
+        }
+        
+        // Si pas de connexion automatique, rediriger vers la page de connexion
+        toast.info("Veuillez vous connecter avec votre nouveau mot de passe", {
+          duration: 5000,
+        });
+        
         // Rediriger vers la page de connexion après un délai
         setTimeout(() => {
           navigate("/auth");
@@ -243,6 +279,13 @@ const AuthCallback = () => {
                 <AlertDescription>{passwordError}</AlertDescription>
               </Alert>
             )}
+
+            {debugInfo && (
+              <div className="bg-gray-100 p-3 rounded text-xs overflow-auto">
+                <p className="font-bold mb-1">Informations de débogage:</p>
+                <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+              </div>
+            )}
             
             <button
               type="submit"
@@ -269,6 +312,13 @@ const AuthCallback = () => {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
+        )}
+        
+        {debugInfo && (
+          <div className="bg-gray-100 p-3 rounded text-xs overflow-auto max-w-md">
+            <p className="font-bold mb-1">Informations de débogage:</p>
+            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+          </div>
         )}
       </div>
     </div>

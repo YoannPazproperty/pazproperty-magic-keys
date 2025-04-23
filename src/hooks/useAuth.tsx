@@ -82,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       console.log("Tentative de connexion avec:", email);
+      console.log("Longueur du mot de passe:", password.length);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -90,6 +91,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error("Erreur de connexion:", error);
+        console.log("Message d'erreur:", error.message);
+        
+        // Spécifique pour le débogage du problème de connexion
+        if (error.message.includes("Invalid login credentials")) {
+          console.log("Erreur d'identifiants invalides détectée");
+          
+          // Vérifier si l'utilisateur existe mais que le mot de passe est incorrect
+          try {
+            const { data: userData } = await supabase.auth.admin.getUserByEmail(email);
+            if (userData) {
+              console.log("L'utilisateur existe, mais le mot de passe est incorrect");
+            } else {
+              console.log("L'utilisateur n'existe pas dans la base de données");
+            }
+          } catch (adminErr) {
+            console.log("Impossible de vérifier si l'utilisateur existe (normal sans droits admin):", adminErr);
+          }
+        }
         
         return { error, success: false };
       }
@@ -97,7 +116,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("Connexion réussie");
       toast.success("Connexion réussie");
       
-      // Ne pas naviguer ici - laisser le gestionnaire d'événements onAuthStateChange s'en charger
       return { error: null, success: true };
     } catch (err) {
       console.error("Erreur inattendue lors de la connexion:", err);

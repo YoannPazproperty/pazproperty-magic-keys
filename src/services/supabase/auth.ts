@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -187,6 +186,46 @@ export const setAdminPassword = async (email: string, newPassword: string): Prom
     return { 
       success: false, 
       message: 'Une erreur inattendue est survenue' 
+    };
+  }
+};
+
+/**
+ * Test login with credentials - for debugging purposes
+ */
+export const testLogin = async (email: string, password: string): Promise<{
+  success: boolean;
+  message: string;
+  error?: any;
+}> => {
+  try {
+    console.log(`Tentative de connexion de test pour ${email}`);
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      console.error("Échec de la connexion de test:", error);
+      return {
+        success: false,
+        message: `Échec de la connexion: ${error.message}`,
+        error
+      };
+    }
+    
+    console.log("Connexion de test réussie", data);
+    return {
+      success: true,
+      message: "Connexion de test réussie"
+    };
+  } catch (err) {
+    console.error("Erreur inattendue lors de la connexion de test:", err);
+    return {
+      success: false,
+      message: `Erreur inattendue: ${err instanceof Error ? err.message : String(err)}`,
+      error: err
     };
   }
 };
