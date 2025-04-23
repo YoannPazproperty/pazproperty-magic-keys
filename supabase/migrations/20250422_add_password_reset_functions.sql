@@ -4,6 +4,7 @@ CREATE OR REPLACE FUNCTION public.check_table_exists(table_name text)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog, public
 AS $$
 DECLARE
   table_exists BOOLEAN;
@@ -23,6 +24,7 @@ CREATE OR REPLACE FUNCTION public.create_password_reset_tokens_table()
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog, public
 AS $$
 BEGIN
   CREATE TABLE IF NOT EXISTS public.password_reset_tokens (
@@ -51,6 +53,7 @@ CREATE OR REPLACE FUNCTION public.run_sql(sql text)
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog, public
 AS $$
 BEGIN
   EXECUTE sql;
