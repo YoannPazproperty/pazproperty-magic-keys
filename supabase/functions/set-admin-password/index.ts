@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
 
@@ -42,12 +43,12 @@ serve(async (req) => {
       console.log("Vérification du token de récupération...");
       
       // Utiliser notre nouvelle fonction SQL pour vérifier le token
-      const { data: userId, error: verifyError } = await adminClient.rpc(
+      const { data: tokenData, error: verifyError } = await adminClient.rpc(
         'verify_password_reset_token',
         { token_param: recoveryToken }
       );
 
-      if (verifyError || !userId) {
+      if (verifyError || !tokenData) {
         console.error("Erreur lors de la vérification du token:", verifyError);
         return new Response(
           JSON.stringify({ 
@@ -61,7 +62,26 @@ serve(async (req) => {
         );
       }
 
+      // Extraire correctement les données du token (userId et userEmail)
+      const userId = tokenData.user_id;
+      const userEmail = tokenData.user_email;
+      
       console.log("Token valide pour l'utilisateur:", userId);
+      console.log("Email de l'utilisateur associé au token:", userEmail);
+
+      if (!userId || !userEmail) {
+        console.error("Données incomplètes retournées par verify_password_reset_token");
+        return new Response(
+          JSON.stringify({ 
+            error: "Données de token incomplètes",
+            details: "L'identifiant ou l'email de l'utilisateur est manquant"
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
 
       if (!password || password.length < 8) {
         return new Response(
@@ -75,7 +95,7 @@ serve(async (req) => {
         );
       }
 
-      // Récupérer les infos de l'utilisateur
+      // Vérifier que l'utilisateur existe toujours
       const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(userId);
       
       if (userError || !userData?.user) {
@@ -92,11 +112,25 @@ serve(async (req) => {
         );
       }
       
-      const userEmail = userData.user.email;
-      console.log("Email de l'utilisateur récupéré:", userEmail);
+      // Double vérification que l'email correspond
+      if (userData.user.email !== userEmail) {
+        console.error("Incohérence dans les données utilisateur. Email attendu:", userEmail, "Email trouvé:", userData.user.email);
+        return new Response(
+          JSON.stringify({ 
+            error: "Incohérence dans les données utilisateur",
+            details: "L'email associé à l'utilisateur ne correspond pas au token"
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      console.log("Email de l'utilisateur confirmé:", userEmail);
 
       // Mettre à jour le mot de passe
-      console.log("Mise à jour du mot de passe pour l'utilisateur:", userId);
+      console.log("Mise à jour du mot de passe pour l'utilisateur:", userId, "avec email:", userEmail);
       const { error: updateError } = await adminClient.auth.admin.updateUserById(
         userId,
         { password: password }
@@ -116,11 +150,11 @@ serve(async (req) => {
         );
       }
 
-      console.log("Mot de passe mis à jour avec succès pour l'utilisateur:", userId);
+      console.log("Mot de passe mis à jour avec succès pour l'utilisateur:", userId, "avec email:", userEmail);
       
       // Pour le débogage, vérifier si nous pouvons nous connecter avec ces identifiants
       try {
-        console.log("Test de connexion avec le nouveau mot de passe...");
+        console.log("Test de connexion avec le nouveau mot de passe pour:", userEmail);
         const { data: signInData, error: signInError } = await adminClient.auth.signInWithPassword({
           email: userEmail,
           password: password

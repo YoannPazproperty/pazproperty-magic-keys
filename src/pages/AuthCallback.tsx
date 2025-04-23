@@ -17,6 +17,7 @@ const AuthCallback = () => {
   const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any | null>(null);
   const [testLoginResult, setTestLoginResult] = useState<any | null>(null);
 
@@ -64,6 +65,12 @@ const AuthCallback = () => {
           if (accessToken) {
             console.log("Token de réinitialisation trouvé:", accessToken);
             setToken(accessToken);
+          }
+          
+          // Stocker l'email s'il est présent dans l'URL
+          if (email) {
+            console.log("Email trouvé dans l'URL:", email);
+            setUserEmail(email);
           }
           
           return; // Attendre que l'utilisateur entre un nouveau mot de passe
@@ -176,7 +183,9 @@ const AuthCallback = () => {
           },
           body: JSON.stringify({
             password: newPassword,
-            recoveryToken: token
+            recoveryToken: token,
+            // Inclure l'email dans la requête si disponible
+            email: userEmail || undefined
           })
         }
       );
@@ -194,23 +203,24 @@ const AuthCallback = () => {
         console.log("Mot de passe réinitialisé avec succès");
         toast.success("Mot de passe mis à jour avec succès");
         
+        // Récupérer l'email de la réponse si disponible
+        const resetEmail = data.userEmail || userEmail;
+        
         // Tenter de se connecter directement avec le nouveau mot de passe
-        try {
-          // Récupérer l'email associé au token si disponible
-          const emailFromUrl = new URLSearchParams(window.location.search).get("email");
-          if (emailFromUrl) {
-            console.log("Tentative de connexion automatique avec l'email:", emailFromUrl);
+        if (resetEmail) {
+          console.log("Tentative de connexion automatique avec l'email:", resetEmail);
+          
+          // Utiliser notre fonction de test de connexion améliorée
+          const testResult = await testLogin(resetEmail, newPassword);
+          setTestLoginResult(testResult);
+          
+          if (testResult.success) {
+            console.log("Test de connexion réussi:", testResult);
             
-            // Utiliser notre fonction de test de connexion améliorée
-            const testResult = await testLogin(emailFromUrl, newPassword);
-            setTestLoginResult(testResult);
-            
-            if (testResult.success) {
-              console.log("Test de connexion réussi:", testResult);
-              
-              // Tenter la connexion réelle
+            // Tenter la connexion réelle
+            try {
               const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: emailFromUrl,
+                email: resetEmail,
                 password: newPassword,
               });
               
@@ -225,15 +235,15 @@ const AuthCallback = () => {
                 navigate("/admin");
                 return;
               }
-            } else {
-              console.error("Échec du test de connexion:", testResult);
-              toast.error("Mot de passe mis à jour, mais le test de connexion a échoué", {
-                description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe."
-              });
+            } catch (signInErr) {
+              console.error("Erreur lors de la tentative de connexion automatique:", signInErr);
             }
+          } else {
+            console.error("Échec du test de connexion:", testResult);
+            toast.error("Mot de passe mis à jour, mais le test de connexion a échoué", {
+              description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe."
+            });
           }
-        } catch (signInErr) {
-          console.error("Erreur lors de la tentative de connexion automatique:", signInErr);
         }
         
         // Si pas de connexion automatique, rediriger vers la page de connexion
@@ -255,11 +265,19 @@ const AuthCallback = () => {
     }
   };
 
-  if (isPasswordReset) {
-    return (
-      <div className="h-screen flex items-center justify-center">
+  return (
+    <div className="h-screen flex items-center justify-center">
+      {isPasswordReset ? (
         <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
           <h2 className="text-2xl font-bold mb-6 text-center">Réinitialisation de mot de passe</h2>
+          {userEmail && (
+            <div className="mb-4 bg-blue-50 p-3 rounded">
+              <p className="text-sm flex items-center text-blue-800">
+                <Info className="h-4 w-4 mr-2" />
+                Réinitialisation du mot de passe pour: <span className="font-medium ml-1">{userEmail}</span>
+              </p>
+            </div>
+          )}
           <form onSubmit={handlePasswordReset} className="space-y-4">
             <div>
               <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
@@ -318,10 +336,12 @@ const AuthCallback = () => {
               </div>
             )}
 
-            <div className="bg-gray-100 p-3 rounded text-xs overflow-auto">
-              <p className="font-bold mb-1">Informations de débogage:</p>
-              <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-            </div>
+            {debugInfo && (
+              <div className="bg-gray-100 p-3 rounded text-xs overflow-auto">
+                <p className="font-bold mb-1">Informations de débogage:</p>
+                <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+              </div>
+            )}
             
             <button
               type="submit"
@@ -332,31 +352,27 @@ const AuthCallback = () => {
             </button>
           </form>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-screen flex items-center justify-center">
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        <p className="text-center text-gray-500">
-          {error ? "Erreur d'authentification..." : "Authentification en cours..."}
-        </p>
-        {error && (
-          <Alert variant="destructive" className="max-w-md">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
-        {debugInfo && (
-          <div className="bg-gray-100 p-3 rounded text-xs overflow-auto max-w-md">
-            <p className="font-bold mb-1">Informations de débogage:</p>
-            <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="text-center text-gray-500">
+            {error ? "Erreur d'authentification..." : "Authentification en cours..."}
+          </p>
+          {error && (
+            <Alert variant="destructive" className="max-w-md">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {debugInfo && (
+            <div className="bg-gray-100 p-3 rounded text-xs overflow-auto max-w-md">
+              <p className="font-bold mb-1">Informations de débogage:</p>
+              <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

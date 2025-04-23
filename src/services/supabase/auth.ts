@@ -81,6 +81,7 @@ export const generatePasswordResetLink = async (email: string): Promise<{
       };
     }
 
+    console.log("Demande de réinitialisation pour:", email);
     console.log("Génération d'un lien de réinitialisation pour:", email);
     const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
     
