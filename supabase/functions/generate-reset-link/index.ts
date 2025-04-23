@@ -195,7 +195,7 @@ serve(async (req) => {
             const resend = new Resend(RESEND_API_KEY);
             
             const emailResult = await resend.emails.send({
-              from: "Pazproperty <noreply@pazproperty.pt>",
+              from: "Pazproperty <alexa@pazproperty.pt>", // Utilisation d'une adresse existante
               to: email,
               subject: "Réinitialisation de votre mot de passe Pazproperty",
               html: `
