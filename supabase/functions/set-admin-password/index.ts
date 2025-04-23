@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
 
@@ -8,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -105,7 +103,7 @@ serve(async (req) => {
       );
     }
     
-    // Cas 2: Administrateur utilisant une clé admin pour définir le mot de passe
+    // Cas 2: Administrateur utilisant une clé admin
     else if (adminKey === "supadmin2025") {
       if (!email || !email.includes("@")) {
         return new Response(

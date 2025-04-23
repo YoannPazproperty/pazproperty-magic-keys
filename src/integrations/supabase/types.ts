@@ -312,6 +312,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_password_reset_tokens_table: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       fix_confirmation_tokens: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -327,9 +331,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      store_password_reset_token: {
+        Args: {
+          user_id_param: string
+          token_param: string
+          expires_at_param: string
+        }
+        Returns: boolean
+      }
       update_auth_settings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      verify_password_reset_token: {
+        Args: { token_param: string }
+        Returns: string
       }
       version: {
         Args: Record<PropertyKey, never>
