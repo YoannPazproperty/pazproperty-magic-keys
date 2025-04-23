@@ -54,72 +54,86 @@ serve(async (req) => {
     }
 
     // Utiliser notre fonction SQL pour vérifier le token
-    const { data: tokenData, error: tokenError } = await adminClient.rpc(
-      'verify_password_reset_token',
-      { token_param: token }
-    );
-
-    console.log("Résultat brut de la vérification du token:", tokenData);
-
-    if (tokenError) {
-      console.error("Erreur lors de la vérification du token:", tokenError);
-      return new Response(
-        JSON.stringify({ 
-          error: "Échec de la vérification du token",
-          details: tokenError.message 
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
+    try {
+      const { data: tokenData, error: tokenError } = await adminClient.rpc(
+        'verify_password_reset_token',
+        { token_param: token }
       );
-    }
 
-    if (!tokenData || tokenData.length === 0) {
-      console.log("Token invalide ou expiré - aucune donnée retournée");
-      return new Response(
-        JSON.stringify({ 
-          error: "Token invalide ou expiré",
-          details: "Aucun utilisateur associé à ce token" 
-        }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
+      console.log("Résultat brut de la vérification du token:", tokenData);
 
-    // The function now returns a table with user_id and user_email columns
-    const userData = tokenData[0];
-    console.log("Données token extraites:", userData);
-    
-    if (!userData.user_id || !userData.user_email) {
-      console.error("Données utilisateur incomplètes:", userData);
-      return new Response(
-        JSON.stringify({ 
-          error: "Données de token incomplètes",
-          details: "ID utilisateur ou email manquant dans les données retournées",
-          tokenData: tokenData
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    // Renvoyer les informations de l'utilisateur associé au token
-    console.log("Informations utilisateur complètes trouvées:", userData);
-    return new Response(
-      JSON.stringify({
-        userId: userData.user_id,
-        userEmail: userData.user_email
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      if (tokenError) {
+        console.error("Erreur lors de la vérification du token:", tokenError);
+        return new Response(
+          JSON.stringify({ 
+            error: "Échec de la vérification du token",
+            details: tokenError.message 
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
       }
-    );
+
+      if (!tokenData || tokenData.length === 0) {
+        console.log("Token invalide ou expiré - aucune donnée retournée");
+        return new Response(
+          JSON.stringify({ 
+            error: "Token invalide ou expiré",
+            details: "Aucun utilisateur associé à ce token" 
+          }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // The function now returns a table with user_id and user_email columns
+      const userData = tokenData[0];
+      console.log("Données token extraites:", userData);
+      
+      if (!userData.user_id || !userData.user_email) {
+        console.error("Données utilisateur incomplètes:", userData);
+        return new Response(
+          JSON.stringify({ 
+            error: "Données de token incomplètes",
+            details: "ID utilisateur ou email manquant dans les données retournées",
+            tokenData: tokenData
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // Renvoyer les informations de l'utilisateur associé au token
+      console.log("Informations utilisateur complètes trouvées:", userData);
+      return new Response(
+        JSON.stringify({
+          userId: userData.user_id,
+          userEmail: userData.user_email
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    } catch (rpcError) {
+      console.error("Exception lors de l'appel RPC:", rpcError);
+      return new Response(
+        JSON.stringify({ 
+          error: "Erreur lors de la vérification du token via RPC",
+          details: rpcError instanceof Error ? rpcError.message : String(rpcError)
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
+    }
   } catch (error) {
     console.error("Erreur inattendue:", error);
     return new Response(

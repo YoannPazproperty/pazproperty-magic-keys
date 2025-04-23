@@ -93,6 +93,27 @@ export type Database = {
         }
         Relationships: []
       }
+      logs: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          message: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message?: string
+        }
+        Relationships: []
+      }
       media_files: {
         Row: {
           createdAt: string | null
