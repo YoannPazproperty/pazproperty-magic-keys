@@ -90,17 +90,17 @@ const AuthCallback = () => {
                 }
               );
               
+              const data = await response.json();
+              
               if (!response.ok) {
-                console.error("Le token est invalide:", await response.json());
+                console.error("Le token est invalide:", data);
                 setTokenValid(false);
-                const errorData = await response.json();
                 setDebugInfo(prev => ({
                   ...prev,
-                  errorDetails: errorData.details || errorData.error,
+                  errorDetails: data.details || data.error,
                   tokenValid: false
                 }));
               } else {
-                const data = await response.json();
                 console.log("Token valide, informations récupérées:", data);
                 setTokenValid(true);
                 setUserEmail(data.userEmail);
@@ -266,7 +266,7 @@ const AuthCallback = () => {
           });
         }
       } else {
-        console.log("Mot de passe réinitialisé avec succès");
+        console.log("Mot de passe mis à jour avec succès");
         toast.success("Mot de passe mis à jour avec succès");
         
         // Récupérer l'email de la réponse si disponible
@@ -398,31 +398,6 @@ const AuthCallback = () => {
               </Alert>
             )}
 
-            {testLoginResult && (
-              <div className="mt-2">
-                <h3 className="font-medium text-sm mb-1">Résultat du test de connexion:</h3>
-                <div className={`bg-gray-100 p-3 rounded text-xs overflow-auto ${
-                  testLoginResult.success ? 'border-green-300' : 'border-red-300'
-                } border`}>
-                  <p><span className="font-bold">Succès:</span> {testLoginResult.success ? 'Oui' : 'Non'}</p>
-                  <p><span className="font-bold">Message:</span> {testLoginResult.message}</p>
-                  {testLoginResult.userData && (
-                    <div>
-                      <p className="font-bold mt-1">Données utilisateur:</p>
-                      <pre>{JSON.stringify(testLoginResult.userData, null, 2)}</pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {debugInfo && (
-              <div className="bg-gray-100 p-3 rounded text-xs overflow-auto">
-                <p className="font-bold mb-1">Informations de débogage:</p>
-                <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-              </div>
-            )}
-            
             <button
               type="submit"
               className={`w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors ${
@@ -443,6 +418,20 @@ const AuthCallback = () => {
               </button>
             )}
           </form>
+          
+          {debugInfo && (
+            <div className="mt-4 bg-gray-100 p-3 rounded text-xs overflow-auto max-h-48">
+              <p className="font-bold mb-1">Informations de débogage:</p>
+              <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+            </div>
+          )}
+          
+          {testLoginResult && (
+            <div className="mt-4 bg-gray-100 p-3 rounded text-xs overflow-auto max-h-48">
+              <p className="font-bold mb-1">Résultat du test de connexion:</p>
+              <pre>{JSON.stringify(testLoginResult, null, 2)}</pre>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex flex-col items-center space-y-4">
@@ -458,7 +447,7 @@ const AuthCallback = () => {
           )}
           
           {debugInfo && (
-            <div className="bg-gray-100 p-3 rounded text-xs overflow-auto max-w-md">
+            <div className="bg-gray-100 p-3 rounded text-xs overflow-auto max-w-md max-h-48">
               <p className="font-bold mb-1">Informations de débogage:</p>
               <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
             </div>

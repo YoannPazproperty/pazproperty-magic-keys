@@ -90,7 +90,7 @@ serve(async (req) => {
         );
       }
 
-      // The function now returns a table with user_id and user_email columns
+      // La fonction retourne maintenant un tableau avec un seul objet contenant user_id et user_email
       const userData = tokenData[0];
       console.log("Données token extraites:", userData);
       
@@ -104,6 +104,41 @@ serve(async (req) => {
           }),
           {
             status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // Récupérer les informations utilisateur pour vérifier que le compte existe toujours
+      const { data: userInfo, error: userError } = await adminClient.auth.admin.getUserById(userData.user_id);
+
+      if (userError || !userInfo?.user) {
+        console.error("Utilisateur non trouvé malgré un token valide:", userData.user_id);
+        return new Response(
+          JSON.stringify({
+            error: "Utilisateur non trouvé",
+            details: "L'utilisateur associé à ce token n'existe plus"
+          }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // Vérifier que l'email correspond toujours
+      if (userInfo.user.email !== userData.user_email) {
+        console.error("Email incohérent entre le token et l'utilisateur actuel:", {
+          tokenEmail: userData.user_email,
+          userEmail: userInfo.user.email
+        });
+        return new Response(
+          JSON.stringify({
+            error: "Données incohérentes",
+            details: "L'email associé à ce token ne correspond plus à l'utilisateur"
+          }),
+          {
+            status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           }
         );
