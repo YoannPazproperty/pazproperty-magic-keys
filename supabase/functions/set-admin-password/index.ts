@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
 
@@ -36,6 +35,7 @@ serve(async (req) => {
     console.log("Méthode:", recoveryToken ? "Token de récupération" : email ? "Email direct" : "Clé admin");
     console.log("Email:", email || "Non fourni");
     console.log("Recovery token présent:", !!recoveryToken);
+    console.log("Password fourni de longueur:", password ? password.length : 0);
 
     // Cas 1: Utilisation d'un token de récupération personnalisé
     if (recoveryToken) {
@@ -51,7 +51,8 @@ serve(async (req) => {
         console.error("Erreur lors de la vérification du token:", verifyError);
         return new Response(
           JSON.stringify({ 
-            error: "Token de réinitialisation invalide ou expiré" 
+            error: "Token de réinitialisation invalide ou expiré",
+            details: verifyError ? verifyError.message : "Aucun utilisateur trouvé pour ce token"
           }),
           {
             status: 400,
@@ -73,6 +74,26 @@ serve(async (req) => {
           }
         );
       }
+
+      // Récupérer les infos de l'utilisateur
+      const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(userId);
+      
+      if (userError || !userData?.user) {
+        console.error("Erreur lors de la récupération des données utilisateur:", userError);
+        return new Response(
+          JSON.stringify({ 
+            error: "Utilisateur introuvable",
+            details: userError?.message 
+          }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+      
+      const userEmail = userData.user.email;
+      console.log("Email de l'utilisateur récupéré:", userEmail);
 
       // Mettre à jour le mot de passe
       console.log("Mise à jour du mot de passe pour l'utilisateur:", userId);
@@ -97,20 +118,28 @@ serve(async (req) => {
 
       console.log("Mot de passe mis à jour avec succès pour l'utilisateur:", userId);
       
-      // Essayons de récupérer l'email associé à cet utilisateur pour le journal
+      // Pour le débogage, vérifier si nous pouvons nous connecter avec ces identifiants
       try {
-        const { data: userData } = await adminClient.auth.admin.getUserById(userId);
-        if (userData?.user) {
-          console.log("Email de l'utilisateur dont le mot de passe a été réinitialisé:", userData.user.email);
+        console.log("Test de connexion avec le nouveau mot de passe...");
+        const { data: signInData, error: signInError } = await adminClient.auth.signInWithPassword({
+          email: userEmail,
+          password: password
+        });
+        
+        if (signInError) {
+          console.error("Échec du test de connexion après réinitialisation:", signInError);
+        } else {
+          console.log("Test de connexion réussi après réinitialisation pour:", userEmail);
         }
-      } catch (e) {
-        console.log("Impossible de récupérer les détails de l'utilisateur:", e);
+      } catch (signInErr) {
+        console.error("Erreur lors du test de connexion:", signInErr);
       }
 
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "Mot de passe mis à jour avec succès"
+          message: "Mot de passe mis à jour avec succès",
+          userEmail: userEmail  // Inclure l'email pour faciliter la connexion automatique
         }),
         {
           status: 200,

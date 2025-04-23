@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Info } from "lucide-react";
+import { testLogin } from "@/services/supabase/auth";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const AuthCallback = () => {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any | null>(null);
+  const [testLoginResult, setTestLoginResult] = useState<any | null>(null);
 
   useEffect(() => {
     // Traiter le callback d'authentification
@@ -36,6 +38,7 @@ const AuthCallback = () => {
         // Vérifier tous les indicateurs possibles de réinitialisation de mot de passe
         const isReset = urlParams.get("reset") === "true";
         const type = urlParams.get("type") || hashParams.get("type");
+        const email = urlParams.get("email");
         
         // Récupérer le token soit des paramètres URL soit du hash
         const accessToken = urlParams.get("token") || hashParams.get("access_token") || urlParams.get("access_token");
@@ -44,7 +47,7 @@ const AuthCallback = () => {
           isReset, 
           type, 
           accessToken: accessToken ? "présent" : "absent",
-          token: accessToken,
+          email: email || "non spécifié",
           hash: window.location.hash,
           search: window.location.search
         };
@@ -136,6 +139,7 @@ const AuthCallback = () => {
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordError(null);
+    setTestLoginResult(null);
     
     if (newPassword.length < 8) {
       setPasswordError("Le mot de passe doit contenir au moins 8 caractères");
@@ -197,19 +201,35 @@ const AuthCallback = () => {
           if (emailFromUrl) {
             console.log("Tentative de connexion automatique avec l'email:", emailFromUrl);
             
-            const { error: signInError } = await supabase.auth.signInWithPassword({
-              email: emailFromUrl,
-              password: newPassword,
-            });
+            // Utiliser notre fonction de test de connexion améliorée
+            const testResult = await testLogin(emailFromUrl, newPassword);
+            setTestLoginResult(testResult);
             
-            if (signInError) {
-              console.error("Échec de la connexion automatique:", signInError);
-              // On continue avec la redirection normale même si la connexion automatique échoue
+            if (testResult.success) {
+              console.log("Test de connexion réussi:", testResult);
+              
+              // Tenter la connexion réelle
+              const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: emailFromUrl,
+                password: newPassword,
+              });
+              
+              if (signInError) {
+                console.error("Échec de la connexion automatique réelle:", signInError);
+                toast.error("Mot de passe mis à jour, mais la connexion automatique a échoué", {
+                  description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe."
+                });
+              } else {
+                console.log("Connexion automatique réussie");
+                toast.success("Connexion automatique réussie");
+                navigate("/admin");
+                return;
+              }
             } else {
-              console.log("Connexion automatique réussie");
-              toast.success("Connexion automatique réussie");
-              navigate("/admin");
-              return;
+              console.error("Échec du test de connexion:", testResult);
+              toast.error("Mot de passe mis à jour, mais le test de connexion a échoué", {
+                description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe."
+              });
             }
           }
         } catch (signInErr) {
@@ -280,12 +300,28 @@ const AuthCallback = () => {
               </Alert>
             )}
 
-            {debugInfo && (
-              <div className="bg-gray-100 p-3 rounded text-xs overflow-auto">
-                <p className="font-bold mb-1">Informations de débogage:</p>
-                <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+            {testLoginResult && (
+              <div className="mt-2">
+                <h3 className="font-medium text-sm mb-1">Résultat du test de connexion:</h3>
+                <div className={`bg-gray-100 p-3 rounded text-xs overflow-auto ${
+                  testLoginResult.success ? 'border-green-300' : 'border-red-300'
+                } border`}>
+                  <p><span className="font-bold">Succès:</span> {testLoginResult.success ? 'Oui' : 'Non'}</p>
+                  <p><span className="font-bold">Message:</span> {testLoginResult.message}</p>
+                  {testLoginResult.userData && (
+                    <div>
+                      <p className="font-bold mt-1">Données utilisateur:</p>
+                      <pre>{JSON.stringify(testLoginResult.userData, null, 2)}</pre>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
+
+            <div className="bg-gray-100 p-3 rounded text-xs overflow-auto">
+              <p className="font-bold mb-1">Informations de débogage:</p>
+              <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+            </div>
             
             <button
               type="submit"
