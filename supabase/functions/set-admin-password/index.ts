@@ -40,20 +40,36 @@ serve(async (req) => {
 
     // Cas 1: Utilisation d'un token de récupération personnalisé
     if (recoveryToken) {
-      console.log("Vérification du token de récupération...");
+      console.log("Vérification du token de récupération:", recoveryToken);
       
-      // Utiliser notre nouvelle fonction SQL pour vérifier le token
+      // Utiliser notre fonction SQL pour vérifier le token
       const { data: tokenData, error: verifyError } = await adminClient.rpc(
         'verify_password_reset_token',
         { token_param: recoveryToken }
       );
 
-      if (verifyError || !tokenData) {
-        console.error("Erreur lors de la vérification du token:", verifyError);
+      console.log("Résultat de la vérification du token:", tokenData, verifyError);
+
+      if (verifyError) {
+        console.error("Erreur lors de la vérification du token SQL:", verifyError);
+        return new Response(
+          JSON.stringify({ 
+            error: "Erreur lors de la vérification du token",
+            details: verifyError.message
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      if (!tokenData || tokenData.length === 0) {
+        console.error("Token invalide ou expiré:", recoveryToken);
         return new Response(
           JSON.stringify({ 
             error: "Token de réinitialisation invalide ou expiré",
-            details: verifyError ? verifyError.message : "Aucun utilisateur trouvé pour ce token"
+            details: "Aucun utilisateur trouvé pour ce token"
           }),
           {
             status: 400,
@@ -63,18 +79,20 @@ serve(async (req) => {
       }
 
       // Extraire correctement les données du token (userId et userEmail)
-      const userId = tokenData.user_id;
-      const userEmail = tokenData.user_email;
+      const userId = tokenData[0].user_id;
+      const userEmail = tokenData[0].user_email;
       
       console.log("Token valide pour l'utilisateur:", userId);
       console.log("Email de l'utilisateur associé au token:", userEmail);
 
       if (!userId || !userEmail) {
         console.error("Données incomplètes retournées par verify_password_reset_token");
+        console.error("Données reçues:", tokenData);
         return new Response(
           JSON.stringify({ 
             error: "Données de token incomplètes",
-            details: "L'identifiant ou l'email de l'utilisateur est manquant"
+            details: "L'identifiant ou l'email de l'utilisateur est manquant",
+            debugData: tokenData
           }),
           {
             status: 500,

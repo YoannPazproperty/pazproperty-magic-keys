@@ -33,16 +33,20 @@ const AuthCallback = () => {
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         
         // Enregistrer les paramètres importants dans la console pour le débogage
-        console.log("URL Search params:", Object.fromEntries(urlParams.entries()));
-        console.log("Hash params:", Object.fromEntries(hashParams.entries()));
+        const urlParamsObj = Object.fromEntries(urlParams.entries());
+        const hashParamsObj = Object.fromEntries(hashParams.entries());
+        
+        console.log("URL Search params:", urlParamsObj);
+        console.log("Hash params:", hashParamsObj);
         
         // Vérifier tous les indicateurs possibles de réinitialisation de mot de passe
         const isReset = urlParams.get("reset") === "true";
         const type = urlParams.get("type") || hashParams.get("type");
         const email = urlParams.get("email");
+        const explicitToken = urlParams.get("token");
         
         // Récupérer le token soit des paramètres URL soit du hash
-        const accessToken = urlParams.get("token") || hashParams.get("access_token") || urlParams.get("access_token");
+        const accessToken = explicitToken || hashParams.get("access_token") || urlParams.get("access_token");
         
         const debugData = { 
           isReset, 
@@ -50,7 +54,8 @@ const AuthCallback = () => {
           accessToken: accessToken ? "présent" : "absent",
           email: email || "non spécifié",
           hash: window.location.hash,
-          search: window.location.search
+          search: window.location.search,
+          fullUrl: window.location.href
         };
         
         console.log("Debug paramètres:", debugData);
@@ -71,6 +76,34 @@ const AuthCallback = () => {
           if (email) {
             console.log("Email trouvé dans l'URL:", email);
             setUserEmail(email);
+          } else {
+            // Tenter de récupérer l'email à partir du token
+            if (accessToken) {
+              try {
+                console.log("Tentative de récupération de l'email à partir du token");
+                const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
+                const response = await fetch(
+                  `${supabaseUrl}/functions/v1/get-token-info`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      token: accessToken
+                    })
+                  }
+                );
+                
+                const data = await response.json();
+                if (response.ok && data.userEmail) {
+                  console.log("Email récupéré à partir du token:", data.userEmail);
+                  setUserEmail(data.userEmail);
+                }
+              } catch (error) {
+                console.error("Erreur lors de la récupération des infos du token:", error);
+              }
+            }
           }
           
           return; // Attendre que l'utilisateur entre un nouveau mot de passe
@@ -172,6 +205,7 @@ const AuthCallback = () => {
 
       // Utiliser notre fonction Edge personnalisée pour réinitialiser le mot de passe
       console.log("Utilisation de la fonction Edge personnalisée avec le token:", token);
+      console.log("Email utilisateur (si disponible):", userEmail);
       
       const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
       const response = await fetch(
@@ -199,6 +233,16 @@ const AuthCallback = () => {
         toast.error("Échec de la réinitialisation", {
           description: data.error || "Une erreur s'est produite"
         });
+        
+        // Afficher des informations de débogage supplémentaires
+        if (data.details || data.debugData) {
+          console.error("Détails d'erreur:", data.details || data.debugData);
+          setDebugInfo({
+            ...debugInfo,
+            errorDetails: data.details,
+            debugData: data.debugData
+          });
+        }
       } else {
         console.log("Mot de passe réinitialisé avec succès");
         toast.success("Mot de passe mis à jour avec succès");
