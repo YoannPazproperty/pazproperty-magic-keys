@@ -12,7 +12,7 @@ const initialDeclarations: Declaration[] = [
     issueType: "plumbing",
     description: "Il y a une fuite d'eau dans la salle de bain principale.",
     urgency: "high",
-    status: "in_progress",
+    status: "Em curso de reparação", // Updated from "in_progress"
     submittedAt: "2024-03-18T14:30:00Z",
   },
   {
@@ -24,7 +24,7 @@ const initialDeclarations: Declaration[] = [
     issueType: "electrical",
     description: "La prise électrique dans la cuisine ne fonctionne pas.",
     urgency: "medium",
-    status: "pending",
+    status: "Novo", // Updated from "pending"
     submittedAt: "2024-03-17T10:15:00Z",
   },
   {
@@ -36,7 +36,7 @@ const initialDeclarations: Declaration[] = [
     issueType: "heating",
     description: "Le chauffage central ne chauffe pas correctement.",
     urgency: "medium",
-    status: "pending",
+    status: "Novo", // Updated from "pending"
     submittedAt: "2024-03-16T08:45:00Z",
   },
   {
@@ -48,7 +48,7 @@ const initialDeclarations: Declaration[] = [
     issueType: "pest",
     description: "J'ai vu des cafards dans la cuisine à plusieurs reprises.",
     urgency: "low",
-    status: "resolved",
+    status: "Resolvido", // Updated from "resolved"
     submittedAt: "2024-03-15T16:20:00Z",
   },
 ];

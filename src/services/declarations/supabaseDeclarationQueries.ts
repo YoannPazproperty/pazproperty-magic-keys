@@ -7,7 +7,7 @@ import { toast } from "sonner";
 const DECLARATIONS_TABLE = 'declarations';
 
 // Get all declarations with optional filters
-export const getSupabaseDeclarations = async (statusFilter: string | null = null): Promise<Declaration[]> => {
+export const getSupabaseDeclarations = async (statusFilter: Declaration["status"] | null = null): Promise<Declaration[]> => {
   try {
     if (!supabase) {
       console.error('Supabase non disponible');
