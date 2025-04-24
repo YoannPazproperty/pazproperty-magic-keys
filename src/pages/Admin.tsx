@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -11,6 +10,9 @@ import { getDeclarations, updateDeclarationStatus } from "@/services/declaration
 import { useAuth } from "@/hooks/useAuth";
 import type { Declaration } from "@/services/types";
 import { useNavigate } from "react-router-dom";
+import { getContactsList } from "@/services/contacts/contactQueries";
+import { ContactsList } from "@/components/admin/ContactsList";
+import type { CommercialContact } from "@/services/types";
 
 const Admin = () => {
   const { user, signOut } = useAuth();
@@ -19,6 +21,8 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState("declarations");
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [contacts, setContacts] = useState<CommercialContact[]>([]);
+  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
   
   const { apiKey, boardId, techBoardId } = getMondayConfig();
 
@@ -45,6 +49,25 @@ const Admin = () => {
       setIsLoading(false);
     }
   };
+
+  const loadContacts = async () => {
+    setIsLoadingContacts(true);
+    try {
+      const allContacts = await getContactsList();
+      setContacts(allContacts);
+    } catch (error) {
+      console.error("Error loading contacts:", error);
+      toast.error("Erro ao carregar contatos");
+    } finally {
+      setIsLoadingContacts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "crm") {
+      loadContacts();
+    }
+  }, [activeTab]);
 
   const handleStatusUpdate = async (id: string, status: Declaration["status"]) => {
     try {
@@ -115,10 +138,14 @@ const Admin = () => {
         </TabsContent>
         
         <TabsContent value="crm" className="space-y-4">
-          <div className="rounded-lg border bg-card p-6">
+          <div className="rounded-lg border bg-card p-6 mb-4">
             <h2 className="text-2xl font-semibold mb-4">CRM</h2>
-            <p className="text-muted-foreground">Le module CRM est en cours d'implémentation. Il permettra de gérer les relations clients.</p>
+            <p className="text-muted-foreground mb-4">Gerencie seus contatos comerciais aqui.</p>
           </div>
+          <ContactsList 
+            contacts={contacts}
+            isLoading={isLoadingContacts}
+          />
         </TabsContent>
       </Tabs>
     </AdminLayout>

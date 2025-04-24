@@ -178,3 +178,14 @@ export const sendNotificationEmail = async (
     };
   }
 };
+
+// Commercial contact interface
+export interface CommercialContact {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string | null;
+  tipo: string;
+  mensagem: string;
+  created_at: string;
+}
