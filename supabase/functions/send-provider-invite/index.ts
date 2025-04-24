@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 import { Resend } from 'npm:resend@2.0.0'
 
@@ -208,26 +209,47 @@ Deno.serve(async (req) => {
       `
     }
     
-    // Send email with credentials
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: 'PAZ Property <onboarding@resend.dev>',
-      to: [provider.email],
-      subject: 'Acesso ao Extranet Técnica - PAZ Property',
-      html: emailHtml,
-    })
+    let emailResult = null;
+    let emailError = null;
+    let wasEmailSent = false;
+    
+    try {
+      // Send email with credentials
+      const { data: emailData, error: sendError } = await resend.emails.send({
+        from: 'PAZ Property <onboarding@resend.dev>',
+        to: [provider.email],
+        subject: 'Acesso ao Extranet Técnica - PAZ Property',
+        html: emailHtml,
+      });
 
-    if (emailError) {
-      console.error('Error sending email:', emailError)
-      throw new Error(`Error sending email: ${emailError}`)
+      if (sendError) {
+        console.error('Error sending email:', sendError);
+        emailError = sendError;
+      } else {
+        console.log('Email sent successfully', emailData);
+        emailResult = emailData;
+        wasEmailSent = true;
+      }
+    } catch (emailSendError) {
+      console.error('Exception when sending email:', emailSendError);
+      emailError = {
+        message: emailSendError.message || "Unknown email error",
+        statusCode: emailSendError.statusCode || 500
+      };
     }
 
-    console.log('Email sent successfully', emailData)
-
+    // Return success even if email sending fails
+    // This way the user account is still created/updated
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Invitation sent successfully',
-        isNewUser: !(existingUsers && existingUsers.users && existingUsers.users.length > 0)
+        message: wasEmailSent ? 'Invitation sent successfully' : 'User account created/updated but email could not be sent',
+        isNewUser: !(existingUsers && existingUsers.users && existingUsers.users.length > 0),
+        emailSent: wasEmailSent,
+        emailError: emailError ? {
+          message: emailError.message,
+          code: emailError.statusCode || 'UNKNOWN'
+        } : null
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
