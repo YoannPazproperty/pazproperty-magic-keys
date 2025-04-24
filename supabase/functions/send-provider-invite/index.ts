@@ -7,8 +7,11 @@ import { getProviderData, getUserByEmail, updateUserMetadata, createUser, ensure
 import { sendInvitationEmail } from './email.ts';
 
 Deno.serve(async (req) => {
+  console.log("Received provider invite request");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -18,6 +21,14 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const publicSiteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://pazproperty.pt';
+
+    // Log environment variable status (pas leurs valeurs pour sécurité)
+    console.log("Environment check:", { 
+      hasResendKey: !!resendApiKey, 
+      hasSupabaseUrl: !!supabaseUrl, 
+      hasServiceKey: !!supabaseServiceKey,
+      publicSiteUrl
+    });
 
     // Check if required environment variables are set
     if (!resendApiKey) {
@@ -34,8 +45,18 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Parse request body
-    const { providerId }: ProviderInviteRequest = await req.json();
+    let body;
+    try {
+      body = await req.json();
+      console.log("Request body received:", body);
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      throw new Error("Invalid request body format");
+    }
+    
+    const { providerId } = body as ProviderInviteRequest;
     if (!providerId) {
+      console.error("Missing providerId in request");
       throw new Error('Provider ID is required');
     }
 
@@ -47,37 +68,45 @@ Deno.serve(async (req) => {
 
     // Check if email exists
     if (!provider.email) {
+      console.error("Provider has no email");
       throw new Error('Provider email is missing');
     }
 
     // Check if user exists and handle account creation/update
     const existingUser = await getUserByEmail(supabase, provider.email);
+    console.log("User check:", existingUser ? "User exists" : "User does not exist");
+    
     let userId: string;
     let tempPassword: string | undefined;
     
     // Create temporary password only for new users
     if (!existingUser) {
       tempPassword = crypto.randomUUID().split('-')[0];
+      console.log("Generated temporary password for new user");
     }
 
     try {
       if (existingUser) {
         userId = existingUser.id;
+        console.log(`Updating existing user metadata for user: ${userId}`);
         await updateUserMetadata(supabase, userId, {
           provider_id: providerId,
           nome: provider.nome_gerente,
           empresa: provider.empresa
         });
       } else {
+        console.log(`Creating new user for email: ${provider.email}`);
         const newUser = await createUser(supabase, provider.email, tempPassword!, {
           provider_id: providerId,
           nome: provider.nome_gerente,
           empresa: provider.empresa
         });
         userId = newUser.id;
+        console.log(`New user created with ID: ${userId}`);
       }
 
       // Ensure user has manager role
+      console.log(`Ensuring user ${userId} has manager role`);
       await ensureUserRole(supabase, userId, 'manager');
 
       // Send invitation email
@@ -86,6 +115,7 @@ Deno.serve(async (req) => {
       let wasEmailSent = false;
 
       try {
+        console.log("Sending invitation email");
         emailResult = await sendInvitationEmail(
           resend,
           provider.email,
@@ -95,25 +125,30 @@ Deno.serve(async (req) => {
           publicSiteUrl
         );
         wasEmailSent = true;
-      } catch (emailError) {
-        console.error('Error sending invitation email:', emailError);
+        console.log("Email sent successfully");
+      } catch (emailErr: any) {
+        console.error('Error sending invitation email:', emailErr);
         emailError = {
-          message: emailError.message || "Unknown email error",
-          statusCode: emailError.statusCode || 500
+          message: emailErr.message || "Unknown email error",
+          statusCode: emailErr.statusCode || 500
         };
       }
 
+      const responseData = {
+        success: true,
+        message: wasEmailSent ? 'Invitation sent successfully' : 'User account created/updated but email could not be sent',
+        isNewUser: !existingUser,
+        emailSent: wasEmailSent,
+        emailError: emailError ? {
+          message: emailError.message,
+          code: emailError.statusCode || 'UNKNOWN'
+        } : null
+      };
+      
+      console.log("Sending successful response:", responseData);
+      
       return new Response(
-        JSON.stringify({
-          success: true,
-          message: wasEmailSent ? 'Invitation sent successfully' : 'User account created/updated but email could not be sent',
-          isNewUser: !existingUser,
-          emailSent: wasEmailSent,
-          emailError: emailError ? {
-            message: emailError.message,
-            code: emailError.statusCode || 'UNKNOWN'
-          } : null
-        }),
+        JSON.stringify(responseData),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200
@@ -123,7 +158,7 @@ Deno.serve(async (req) => {
       console.error('Error managing user account:', error);
       throw error;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in send-provider-invite function:', error);
     return new Response(
       JSON.stringify({

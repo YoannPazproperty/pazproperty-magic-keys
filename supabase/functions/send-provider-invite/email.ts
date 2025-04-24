@@ -9,7 +9,12 @@ export async function sendInvitationEmail(
   tempPassword?: string,
   siteUrl?: string
 ) {
+  console.log(`Preparing invitation email for ${to}, isNewUser: ${isNewUser}`);
+  
   const publicSiteUrl = siteUrl || 'https://pazproperty.pt';
+  const loginUrl = `${publicSiteUrl}/auth?provider=true`;
+  
+  console.log(`Using login URL: ${loginUrl}`);
   
   let emailHtml: string;
   
@@ -19,7 +24,7 @@ export async function sendInvitationEmail(
       <p>Olá ${nome},</p>
       <p>Sua empresa foi adicionada como prestador de serviços na PAZ Property.</p>
       <p>Você pode acessar o Extranet Técnica com o email que já está registrado no sistema.</p>
-      <p>Por favor, acesse <a href="${publicSiteUrl}/auth?provider=true">aqui</a> e faça login.</p>
+      <p>Por favor, acesse <a href="${loginUrl}">aqui</a> e faça login.</p>
       <p>Se você esqueceu sua senha, pode usar a opção "Esqueci minha senha" na página de login.</p>
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
     `;
@@ -33,13 +38,15 @@ export async function sendInvitationEmail(
         <li>Email: ${to}</li>
         <li>Senha temporária: ${tempPassword}</li>
       </ul>
-      <p>Por favor, acesse <a href="${publicSiteUrl}/auth?provider=true">aqui</a> e faça login com essas credenciais.</p>
+      <p>Por favor, acesse <a href="${loginUrl}">aqui</a> e faça login com essas credenciais.</p>
       <p>Por razões de segurança, recomendamos que você altere sua senha após o primeiro acesso.</p>
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
     `;
   }
 
   try {
+    console.log("Sending email via Resend");
+    
     const { data: emailData, error: sendError } = await resend.emails.send({
       from: 'PAZ Property <contact@pazproperty.pt>',
       to: [to],
@@ -48,11 +55,11 @@ export async function sendInvitationEmail(
     });
 
     if (sendError) {
-      console.error('Error sending email:', sendError);
+      console.error('Error sending email via Resend API:', sendError);
       throw sendError;
     }
 
-    console.log('Email sent successfully', emailData);
+    console.log('Email sent successfully with ID:', emailData?.id);
     return emailData;
   } catch (emailError) {
     console.error('Exception when sending email:', emailError);

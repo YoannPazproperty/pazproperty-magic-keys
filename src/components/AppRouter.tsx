@@ -52,12 +52,12 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
               </ProtectedRoute>
             } 
           />
-          {/* Redirect /extranet-technique to /auth?provider=true if not authenticated */}
+          {/* Rediriger /extranet-technique vers /auth?provider=true si non authentifié */}
           <Route 
             path="/extranet-technique-login" 
             element={<Navigate to="/auth?provider=true" replace />} 
           />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          {/* AJOUTER TOUTES LES ROUTES PERSONNALISÉES AU-DESSUS DE LA ROUTE CATCH-ALL "*" */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>

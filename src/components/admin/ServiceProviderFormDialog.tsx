@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -116,17 +117,29 @@ export function ServiceProviderFormDialog({
     
     try {
       console.log("Sending invite to provider:", providerId);
+      
+      // Debug log pour vérifier la structure de la requête
+      console.log("Request body:", { providerId });
+      
+      // Modifier l'appel de la fonction Edge pour ajouter plus de logging
       const response = await supabase.functions.invoke('send-provider-invite', {
-        body: { providerId }
+        body: { providerId },
+        // Ajouter des options pour éviter les problèmes de cache
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
 
       console.log("Invite response:", response);
 
       if (response.error) {
+        console.error("Error details:", response.error);
         throw new Error(response.error.message || "Erro ao enviar convite");
       }
       
       if (response.data && !response.data.success) {
+        console.error("Error in data:", response.data.error);
         throw new Error(response.data.error || "Erro ao processar convite");
       }
 
@@ -157,7 +170,7 @@ export function ServiceProviderFormDialog({
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending invite:', error);
       toast.error("Erro ao enviar convite", { 
         description: error.message || "Verifique os logs para mais detalhes" 
