@@ -18,7 +18,6 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const publicSiteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://pazproperty.pt'
-    const ownerEmail = Deno.env.get('yoann@pazproperty.pt') // Owner's verified email
 
     // Check if required environment variables are set
     if (!resendApiKey) {
@@ -212,51 +211,30 @@ Deno.serve(async (req) => {
     let emailResult = null;
     let emailError = null;
     let wasEmailSent = false;
-    let isResendRestrictionError = false;
     
     try {
-      // Check if we're in free tier restriction where we can only send to owner's email
-      if (provider.email !== ownerEmail) {
-        console.log(`Resend free tier limitation - cannot send to ${provider.email}, only to ${ownerEmail}`)
-        isResendRestrictionError = true;
-        emailError = {
-          message: `You can only send testing emails to your own email address (${ownerEmail})`,
-          statusCode: 403
-        };
-      } else {
-        // Send email with credentials
-        const { data: emailData, error: sendError } = await resend.emails.send({
-          from: 'PAZ Property <onboarding@resend.dev>',
-          to: [provider.email],
-          subject: 'Acesso ao Extranet Técnica - PAZ Property',
-          html: emailHtml,
-        });
+      // Send email with credentials - No more restrictions since we're on Pro plan
+      const { data: emailData, error: sendError } = await resend.emails.send({
+        from: 'PAZ Property <contact@pazproperty.pt>', // Utiliser l'adresse vérifiée
+        to: [provider.email],
+        subject: 'Acesso ao Extranet Técnica - PAZ Property',
+        html: emailHtml,
+      });
 
-        if (sendError) {
-          console.error('Error sending email:', sendError);
-          emailError = sendError;
-        } else {
-          console.log('Email sent successfully', emailData);
-          emailResult = emailData;
-          wasEmailSent = true;
-        }
+      if (sendError) {
+        console.error('Error sending email:', sendError);
+        emailError = sendError;
+      } else {
+        console.log('Email sent successfully', emailData);
+        emailResult = emailData;
+        wasEmailSent = true;
       }
     } catch (emailSendError) {
       console.error('Exception when sending email:', emailSendError);
-      
-      // Check if it's the free tier restriction error
-      if (emailSendError.message && emailSendError.message.includes("own email address")) {
-        isResendRestrictionError = true;
-        emailError = {
-          message: emailSendError.message || "You can only send emails to your own verified address in free tier",
-          statusCode: 403
-        };
-      } else {
-        emailError = {
-          message: emailSendError.message || "Unknown email error",
-          statusCode: emailSendError.statusCode || 500
-        };
-      }
+      emailError = {
+        message: emailSendError.message || "Unknown email error",
+        statusCode: emailSendError.statusCode || 500
+      };
     }
 
     // Return success even if email sending fails
@@ -269,8 +247,7 @@ Deno.serve(async (req) => {
         emailSent: wasEmailSent,
         emailError: emailError ? {
           message: emailError.message,
-          code: emailError.statusCode || 'UNKNOWN',
-          isResendRestrictionError: isResendRestrictionError
+          code: emailError.statusCode || 'UNKNOWN'
         } : null
       }),
       { 

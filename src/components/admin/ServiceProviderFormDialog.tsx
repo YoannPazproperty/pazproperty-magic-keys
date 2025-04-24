@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,7 @@ export function ServiceProviderFormDialog({
 }: ServiceProviderFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
-  const [emailError, setEmailError] = useState<{ message: string, code: string, isResendRestrictionError?: boolean } | null>(null);
+  const [emailError, setEmailError] = useState<{ message: string, code: string } | null>(null);
   const isEditing = !!providerToEdit;
 
   // Define default values from providerToEdit or empty values
@@ -143,15 +142,9 @@ export function ServiceProviderFormDialog({
             description: "Um email com as credenciais foi enviado ao prestador"
           });
         } else {
-          if (response.data.emailError?.isResendRestrictionError) {
-            toast.success("Conta criada com sucesso", {
-              description: "A conta foi criada, mas o email não pôde ser enviado devido às restrições da conta gratuita do Resend"
-            });
-          } else {
-            toast.success("Conta criada com sucesso", {
-              description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
-            });
-          }
+          toast.warning("Conta criada com sucesso", {
+            description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
+          });
         }
       } else {
         if (response.data.emailSent) {
@@ -159,15 +152,9 @@ export function ServiceProviderFormDialog({
             description: "O prestador já possui uma conta e foi notificado"
           });
         } else {
-          if (response.data.emailError?.isResendRestrictionError) {
-            toast.success("Permissões atualizadas", {
-              description: "As permissões foram atualizadas, mas o email não pôde ser enviado devido às restrições da conta gratuita do Resend"
-            });
-          } else {
-            toast.success("Permissões atualizadas", {
-              description: "O prestador já possui uma conta e suas permissões foram atualizadas, mas ocorreu um erro ao enviar o email"
-            });
-          }
+          toast.warning("Permissões atualizadas", {
+            description: "O prestador já possui uma conta e suas permissões foram atualizadas, mas ocorreu um erro ao enviar o email"
+          });
         }
       }
     } catch (error) {
@@ -224,24 +211,7 @@ export function ServiceProviderFormDialog({
           </DialogTitle>
         </DialogHeader>
         
-        {emailError?.isResendRestrictionError && (
-          <Alert variant="info" className="mb-4">
-            <Info className="h-4 w-4" />
-            <AlertTitle>Limitação do serviço de email</AlertTitle>
-            <AlertDescription>
-              <p>A conta foi criada/atualizada com sucesso, mas não foi possível enviar o email devido a restrições do serviço Resend.</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Na versão gratuita do Resend, só é possível enviar emails para o próprio endereço do proprietário da conta. 
-                Para enviar emails para qualquer endereço, será necessário atualizar para uma conta paga ou verificar seu domínio.
-              </p>
-              <div className="mt-2">
-                <Button size="sm" variant="outline" onClick={dismissEmailError}>Entendi</Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {emailError && !emailError.isResendRestrictionError && (
+        {emailError && (
           <Alert variant="warning" className="mb-4">
             <AlertTitle>Aviso sobre o email</AlertTitle>
             <AlertDescription>
