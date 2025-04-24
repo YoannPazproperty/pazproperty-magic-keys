@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -61,13 +61,6 @@ export function ServiceProviderFormDialog({
     defaultValues: defaultValues,
   });
 
-  // Réinitialiser le formulaire quand providerToEdit change
-  useState(() => {
-    if (isOpen) {
-      form.reset(defaultValues);
-    }
-  });
-
   async function onSubmit(data: ProviderFormValues) {
     setIsSubmitting(true);
     
@@ -127,7 +120,7 @@ export function ServiceProviderFormDialog({
   };
 
   // Réinitialiser le formulaire quand la modal s'ouvre
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen && providerToEdit) {
       form.reset({
         empresa: providerToEdit.empresa || "",
