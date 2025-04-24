@@ -13,12 +13,13 @@ import { toast } from "sonner";
 import type { CommercialContact } from "@/services/types";
 import { createContact, updateContact } from "@/services/contacts/contactQueries";
 
+// Define the form schema with required fields matching CommercialContact requirements
 const contactFormSchema = z.object({
   nome: z.string().min(1, { message: "Nome é obrigatório" }),
   email: z.string().email({ message: "Email inválido" }),
   telefone: z.string().optional(),
   tipo: z.enum(["Proprietario", "Inquilino", "Outros", "Agente Imobiliario"]),
-  mensagem: z.string().optional(),
+  mensagem: z.string().min(1, { message: "Mensagem é obrigatória" }),
 });
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
@@ -59,7 +60,14 @@ export function ContactFormDialog({ isOpen, onClose, onSuccess, contactToEdit }:
           toast.error("Erro ao atualizar contato");
         }
       } else {
-        const newContact = await createContact(data);
+        // Ensure all required fields are present for create operation
+        const newContact = await createContact({
+          nome: data.nome,
+          email: data.email,
+          telefone: data.telefone || null,
+          tipo: data.tipo,
+          mensagem: data.mensagem
+        });
         
         if (newContact) {
           toast.success("Contato criado com sucesso");
