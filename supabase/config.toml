@@ -15,3 +15,7 @@ verify_jwt = false
 
 [functions.get-token-info]
 verify_jwt = false
+
+[functions.send-provider-invite]
+verify_jwt = false
+
