@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -42,19 +43,29 @@ export function ServiceProviderFormDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEditing = !!providerToEdit;
 
+  // Définir correctement les valeurs par défaut à partir du providerToEdit
+  const defaultValues: ProviderFormValues = {
+    empresa: providerToEdit?.empresa || "",
+    tipo_de_obras: providerToEdit?.tipo_de_obras || "Obras gerais",
+    nome_gerente: providerToEdit?.nome_gerente || "",
+    telefone: providerToEdit?.telefone || "",
+    email: providerToEdit?.email || "",
+    endereco: providerToEdit?.endereco || "",
+    codigo_postal: providerToEdit?.codigo_postal || "",
+    cidade: providerToEdit?.cidade || "",
+    nif: providerToEdit?.nif || "",
+  };
+
   const form = useForm<ProviderFormValues>({
     resolver: zodResolver(providerFormSchema),
-    defaultValues: {
-      empresa: providerToEdit?.empresa || "",
-      tipo_de_obras: providerToEdit?.tipo_de_obras || "Obras gerais",
-      nome_gerente: providerToEdit?.nome_gerente || "",
-      telefone: providerToEdit?.telefone || "",
-      email: providerToEdit?.email || "",
-      endereco: providerToEdit?.endereco || "",
-      codigo_postal: providerToEdit?.codigo_postal || "",
-      cidade: providerToEdit?.cidade || "",
-      nif: providerToEdit?.nif || "",
-    },
+    defaultValues: defaultValues,
+  });
+
+  // Réinitialiser le formulaire quand providerToEdit change
+  useState(() => {
+    if (isOpen) {
+      form.reset(defaultValues);
+    }
   });
 
   async function onSubmit(data: ProviderFormValues) {
@@ -114,6 +125,35 @@ export function ServiceProviderFormDialog({
       toast.error("Erro ao enviar convite: " + (error.message || 'Tente novamente'));
     }
   };
+
+  // Réinitialiser le formulaire quand la modal s'ouvre
+  React.useEffect(() => {
+    if (isOpen && providerToEdit) {
+      form.reset({
+        empresa: providerToEdit.empresa || "",
+        tipo_de_obras: providerToEdit.tipo_de_obras || "Obras gerais",
+        nome_gerente: providerToEdit.nome_gerente || "",
+        telefone: providerToEdit.telefone || "",
+        email: providerToEdit.email || "",
+        endereco: providerToEdit.endereco || "",
+        codigo_postal: providerToEdit.codigo_postal || "",
+        cidade: providerToEdit.cidade || "",
+        nif: providerToEdit.nif || "",
+      });
+    } else if (isOpen) {
+      form.reset({
+        empresa: "",
+        tipo_de_obras: "Obras gerais",
+        nome_gerente: "",
+        telefone: "",
+        email: "",
+        endereco: "",
+        codigo_postal: "",
+        cidade: "",
+        nif: "",
+      });
+    }
+  }, [isOpen, providerToEdit, form]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
