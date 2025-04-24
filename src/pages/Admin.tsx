@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -145,6 +146,7 @@ const Admin = () => {
           <ContactsList 
             contacts={contacts}
             isLoading={isLoadingContacts}
+            onRefresh={loadContacts}
           />
         </TabsContent>
       </Tabs>
