@@ -10,6 +10,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import type { ServiceProvider } from "@/services/types";
 import { createProvider, updateProvider } from "@/services/providers/providerQueries";
+import { supabase } from "@/integrations/supabase/client";
 
 const providerFormSchema = z.object({
   empresa: z.string().min(1, { message: "Empresa é obrigatória" }),
