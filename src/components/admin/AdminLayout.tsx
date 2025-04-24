@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, FileText, LayoutDashboard } from "lucide-react";
+import { LogOut, Users, FileText, LayoutDashboard, Building } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import {
   DropdownMenu,
@@ -46,9 +45,7 @@ export const AdminLayout = ({
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
       {/* Sidebar */}
       <div
-        className={`${
-          isSidebarOpen ? "w-64" : "w-16"
-        } bg-white border-r transition-width duration-300 ease-in-out flex-shrink-0 hidden md:block`}
+        className={`${isSidebarOpen ? "w-64" : "w-16"} bg-white border-r transition-width duration-300 ease-in-out flex-shrink-0 hidden md:block`}
       >
         <div className="h-16 flex items-center px-4 border-b">
           <h1 className={`font-bold text-lg ${isSidebarOpen ? "block" : "hidden"}`}>
@@ -89,6 +86,17 @@ export const AdminLayout = ({
             >
               <Users className="h-5 w-5 mr-2" />
               <span className={`${isSidebarOpen ? "block" : "hidden"}`}>CRM</span>
+            </button>
+            <button
+              onClick={() => onTabChange("prestadores")}
+              className={`w-full text-left flex items-center px-3 py-2 rounded-lg transition-colors ${
+                activeTab === "prestadores"
+                  ? "bg-gray-100 text-primary font-medium"
+                  : "hover:bg-gray-50"
+              } ${!isSidebarOpen ? "justify-center" : ""}`}
+            >
+              <Building className="h-5 w-5 mr-2" />
+              <span className={`${isSidebarOpen ? "block" : "hidden"}`}>Prestadores</span>
             </button>
           </nav>
         </div>

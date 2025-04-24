@@ -251,6 +251,48 @@ export type Database = {
         }
         Relationships: []
       }
+      prestadores_de_servicos: {
+        Row: {
+          cidade: string | null
+          codigo_postal: string | null
+          created_at: string
+          email: string
+          empresa: string
+          endereco: string | null
+          id: string
+          nif: string | null
+          nome_gerente: string
+          telefone: string | null
+          tipo_de_obras: string
+        }
+        Insert: {
+          cidade?: string | null
+          codigo_postal?: string | null
+          created_at?: string
+          email: string
+          empresa: string
+          endereco?: string | null
+          id?: string
+          nif?: string | null
+          nome_gerente: string
+          telefone?: string | null
+          tipo_de_obras: string
+        }
+        Update: {
+          cidade?: string | null
+          codigo_postal?: string | null
+          created_at?: string
+          email?: string
+          empresa?: string
+          endereco?: string | null
+          id?: string
+          nif?: string | null
+          nome_gerente?: string
+          telefone?: string | null
+          tipo_de_obras?: string
+        }
+        Relationships: []
+      }
       technician_reports: {
         Row: {
           address: string | null

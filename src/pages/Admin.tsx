@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -14,6 +13,9 @@ import { useNavigate } from "react-router-dom";
 import { getContactsList } from "@/services/contacts/contactQueries";
 import { ContactsList } from "@/components/admin/ContactsList";
 import type { CommercialContact } from "@/services/types";
+import { getProvidersList } from "@/services/providers/providerQueries";
+import type { ServiceProvider } from "@/services/types";
+import { ProvidersList } from "@/components/admin/ProvidersList";
 
 const Admin = () => {
   const { user, signOut } = useAuth();
@@ -24,7 +26,8 @@ const Admin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [contacts, setContacts] = useState<CommercialContact[]>([]);
   const [isLoadingContacts, setIsLoadingContacts] = useState(false);
-  
+  const [providers, setProviders] = useState<ServiceProvider[]>([]);
+  const [isLoadingProviders, setIsLoadingProviders] = useState(false);
   const { apiKey, boardId, techBoardId } = getMondayConfig();
 
   useEffect(() => {
@@ -64,9 +67,28 @@ const Admin = () => {
     }
   };
 
+  const loadProviders = async () => {
+    setIsLoadingProviders(true);
+    try {
+      const allProviders = await getProvidersList();
+      setProviders(allProviders);
+    } catch (error) {
+      console.error("Error loading providers:", error);
+      toast.error("Erro ao carregar prestadores");
+    } finally {
+      setIsLoadingProviders(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "crm") {
       loadContacts();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "prestadores") {
+      loadProviders();
     }
   }, [activeTab]);
 
@@ -117,10 +139,11 @@ const Admin = () => {
       user={user}
     >
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
+        <TabsList className="grid w-full grid-cols-4 mb-8">
           <TabsTrigger value="declarations">Acompanhamento das declarações</TabsTrigger>
           <TabsTrigger value="obras">Acompanhamento das obras</TabsTrigger>
           <TabsTrigger value="crm">CRM</TabsTrigger>
+          <TabsTrigger value="prestadores">Prestadores</TabsTrigger>
         </TabsList>
         
         <TabsContent value="declarations" className="space-y-4">
@@ -147,6 +170,14 @@ const Admin = () => {
             contacts={contacts}
             isLoading={isLoadingContacts}
             onRefresh={loadContacts}
+          />
+        </TabsContent>
+        
+        <TabsContent value="prestadores" className="space-y-4">
+          <ProvidersList 
+            providers={providers}
+            isLoading={isLoadingProviders}
+            onRefresh={loadProviders}
           />
         </TabsContent>
       </Tabs>

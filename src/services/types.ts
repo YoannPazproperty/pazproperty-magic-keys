@@ -189,3 +189,18 @@ export interface CommercialContact {
   mensagem: string;
   created_at: string;
 }
+
+// ServiceProvider interface
+export type ServiceProvider = {
+  id: string;
+  empresa: string;
+  tipo_de_obras: 'Eletricidade' | 'Canalização' | 'Alvenaria' | 'Caixilharias' | 'Obras gerais';
+  nome_gerente: string;
+  telefone: string | null;
+  email: string;
+  endereco: string | null;
+  codigo_postal: string | null;
+  cidade: string | null;
+  nif: string | null;
+  created_at: string;
+};
