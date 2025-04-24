@@ -41,6 +41,7 @@ export function ServiceProviderFormDialog({
   providerToEdit
 }: ServiceProviderFormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
   const isEditing = !!providerToEdit;
 
   // Définir correctement les valeurs par défaut à partir du providerToEdit
@@ -103,19 +104,33 @@ export function ServiceProviderFormDialog({
   }
 
   const handleInvite = async (providerId: string) => {
+    if (!providerId) {
+      toast.error("ID do prestador não encontrado");
+      return;
+    }
+    
+    setIsSendingInvite(true);
+    
     try {
+      console.log("Sending invite to provider:", providerId);
       const response = await supabase.functions.invoke('send-provider-invite', {
         body: { providerId }
       });
 
+      console.log("Invite response:", response);
+
       if (response.error) {
-        throw new Error(response.error.message);
+        throw new Error(response.error.message || "Erro ao enviar convite");
       }
 
       toast.success("Convite enviado com sucesso");
     } catch (error) {
       console.error('Error sending invite:', error);
-      toast.error("Erro ao enviar convite: " + (error.message || 'Tente novamente'));
+      toast.error("Erro ao enviar convite", { 
+        description: error.message || "Verifique os logs para mais detalhes" 
+      });
+    } finally {
+      setIsSendingInvite(false);
     }
   };
 
@@ -309,10 +324,10 @@ export function ServiceProviderFormDialog({
                   <Button
                     type="button"
                     variant="secondary"
-                    onClick={() => handleInvite(providerToEdit.id)}
-                    disabled={isSubmitting}
+                    onClick={() => handleInvite(providerToEdit!.id)}
+                    disabled={isSubmitting || isSendingInvite}
                   >
-                    Enviar Convite
+                    {isSendingInvite ? "Enviando..." : "Enviar Convite"}
                   </Button>
                 )}
                 <Button type="submit" disabled={isSubmitting}>
