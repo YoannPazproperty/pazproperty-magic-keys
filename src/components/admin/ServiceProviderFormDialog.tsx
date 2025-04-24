@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { toast } from "sonner";
 import type { ServiceProvider } from "@/services/types";
 import { createProvider, updateProvider } from "@/services/providers/providerQueries";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Info } from "lucide-react";
+import { Loader2, Info, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const providerFormSchema = z.object({
@@ -45,6 +46,7 @@ export function ServiceProviderFormDialog({
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [emailError, setEmailError] = useState<{ message: string, code: string } | null>(null);
   const [inviteStatus, setInviteStatus] = useState<string | null>(null);
+  const [technicalError, setTechnicalError] = useState<string | null>(null);
   const isEditing = !!providerToEdit;
 
   const defaultValues: ProviderFormValues = {
@@ -113,6 +115,7 @@ export function ServiceProviderFormDialog({
     
     setIsSendingInvite(true);
     setEmailError(null);
+    setTechnicalError(null);
     setInviteStatus("Enviando convite...");
     
     try {
@@ -121,33 +124,42 @@ export function ServiceProviderFormDialog({
       const requestBody = { providerId };
       console.log("Request body:", requestBody);
       
-      const response = await supabase.functions.invoke('send-provider-invite', {
-        body: requestBody,
+      // URL complète de la fonction Edge
+      const edgeFunctionUrl = `${supabase.functions.url}/send-provider-invite`;
+      console.log("Using Edge function URL:", edgeFunctionUrl);
+      
+      // Utiliser fetch directement pour résoudre le problème CORS
+      const response = await fetch(edgeFunctionUrl, {
+        method: 'POST',
         headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`,
+          'apikey': supabase.supabaseKey
+        },
+        body: JSON.stringify(requestBody)
       });
 
-      console.log("Invite response:", response);
-
-      if (response.error) {
-        console.error("Error from Edge function:", response.error);
-        throw new Error(response.error.message || "Erro ao enviar convite");
+      if (!response.ok) {
+        console.error("Error status from Edge function:", response.status, response.statusText);
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
       }
       
-      if (response.data && !response.data.success) {
-        console.error("Error in response data:", response.data.error);
-        throw new Error(response.data.error || "Erro ao processar convite");
+      const data = await response.json();
+      console.log("Invite response:", data);
+
+      if (!data.success) {
+        console.error("Error in response data:", data.error);
+        throw new Error(data.error || "Erro ao processar convite");
       }
 
-      if (response.data.emailError) {
-        setEmailError(response.data.emailError);
+      if (data.emailError) {
+        setEmailError(data.emailError);
         setInviteStatus("Conta configurada, mas erro no envio de email");
       }
 
-      if (response.data && response.data.isNewUser) {
-        if (response.data.emailSent) {
+      if (data && data.isNewUser) {
+        if (data.emailSent) {
           setInviteStatus("Conta criada e convite enviado com sucesso");
           toast.success("Convite enviado com sucesso", {
             description: "Um email com as credenciais foi enviado ao prestador"
@@ -159,7 +171,7 @@ export function ServiceProviderFormDialog({
           });
         }
       } else {
-        if (response.data.emailSent) {
+        if (data.emailSent) {
           setInviteStatus("Convite enviado com sucesso");
           toast.success("Convite enviado com sucesso", {
             description: "O prestador já possui uma conta e foi notificado"
@@ -174,6 +186,7 @@ export function ServiceProviderFormDialog({
     } catch (error: any) {
       console.error('Error sending invite:', error);
       setInviteStatus(`Erro: ${error.message}`);
+      setTechnicalError(error.message || "Erro desconhecido");
       toast.error("Erro ao enviar convite", { 
         description: error.message || "Verifique os logs para mais detalhes" 
       });
@@ -211,10 +224,12 @@ export function ServiceProviderFormDialog({
       }
       setEmailError(null);
       setInviteStatus(null);
+      setTechnicalError(null);
     }
   }, [isOpen, providerToEdit, form]);
 
   const dismissEmailError = () => setEmailError(null);
+  const dismissTechnicalError = () => setTechnicalError(null);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -224,6 +239,22 @@ export function ServiceProviderFormDialog({
             {isEditing ? "Editar prestador" : "Adicionar novo prestador"}
           </DialogTitle>
         </DialogHeader>
+        
+        {technicalError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Erro técnico</AlertTitle>
+            <AlertDescription>
+              <p>Ocorreu um erro ao enviar o convite:</p>
+              <p className="text-sm mt-1 font-mono bg-secondary/50 p-2 rounded overflow-x-auto">
+                {technicalError}
+              </p>
+              <div className="mt-2">
+                <Button size="sm" variant="outline" onClick={dismissTechnicalError}>Entendi</Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
         
         {emailError && (
           <Alert variant="warning" className="mb-4">
@@ -243,7 +274,7 @@ export function ServiceProviderFormDialog({
           </Alert>
         )}
         
-        {inviteStatus && !emailError && (
+        {inviteStatus && !emailError && !technicalError && (
           <Alert className="mb-4" variant="info">
             <Info className="h-4 w-4" />
             <AlertTitle>Status do convite</AlertTitle>

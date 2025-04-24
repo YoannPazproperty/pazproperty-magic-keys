@@ -17,9 +17,11 @@ export async function sendInvitationEmail(
   console.log(`Using login URL: ${loginUrl}`);
   
   let emailHtml: string;
+  let emailSubject: string;
   
   if (!isNewUser) {
     console.log("Generating email for existing user");
+    emailSubject = "Acesso ao Extranet Técnica - PAZ Property";
     emailHtml = `
       <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>
       <p>Olá ${nome},</p>
@@ -31,6 +33,7 @@ export async function sendInvitationEmail(
     `;
   } else {
     console.log("Generating email for new user with temp password");
+    emailSubject = "Suas credenciais de acesso - PAZ Property";
     emailHtml = `
       <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>
       <p>Olá ${nome},</p>
@@ -49,11 +52,12 @@ export async function sendInvitationEmail(
   try {
     console.log("Sending email via Resend to:", to);
     console.log("From address: PAZ Property <contact@pazproperty.pt>");
+    console.log("Email subject:", emailSubject);
     
     const { data: emailData, error: sendError } = await resend.emails.send({
       from: 'PAZ Property <contact@pazproperty.pt>',
       to: [to],
-      subject: 'Acesso ao Extranet Técnica - PAZ Property',
+      subject: emailSubject,
       html: emailHtml,
     });
 
