@@ -61,7 +61,7 @@ export const ContactsList = ({ contacts, isLoading }: ContactsListProps) => {
                 })}
               </TableCell>
             </TableRow>
-          )TableBody>
+          ))}
         </TableBody>
       </Table>
     </div>
