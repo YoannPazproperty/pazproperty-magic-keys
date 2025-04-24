@@ -14,7 +14,10 @@ export const getProvidersList = async (): Promise<ServiceProvider[]> => {
       return [];
     }
     
-    return data || [];
+    return (data as any[] || []).map(provider => ({
+      ...provider,
+      tipo_de_obras: provider.tipo_de_obras as ServiceProvider['tipo_de_obras']
+    }));
   } catch (err) {
     console.error('Error in getProvidersList:', err);
     return [];
@@ -34,7 +37,10 @@ export const createProvider = async (provider: Omit<ServiceProvider, 'id' | 'cre
       return null;
     }
     
-    return data;
+    return {
+      ...data,
+      tipo_de_obras: data.tipo_de_obras as ServiceProvider['tipo_de_obras']
+    };
   } catch (err) {
     console.error('Error in createProvider:', err);
     return null;
@@ -55,7 +61,10 @@ export const updateProvider = async (id: string, provider: Partial<ServiceProvid
       return null;
     }
     
-    return data;
+    return {
+      ...data,
+      tipo_de_obras: data.tipo_de_obras as ServiceProvider['tipo_de_obras']
+    };
   } catch (err) {
     console.error('Error in updateProvider:', err);
     return null;
