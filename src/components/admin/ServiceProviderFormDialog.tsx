@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -45,9 +44,9 @@ export function ServiceProviderFormDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [emailError, setEmailError] = useState<{ message: string, code: string } | null>(null);
+  const [inviteStatus, setInviteStatus] = useState<string | null>(null);
   const isEditing = !!providerToEdit;
 
-  // Define default values from providerToEdit or empty values
   const defaultValues: ProviderFormValues = {
     empresa: providerToEdit?.empresa || "",
     tipo_de_obras: providerToEdit?.tipo_de_obras || "Obras gerais",
@@ -114,17 +113,16 @@ export function ServiceProviderFormDialog({
     
     setIsSendingInvite(true);
     setEmailError(null);
+    setInviteStatus("Enviando convite...");
     
     try {
       console.log("Sending invite to provider:", providerId);
       
-      // Debug log pour vérifier la structure de la requête
-      console.log("Request body:", { providerId });
+      const requestBody = { providerId };
+      console.log("Request body:", requestBody);
       
-      // Modifier l'appel de la fonction Edge pour ajouter plus de logging
       const response = await supabase.functions.invoke('send-provider-invite', {
-        body: { providerId },
-        // Ajouter des options pour éviter les problèmes de cache
+        body: requestBody,
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
@@ -134,37 +132,40 @@ export function ServiceProviderFormDialog({
       console.log("Invite response:", response);
 
       if (response.error) {
-        console.error("Error details:", response.error);
+        console.error("Error from Edge function:", response.error);
         throw new Error(response.error.message || "Erro ao enviar convite");
       }
       
       if (response.data && !response.data.success) {
-        console.error("Error in data:", response.data.error);
+        console.error("Error in response data:", response.data.error);
         throw new Error(response.data.error || "Erro ao processar convite");
       }
 
-      // Set email error if present (email failed but user account was created/updated)
       if (response.data.emailError) {
         setEmailError(response.data.emailError);
+        setInviteStatus("Conta configurada, mas erro no envio de email");
       }
 
-      // Check if it's a new user or existing user
       if (response.data && response.data.isNewUser) {
         if (response.data.emailSent) {
+          setInviteStatus("Conta criada e convite enviado com sucesso");
           toast.success("Convite enviado com sucesso", {
             description: "Um email com as credenciais foi enviado ao prestador"
           });
         } else {
+          setInviteStatus("Conta criada, mas erro no envio de email");
           toast.warning("Conta criada com sucesso", {
             description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
           });
         }
       } else {
         if (response.data.emailSent) {
+          setInviteStatus("Convite enviado com sucesso");
           toast.success("Convite enviado com sucesso", {
             description: "O prestador já possui uma conta e foi notificado"
           });
         } else {
+          setInviteStatus("Permissões atualizadas, mas erro no envio de email");
           toast.warning("Permissões atualizadas", {
             description: "O prestador já possui uma conta e suas permissões foram atualizadas, mas ocorreu um erro ao enviar o email"
           });
@@ -172,6 +173,7 @@ export function ServiceProviderFormDialog({
       }
     } catch (error: any) {
       console.error('Error sending invite:', error);
+      setInviteStatus(`Erro: ${error.message}`);
       toast.error("Erro ao enviar convite", { 
         description: error.message || "Verifique os logs para mais detalhes" 
       });
@@ -180,7 +182,6 @@ export function ServiceProviderFormDialog({
     }
   };
 
-  // Reset form when dialog opens/changes provider
   useEffect(() => {
     if (isOpen) {
       if (providerToEdit) {
@@ -209,10 +210,10 @@ export function ServiceProviderFormDialog({
         });
       }
       setEmailError(null);
+      setInviteStatus(null);
     }
   }, [isOpen, providerToEdit, form]);
 
-  // Close email error alert
   const dismissEmailError = () => setEmailError(null);
 
   return (
@@ -232,10 +233,21 @@ export function ServiceProviderFormDialog({
               <p className="text-sm text-muted-foreground mt-1">
                 {emailError.message}
               </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                URL de login: <code>/auth?provider=true</code>
+              </p>
               <div className="mt-2">
                 <Button size="sm" variant="outline" onClick={dismissEmailError}>Entendi</Button>
               </div>
             </AlertDescription>
+          </Alert>
+        )}
+        
+        {inviteStatus && !emailError && (
+          <Alert className="mb-4" variant="info">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Status do convite</AlertTitle>
+            <AlertDescription>{inviteStatus}</AlertDescription>
           </Alert>
         )}
         

@@ -19,6 +19,7 @@ export async function sendInvitationEmail(
   let emailHtml: string;
   
   if (!isNewUser) {
+    console.log("Generating email for existing user");
     emailHtml = `
       <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>
       <p>Olá ${nome},</p>
@@ -29,6 +30,7 @@ export async function sendInvitationEmail(
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
     `;
   } else {
+    console.log("Generating email for new user with temp password");
     emailHtml = `
       <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>
       <p>Olá ${nome},</p>
@@ -45,7 +47,8 @@ export async function sendInvitationEmail(
   }
 
   try {
-    console.log("Sending email via Resend");
+    console.log("Sending email via Resend to:", to);
+    console.log("From address: PAZ Property <contact@pazproperty.pt>");
     
     const { data: emailData, error: sendError } = await resend.emails.send({
       from: 'PAZ Property <contact@pazproperty.pt>',
@@ -63,6 +66,7 @@ export async function sendInvitationEmail(
     return emailData;
   } catch (emailError) {
     console.error('Exception when sending email:', emailError);
+    console.error('Error details:', JSON.stringify(emailError, null, 2));
     throw emailError;
   }
 }
