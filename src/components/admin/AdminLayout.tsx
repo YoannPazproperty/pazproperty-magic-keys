@@ -1,8 +1,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { LogOut, Users, FileText, LayoutDashboard } from "lucide-react";
+import { User } from "@supabase/supabase-js";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,7 @@ interface AdminLayoutProps {
   onTabChange: (tab: string) => void;
   onLogout: () => void;
   apiConnected: boolean;
-  user: SupabaseUser | null;
+  user: User | null;
 }
 
 export const AdminLayout = ({
@@ -59,35 +59,49 @@ export const AdminLayout = ({
           <nav className="space-y-2">
             <button
               onClick={() => onTabChange("declarations")}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+              className={`w-full text-left flex items-center px-3 py-2 rounded-lg transition-colors ${
                 activeTab === "declarations"
                   ? "bg-gray-100 text-primary font-medium"
                   : "hover:bg-gray-50"
               } ${!isSidebarOpen ? "justify-center" : ""}`}
             >
-              <span className={`${isSidebarOpen ? "block" : "hidden"}`}>Declarations</span>
+              <FileText className="h-5 w-5 mr-2" />
+              <span className={`${isSidebarOpen ? "block" : "hidden"}`}>Declarações</span>
             </button>
             <button
-              onClick={() => onTabChange("apiConfig")}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                activeTab === "apiConfig"
+              onClick={() => onTabChange("obras")}
+              className={`w-full text-left flex items-center px-3 py-2 rounded-lg transition-colors ${
+                activeTab === "obras"
                   ? "bg-gray-100 text-primary font-medium"
                   : "hover:bg-gray-50"
               } ${!isSidebarOpen ? "justify-center" : ""}`}
             >
-              <span className={`${isSidebarOpen ? "block" : "hidden"}`}>API Config</span>
+              <LayoutDashboard className="h-5 w-5 mr-2" />
+              <span className={`${isSidebarOpen ? "block" : "hidden"}`}>Obras</span>
             </button>
             <button
-              onClick={() => onTabChange("notifications")}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                activeTab === "notifications"
+              onClick={() => onTabChange("crm")}
+              className={`w-full text-left flex items-center px-3 py-2 rounded-lg transition-colors ${
+                activeTab === "crm"
                   ? "bg-gray-100 text-primary font-medium"
                   : "hover:bg-gray-50"
               } ${!isSidebarOpen ? "justify-center" : ""}`}
             >
-              <span className={`${isSidebarOpen ? "block" : "hidden"}`}>Notifications</span>
+              <Users className="h-5 w-5 mr-2" />
+              <span className={`${isSidebarOpen ? "block" : "hidden"}`}>CRM</span>
             </button>
           </nav>
+        </div>
+        
+        <div className="absolute bottom-4 left-0 w-full px-4">
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center justify-center" 
+            onClick={onLogout}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            <span className={`${isSidebarOpen ? "block" : "hidden"}`}>Déconnexion</span>
+          </Button>
         </div>
       </div>
 
@@ -147,6 +161,7 @@ export const AdminLayout = ({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={onLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
                   Se déconnecter
                 </DropdownMenuItem>
               </DropdownMenuContent>

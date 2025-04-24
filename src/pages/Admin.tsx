@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -93,9 +94,9 @@ const Admin = () => {
     >
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8">
-          <TabsTrigger value="declarations">Declarações</TabsTrigger>
-          <TabsTrigger value="apiConfig">Config. API</TabsTrigger>
-          <TabsTrigger value="notifications">Notificações</TabsTrigger>
+          <TabsTrigger value="declarations">Acompanhamento das declarações</TabsTrigger>
+          <TabsTrigger value="obras">Acompanhamento das obras</TabsTrigger>
+          <TabsTrigger value="crm">CRM</TabsTrigger>
         </TabsList>
         
         <TabsContent value="declarations" className="space-y-4">
@@ -106,18 +107,18 @@ const Admin = () => {
           />
         </TabsContent>
         
-        <TabsContent value="apiConfig" className="space-y-4">
-          <ApiSettings 
-            mondayApiKey={apiKey}
-            mondayBoardId={boardId}
-            mondayTechBoardId={techBoardId}
-            mondayConfigStatus={apiStatus}
-            onConfigUpdate={handleSaveApiConfig}
-          />
+        <TabsContent value="obras" className="space-y-4">
+          <div className="rounded-lg border bg-card p-6">
+            <h2 className="text-2xl font-semibold mb-4">Acompanhamento das obras e dos prestadores de serviços</h2>
+            <p className="text-muted-foreground">Cette section est en cours de développement. Elle permettra de suivre les travaux et les prestataires de services.</p>
+          </div>
         </TabsContent>
         
-        <TabsContent value="notifications" className="space-y-4">
-          <NotificationSettings />
+        <TabsContent value="crm" className="space-y-4">
+          <div className="rounded-lg border bg-card p-6">
+            <h2 className="text-2xl font-semibold mb-4">CRM</h2>
+            <p className="text-muted-foreground">Le module CRM est en cours d'implémentation. Il permettra de gérer les relations clients.</p>
+          </div>
         </TabsContent>
       </Tabs>
     </AdminLayout>
