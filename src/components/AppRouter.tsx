@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "../pages/Index";
@@ -51,6 +51,11 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
                 <ExtranetTechnique />
               </ProtectedRoute>
             } 
+          />
+          {/* Redirect /extranet-technique to /auth?provider=true if not authenticated */}
+          <Route 
+            path="/extranet-technique-login" 
+            element={<Navigate to="/auth?provider=true" replace />} 
           />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

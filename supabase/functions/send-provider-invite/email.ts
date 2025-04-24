@@ -19,7 +19,7 @@ export async function sendInvitationEmail(
       <p>Olá ${nome},</p>
       <p>Sua empresa foi adicionada como prestador de serviços na PAZ Property.</p>
       <p>Você pode acessar o Extranet Técnica com o email que já está registrado no sistema.</p>
-      <p>Por favor, acesse <a href="${publicSiteUrl}/extranet-technique">aqui</a> e faça login.</p>
+      <p>Por favor, acesse <a href="${publicSiteUrl}/auth?provider=true">aqui</a> e faça login.</p>
       <p>Se você esqueceu sua senha, pode usar a opção "Esqueci minha senha" na página de login.</p>
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
     `;
@@ -33,7 +33,7 @@ export async function sendInvitationEmail(
         <li>Email: ${to}</li>
         <li>Senha temporária: ${tempPassword}</li>
       </ul>
-      <p>Por favor, acesse <a href="${publicSiteUrl}/extranet-technique">aqui</a> e faça login com essas credenciais.</p>
+      <p>Por favor, acesse <a href="${publicSiteUrl}/auth?provider=true">aqui</a> e faça login com essas credenciais.</p>
       <p>Por razões de segurança, recomendamos que você altere sua senha após o primeiro acesso.</p>
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
     `;
