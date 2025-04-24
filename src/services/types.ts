@@ -10,11 +10,11 @@ export interface Declaration {
   issueType: string;
   description: string;
   urgency: string;
-  status: "pending" | "in_progress" | "resolved";
+  status: "Novo" | "Transmitido" | "Orçamento recebido" | "Em curso de reparação" | "Resolvido";
   submittedAt: string;
   nif?: string;
   mondayId?: string;
-  mediaFiles?: string[]; // URLs to uploaded media files (photos/videos)
+  mediaFiles?: string[];
 }
 
 // Technician report interface

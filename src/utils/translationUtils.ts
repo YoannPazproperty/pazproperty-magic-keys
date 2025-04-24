@@ -1,4 +1,3 @@
-
 // Translation and formatting utilities for declarations
 
 // Helper functions for translations and formatting
@@ -26,12 +25,8 @@ export const translateUrgency = (urgency: string): string => {
 };
 
 export const translateStatus = (status: string): string => {
-  const translations: Record<string, string> = {
-    pending: "Em espera",
-    in_progress: "Em progresso",
-    resolved: "Resolvido",
-  };
-  return translations[status] || status;
+  // No translation needed since our status values are already in Portuguese
+  return status;
 };
 
 export const formatDate = (dateString: string): string => {
@@ -48,11 +43,15 @@ export const formatDate = (dateString: string): string => {
 // Status badge color utility
 export const getStatusBadgeColor = (status: string) => {
   switch (status) {
-    case "pending":
+    case "Novo":
       return "bg-yellow-500 hover:bg-yellow-600";
-    case "in_progress":
+    case "Transmitido":
       return "bg-blue-500 hover:bg-blue-600";
-    case "resolved":
+    case "Orçamento recebido":
+      return "bg-purple-500 hover:bg-purple-600";
+    case "Em curso de reparação":
+      return "bg-orange-500 hover:bg-orange-600";
+    case "Resolvido":
       return "bg-green-500 hover:bg-green-600";
     default:
       return "bg-gray-500 hover:bg-gray-600";

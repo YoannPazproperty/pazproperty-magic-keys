@@ -53,7 +53,7 @@ export type Database = {
           phone: string | null
           postalCode: string | null
           property: string | null
-          status: string | null
+          status: Database["public"]["Enums"]["declaration_status"] | null
           submittedAt: string | null
           urgency: string | null
         }
@@ -70,7 +70,7 @@ export type Database = {
           phone?: string | null
           postalCode?: string | null
           property?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["declaration_status"] | null
           submittedAt?: string | null
           urgency?: string | null
         }
@@ -87,7 +87,7 @@ export type Database = {
           phone?: string | null
           postalCode?: string | null
           property?: string | null
-          status?: string | null
+          status?: Database["public"]["Enums"]["declaration_status"] | null
           submittedAt?: string | null
           urgency?: string | null
         }
@@ -401,6 +401,12 @@ export type Database = {
       }
     }
     Enums: {
+      declaration_status:
+        | "Novo"
+        | "Transmitido"
+        | "Orçamento recebido"
+        | "Em curso de reparação"
+        | "Resolvido"
       user_role: "admin" | "manager" | "user"
     }
     CompositeTypes: {
@@ -517,6 +523,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      declaration_status: [
+        "Novo",
+        "Transmitido",
+        "Orçamento recebido",
+        "Em curso de reparação",
+        "Resolvido",
+      ],
       user_role: ["admin", "manager", "user"],
     },
   },

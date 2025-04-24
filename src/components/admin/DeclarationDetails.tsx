@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Declaration } from "@/services/types";
@@ -18,7 +17,6 @@ export const DeclarationDetails = ({
   getStatusBadgeColor,
   translateStatus
 }: DeclarationDetailsProps) => {
-  // Helper function to determine file type icon
   const getFileIcon = (fileUrl: string) => {
     if (fileUrl.includes('image') || fileUrl.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/)) {
       return <Image className="h-4 w-4 mr-1" />;
@@ -29,13 +27,10 @@ export const DeclarationDetails = ({
     }
   };
 
-  // Helper function to get file name from URL
   const getFileName = (fileUrl: string): string => {
-    // For Supabase Storage URLs
     if (fileUrl.includes('storage/v1/object/public/')) {
       const matches = fileUrl.match(/([^\/]+)(?=\?|$)/);
       if (matches && matches[0]) {
-        // Remove UUID prefix if present (UUID-filename format)
         const parts = matches[0].split('-');
         if (parts.length > 1 && parts[0].length === 36) {
           return parts.slice(1).join('-');
@@ -44,12 +39,10 @@ export const DeclarationDetails = ({
       }
     }
     
-    // For local API URLs
     if (fileUrl.includes('/api/files/')) {
       return `Fichier ${fileUrl.split('/').pop()?.substring(0, 8)}...`;
     }
     
-    // Default: show abbreviated URL
     return fileUrl.split('/').pop() || 'Fichier';
   };
 
@@ -101,7 +94,6 @@ export const DeclarationDetails = ({
           <h3 className="font-semibold">Fichiers médias</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {declaration.mediaFiles.map((fileUrl, index) => {
-              // Determine if this is an image that can be previewed
               const isPreviewableImage = fileUrl.includes('image') || 
                 fileUrl.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/);
               
@@ -120,7 +112,6 @@ export const DeclarationDetails = ({
                         alt={`Aperçu ${index + 1}`}
                         className="w-full h-full object-contain"
                         onError={(e) => {
-                          // Fallback if image fails to load
                           (e.target as HTMLImageElement).style.display = 'none';
                           (e.target as HTMLImageElement).parentElement!.innerHTML = 
                             '<div class="flex items-center justify-center h-full text-gray-400"><span>Aperçu non disponible</span></div>';
@@ -164,31 +155,47 @@ export const DeclarationDetails = ({
       )}
       
       <div className="space-y-2 py-2">
-        <h3 className="font-semibold">Mettre à jour le statut</h3>
+        <h3 className="font-semibold">Atualizar estado</h3>
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onStatusUpdate(declaration.id, "pending")}
-            className={declaration.status === "pending" ? "bg-yellow-100" : ""}
+            onClick={() => onStatusUpdate(declaration.id, "Novo")}
+            className={declaration.status === "Novo" ? "bg-yellow-100" : ""}
           >
-            En attente
+            Novo
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onStatusUpdate(declaration.id, "in_progress")}
-            className={declaration.status === "in_progress" ? "bg-blue-100" : ""}
+            onClick={() => onStatusUpdate(declaration.id, "Transmitido")}
+            className={declaration.status === "Transmitido" ? "bg-blue-100" : ""}
           >
-            En cours
+            Transmitido
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onStatusUpdate(declaration.id, "resolved")}
-            className={declaration.status === "resolved" ? "bg-green-100" : ""}
+            onClick={() => onStatusUpdate(declaration.id, "Orçamento recebido")}
+            className={declaration.status === "Orçamento recebido" ? "bg-purple-100" : ""}
           >
-            Résolu
+            Orçamento recebido
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onStatusUpdate(declaration.id, "Em curso de reparação")}
+            className={declaration.status === "Em curso de reparação" ? "bg-orange-100" : ""}
+          >
+            Em curso de reparação
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onStatusUpdate(declaration.id, "Resolvido")}
+            className={declaration.status === "Resolvido" ? "bg-green-100" : ""}
+          >
+            Resolvido
           </Button>
         </div>
       </div>
