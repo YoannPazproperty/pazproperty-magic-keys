@@ -117,11 +117,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   const role = await fetchUserRole(newSession.user.id);
                   setUserRole(role);
                   
-                  // Rediriger vers la page admin si l'utilisateur a un rôle admin
+                  // Rediriger en fonction du rôle
                   if (role === 'admin') {
                     navigate("/admin");
                   } else if (role === 'manager') {
-                    navigate("/");
+                    // Rediriger les prestataires (manager) vers l'extranet technique
+                    navigate("/extranet-technique");
                   } else if (role === 'user') {
                     navigate("/");
                   } else {

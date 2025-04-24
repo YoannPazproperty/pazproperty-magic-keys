@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -58,6 +57,7 @@ const Auth = () => {
   const [isFixingTokens, setIsFixingTokens] = useState(false);
   const [resetLink, setResetLink] = useState<string | null>(null);
   const [prefilledEmail] = useState<string | null>(searchParams.get("email"));
+  const isProviderLogin = searchParams.get("provider") === "true";
 
   // Initialiser les formulaires
   const loginForm = useForm<LoginValues>({
@@ -104,7 +104,7 @@ const Auth = () => {
         toast.success("Connexion réussie", {
           description: "Vous êtes maintenant connecté."
         });
-        navigate("/admin");
+        // La redirection sera gérée par le hook useAuth en fonction du rôle
       } else if (error) {
         console.error("Erreur de connexion:", error);
         
@@ -206,16 +206,22 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Pazproperty Admin</CardTitle>
+            <CardTitle className="text-2xl text-center">
+              {isProviderLogin ? "Extranet Técnica - Acesso" : "Pazproperty Admin"}
+            </CardTitle>
             <CardDescription className="text-center">
-              Connectez-vous pour accéder à l'interface d'administration
+              {isProviderLogin 
+                ? "Acesse o Extranet Técnica para gerenciar suas ordens de serviço"
+                : "Connectez-vous pour accéder à l'interface d'administration"}
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Tabs remain the same, but we adjust the visibility of register tab for providers */}
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "register" | "forgot-password")}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Connexion</TabsTrigger>
-                <TabsTrigger value="register">S'inscrire</TabsTrigger>
+                {!isProviderLogin && <TabsTrigger value="register">S'inscrire</TabsTrigger>}
+                {isProviderLogin && <TabsTrigger value="forgot-password">Mot de passe oublié</TabsTrigger>}
               </TabsList>
               
               <TabsContent value="login" className="mt-4">
@@ -472,7 +478,9 @@ const Auth = () => {
             <Alert className="bg-amber-50 border-amber-200">
               <Info className="h-4 w-4 text-amber-700" />
               <AlertDescription className="text-xs text-amber-700">
-                Cette interface est réservée au personnel autorisé de Pazproperty.
+                {isProviderLogin 
+                  ? "Cette interface est réservée aux prestataires de services de Pazproperty."
+                  : "Cette interface est réservée au personnel autorisé de Pazproperty."}
                 {activeTab === "login" && " Utilisez votre adresse e-mail professionnelle pour vous connecter."}
               </AlertDescription>
             </Alert>
