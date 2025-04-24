@@ -15,7 +15,7 @@ export const generateUniqueId = (): string => {
 };
 
 // Get all declarations with optional filters
-export const getDeclarations = async (statusFilter: string | null = null): Promise<Declaration[]> => {
+export const getDeclarations = async (statusFilter: Declaration["status"] | null = null): Promise<Declaration[]> => {
   // Vérifier si Supabase est connecté
   const supabaseConnected = await isSupabaseConnected();
   
