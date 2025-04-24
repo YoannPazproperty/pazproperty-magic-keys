@@ -1,13 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TechnicienManager from "@/components/TechnicienManager";
 import { validateMondayConfig } from "@/services/monday";
+import { ServiceOrdersList } from "@/components/extranet/ServiceOrdersList";
 
 const ExtranetTechnique = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("new");
   const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
 
   useEffect(() => {
@@ -33,38 +33,37 @@ const ExtranetTechnique = () => {
                 Gestão de intervenções técnicas e relatórios.
               </p>
             </div>
-            
-            <div className="mt-4 md:mt-0 flex items-center">
-              <div className={`h-2 w-2 rounded-full mr-2 ${apiStatus.valid ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-sm font-medium">
-                {apiStatus.valid ? 'Monday.com conectado' : 'Monday.com desconectado'}
-              </span>
-            </div>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="interventions">Intervenções</TabsTrigger>
-              <TabsTrigger value="reports">Relatórios</TabsTrigger>
+              <TabsTrigger value="new">Novos Ordens</TabsTrigger>
+              <TabsTrigger value="ongoing">Ordens em Curso</TabsTrigger>
+              <TabsTrigger value="completed">Ordens Passados</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="dashboard" className="space-y-4">
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold mb-4">Dashboard do Técnico</h2>
-                <p>Bem-vindo à área do técnico. Aqui você pode visualizar e gerenciar suas intervenções.</p>
-              </div>
+            <TabsContent value="new">
+              <ServiceOrdersList
+                title="Novos Ordens de Serviço"
+                description="Ordens de serviço que aguardam sua atenção"
+                orders={[]} // We'll implement this later
+              />
             </TabsContent>
             
-            <TabsContent value="interventions" className="space-y-4">
-              <TechnicienManager />
+            <TabsContent value="ongoing">
+              <ServiceOrdersList
+                title="Ordens em Curso"
+                description="Ordens de serviço em andamento"
+                orders={[]} // We'll implement this later
+              />
             </TabsContent>
             
-            <TabsContent value="reports" className="space-y-4">
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-semibold mb-4">Relatórios de Intervenção</h2>
-                <p>Visualize e gerencie seus relatórios de intervenção técnica.</p>
-              </div>
+            <TabsContent value="completed">
+              <ServiceOrdersList
+                title="Ordens Passados"
+                description="Histórico de ordens de serviço completadas"
+                orders={[]} // We'll implement this later
+              />
             </TabsContent>
           </Tabs>
         </div>

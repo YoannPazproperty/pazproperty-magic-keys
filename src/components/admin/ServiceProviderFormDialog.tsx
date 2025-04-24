@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -97,6 +96,23 @@ export function ServiceProviderFormDialog({
       setIsSubmitting(false);
     }
   }
+
+  const handleInvite = async (providerId: string) => {
+    try {
+      const response = await supabase.functions.invoke('send-provider-invite', {
+        body: { providerId }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      toast.success("Convite enviado com sucesso");
+    } catch (error) {
+      console.error('Error sending invite:', error);
+      toast.error("Erro ao enviar convite: " + (error.message || 'Tente novamente'));
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -254,9 +270,21 @@ export function ServiceProviderFormDialog({
               <Button variant="outline" type="button" onClick={onClose} disabled={isSubmitting}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Salvando..." : isEditing ? "Atualizar" : "Criar"}
-              </Button>
+              <div className="flex gap-2">
+                {isEditing && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => handleInvite(providerToEdit.id)}
+                    disabled={isSubmitting}
+                  >
+                    Enviar Convite
+                  </Button>
+                )}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Salvando..." : isEditing ? "Atualizar" : "Criar"}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
