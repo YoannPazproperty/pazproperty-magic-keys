@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0'
 import { Resend } from 'npm:resend@2.0.0'
 
@@ -69,51 +68,88 @@ Deno.serve(async (req) => {
     // Check if user already exists
     const { data: existingUsers, error: userCheckError } = await supabase.auth.admin
       .listUsers({
-        email: provider.email
+        filter: {
+          email: provider.email
+        }
       })
 
     if (userCheckError) {
       console.error('Error checking existing users:', userCheckError)
-    } else if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
-      console.log('User already exists with this email')
-      
-      // We can either update the existing user or inform that the user already exists
-      // For now, let's just continue and update their role if needed
-    }
-
-    // Create temporary password
-    const tempPassword = crypto.randomUUID().split('-')[0]
-
-    console.log('Creating or updating user account')
+    } 
     
-    // Create Supabase user or update if exists
-    const { data: authData, error: createUserError } = await supabase.auth.admin.createUser({
-      email: provider.email,
-      password: tempPassword,
-      email_confirm: true,
-      user_metadata: {
-        provider_id: providerId,
-        nome: provider.nome_gerente,
-        empresa: provider.empresa
+    let userId: string | undefined;
+    
+    if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
+      console.log('User already exists with this email')
+      // Store the existing user ID for updating
+      userId = existingUsers.users[0].id;
+      // We'll update their role if needed, but we won't reset their password
+    }
+
+    // Create temporary password only for new users
+    const tempPassword = crypto.randomUUID().split('-')[0]
+    
+    console.log('Creating or updating user account')
+
+    try {
+      // If user exists, update their metadata
+      if (userId) {
+        const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(
+          userId,
+          {
+            user_metadata: {
+              provider_id: providerId,
+              nome: provider.nome_gerente,
+              empresa: provider.empresa
+            }
+          }
+        )
+        
+        if (updateError) {
+          console.error('Error updating user metadata:', updateError)
+          throw new Error(`Error updating user metadata: ${updateError.message}`)
+        }
+        
+        console.log(`User metadata updated for ID: ${userId}`)
+      } else {
+        // Create new user if doesn't exist
+        const { data: authData, error: createUserError } = await supabase.auth.admin.createUser({
+          email: provider.email,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: {
+            provider_id: providerId,
+            nome: provider.nome_gerente,
+            empresa: provider.empresa
+          }
+        })
+        
+        if (createUserError) {
+          console.error('Error creating user:', createUserError)
+          throw new Error(`Error creating user: ${createUserError.message}`)
+        }
+        
+        if (!authData || !authData.user) {
+          throw new Error('Failed to create user account')
+        }
+        
+        userId = authData.user.id
+        console.log(`New user created with ID: ${userId}`)
       }
-    })
-
-    if (createUserError) {
-      console.error('Error creating user:', createUserError)
-      throw new Error(`Error creating user: ${createUserError.message}`)
+    } catch (error) {
+      console.error('Error managing user account:', error)
+      throw error
     }
 
-    if (!authData || !authData.user) {
-      throw new Error('Failed to create user account')
+    if (!userId) {
+      throw new Error('Failed to obtain user ID')
     }
-
-    console.log(`User created/updated with ID: ${authData.user.id}`)
-
+    
     // Check if role already exists for this user
     const { data: existingRole, error: roleCheckError } = await supabase
       .from('user_roles')
       .select('*')
-      .eq('user_id', authData.user.id)
+      .eq('user_id', userId)
       .eq('role', 'manager')
       .single()
 
@@ -127,7 +163,7 @@ Deno.serve(async (req) => {
       const { error: roleError } = await supabase
         .from('user_roles')
         .insert({
-          user_id: authData.user.id,
+          user_id: userId,
           role: 'manager'
         })
 
@@ -141,12 +177,23 @@ Deno.serve(async (req) => {
 
     console.log('Sending invitation email')
     
-    // Send email with credentials
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: 'PAZ Property <onboarding@resend.dev>',
-      to: [provider.email],
-      subject: 'Acesso ao Extranet Técnica - PAZ Property',
-      html: `
+    // Only send password reset email for new users, existing users keep their password
+    let emailHtml;
+    
+    if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
+      // For existing users, don't include the temporary password
+      emailHtml = `
+        <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>
+        <p>Olá ${provider.nome_gerente},</p>
+        <p>Sua empresa foi adicionada como prestador de serviços na PAZ Property.</p>
+        <p>Você pode acessar o Extranet Técnica com o email que já está registrado no sistema.</p>
+        <p>Por favor, acesse <a href="${publicSiteUrl}/extranet-technique">aqui</a> e faça login.</p>
+        <p>Se você esqueceu sua senha, pode usar a opção "Esqueci minha senha" na página de login.</p>
+        <p>Atenciosamente,<br>Equipe PAZ Property</p>
+      `
+    } else {
+      // For new users, include the temporary password
+      emailHtml = `
         <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>
         <p>Olá ${provider.nome_gerente},</p>
         <p>A sua conta foi criada no Extranet Técnica da PAZ Property.</p>
@@ -158,7 +205,15 @@ Deno.serve(async (req) => {
         <p>Por favor, acesse <a href="${publicSiteUrl}/extranet-technique">aqui</a> e faça login com essas credenciais.</p>
         <p>Por razões de segurança, recomendamos que você altere sua senha após o primeiro acesso.</p>
         <p>Atenciosamente,<br>Equipe PAZ Property</p>
-      `,
+      `
+    }
+    
+    // Send email with credentials
+    const { data: emailData, error: emailError } = await resend.emails.send({
+      from: 'PAZ Property <onboarding@resend.dev>',
+      to: [provider.email],
+      subject: 'Acesso ao Extranet Técnica - PAZ Property',
+      html: emailHtml,
     })
 
     if (emailError) {
@@ -169,7 +224,11 @@ Deno.serve(async (req) => {
     console.log('Email sent successfully', emailData)
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Invitation sent successfully' }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Invitation sent successfully',
+        isNewUser: !(existingUsers && existingUsers.users && existingUsers.users.length > 0)
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
@@ -179,10 +238,13 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in send-provider-invite function:', error)
     return new Response(
-      JSON.stringify({ error: error.message || 'An unknown error occurred' }),
+      JSON.stringify({ 
+        error: error.message || 'An unknown error occurred',
+        success: false 
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: 200  // Return 200 even with errors, to avoid CORS issues
       }
     )
   }

@@ -44,7 +44,7 @@ export function ServiceProviderFormDialog({
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const isEditing = !!providerToEdit;
 
-  // Définir correctement les valeurs par défaut à partir du providerToEdit
+  // Define default values from providerToEdit or empty values
   const defaultValues: ProviderFormValues = {
     empresa: providerToEdit?.empresa || "",
     tipo_de_obras: providerToEdit?.tipo_de_obras || "Obras gerais",
@@ -122,8 +122,21 @@ export function ServiceProviderFormDialog({
       if (response.error) {
         throw new Error(response.error.message || "Erro ao enviar convite");
       }
+      
+      if (response.data && !response.data.success) {
+        throw new Error(response.data.error || "Erro ao processar convite");
+      }
 
-      toast.success("Convite enviado com sucesso");
+      // Check if it's a new user or existing user
+      if (response.data && response.data.isNewUser) {
+        toast.success("Convite enviado com sucesso", {
+          description: "Um email com as credenciais foi enviado ao prestador"
+        });
+      } else {
+        toast.success("Convite enviado com sucesso", {
+          description: "O prestador já possui uma conta e foi notificado"
+        });
+      }
     } catch (error) {
       console.error('Error sending invite:', error);
       toast.error("Erro ao enviar convite", { 
@@ -134,32 +147,34 @@ export function ServiceProviderFormDialog({
     }
   };
 
-  // Réinitialiser le formulaire quand la modal s'ouvre
+  // Reset form when dialog opens/changes provider
   useEffect(() => {
-    if (isOpen && providerToEdit) {
-      form.reset({
-        empresa: providerToEdit.empresa || "",
-        tipo_de_obras: providerToEdit.tipo_de_obras || "Obras gerais",
-        nome_gerente: providerToEdit.nome_gerente || "",
-        telefone: providerToEdit.telefone || "",
-        email: providerToEdit.email || "",
-        endereco: providerToEdit.endereco || "",
-        codigo_postal: providerToEdit.codigo_postal || "",
-        cidade: providerToEdit.cidade || "",
-        nif: providerToEdit.nif || "",
-      });
-    } else if (isOpen) {
-      form.reset({
-        empresa: "",
-        tipo_de_obras: "Obras gerais",
-        nome_gerente: "",
-        telefone: "",
-        email: "",
-        endereco: "",
-        codigo_postal: "",
-        cidade: "",
-        nif: "",
-      });
+    if (isOpen) {
+      if (providerToEdit) {
+        form.reset({
+          empresa: providerToEdit.empresa || "",
+          tipo_de_obras: providerToEdit.tipo_de_obras || "Obras gerais",
+          nome_gerente: providerToEdit.nome_gerente || "",
+          telefone: providerToEdit.telefone || "",
+          email: providerToEdit.email || "",
+          endereco: providerToEdit.endereco || "",
+          codigo_postal: providerToEdit.codigo_postal || "",
+          cidade: providerToEdit.cidade || "",
+          nif: providerToEdit.nif || "",
+        });
+      } else {
+        form.reset({
+          empresa: "",
+          tipo_de_obras: "Obras gerais",
+          nome_gerente: "",
+          telefone: "",
+          email: "",
+          endereco: "",
+          codigo_postal: "",
+          cidade: "",
+          nif: "",
+        });
+      }
     }
   }, [isOpen, providerToEdit, form]);
 
@@ -327,11 +342,21 @@ export function ServiceProviderFormDialog({
                     onClick={() => handleInvite(providerToEdit!.id)}
                     disabled={isSubmitting || isSendingInvite}
                   >
-                    {isSendingInvite ? "Enviando..." : "Enviar Convite"}
+                    {isSendingInvite ? (
+                      <>
+                        <span className="animate-spin mr-2">⟳</span> 
+                        Enviando...
+                      </>
+                    ) : "Enviar Convite"}
                   </Button>
                 )}
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Salvando..." : isEditing ? "Atualizar" : "Criar"}
+                  {isSubmitting ? (
+                    <>
+                      <span className="animate-spin mr-2">⟳</span> 
+                      Salvando...
+                    </>
+                  ) : isEditing ? "Atualizar" : "Criar"}
                 </Button>
               </div>
             </DialogFooter>
