@@ -76,7 +76,7 @@ export const getSupabaseDeclarationById = async (id: string): Promise<Declaratio
     console.error(`Erreur lors de la récupération de la déclaration ${id}:`, err);
     toast.error("Erro ao processar declaração", {
       description: "Ocorreu um erro inesperado ao processar os dados."
-    });
+      });
     return undefined;
   }
 };
