@@ -6,12 +6,13 @@ import type { ServiceProvider } from "@/services/types";
 const fetchProviders = async () => {
   const { data, error } = await supabase
     .from('prestadores_de_servicos')
-    .select('id, empresa, nome_gerente');
+    .select('id, empresa, nome_gerente, tipo_de_obras, email, telefone')
+    .order('tipo_de_obras', { ascending: true });
     
   if (error) {
     throw error;
   }
-  return data as Pick<ServiceProvider, 'id' | 'empresa' | 'nome_gerente'>[];
+  return data as Pick<ServiceProvider, 'id' | 'empresa' | 'tipo_de_obras' | 'email' | 'telefone'>[];
 };
 
 export const useProviders = () => {

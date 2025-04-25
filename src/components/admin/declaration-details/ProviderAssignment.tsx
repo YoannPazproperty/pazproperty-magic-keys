@@ -12,6 +12,11 @@ export const ProviderAssignment = ({ declaration }: ProviderAssignmentProps) => 
   const { data: providers, isLoading } = useProviders();
   const { handleProviderAssignment } = useProviderAssignment();
 
+  const formatProviderDisplay = (provider: any) => {
+    const phone = provider.telefone || 'No phone';
+    return `${provider.tipo_de_obras} - ${provider.empresa} - ${provider.email} - ${phone}`;
+  };
+
   return (
     <div className="space-y-2">
       <h3 className="font-semibold">Affecter un prestataire</h3>
@@ -26,7 +31,7 @@ export const ProviderAssignment = ({ declaration }: ProviderAssignmentProps) => 
         <SelectContent>
           {providers?.map((provider) => (
             <SelectItem key={provider.id} value={provider.id}>
-              {provider.empresa} - {provider.nome_gerente}
+              {formatProviderDisplay(provider)}
             </SelectItem>
           ))}
         </SelectContent>
