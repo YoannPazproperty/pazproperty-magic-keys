@@ -124,17 +124,25 @@ export function ServiceProviderFormDialog({
       const requestBody = { providerId };
       console.log("Request body:", requestBody);
       
-      // URL complète de la fonction Edge
-      const edgeFunctionUrl = `${supabase.functions.url}/send-provider-invite`;
+      // Get the Supabase Functions URL from environment
+      const SUPABASE_URL = "https://ubztjjxmldogpwawcnrj.supabase.co";
+      const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/send-provider-invite`;
       console.log("Using Edge function URL:", edgeFunctionUrl);
+      
+      // Get the current session for authentication
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token || '';
+
+      // Get the anon key for authentication
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVienRqanhtbGRvZ3B3YXdjbnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyODU4MjMsImV4cCI6MjA1OTg2MTgyM30.779CoUY0U1WO7RXXx9OWV1axrXS-UYXuleh_NvH0V8U";
       
       // Utiliser fetch directement pour résoudre le problème CORS
       const response = await fetch(edgeFunctionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`,
-          'apikey': supabase.supabaseKey
+          'Authorization': `Bearer ${accessToken}`,
+          'apikey': SUPABASE_ANON_KEY
         },
         body: JSON.stringify(requestBody)
       });
