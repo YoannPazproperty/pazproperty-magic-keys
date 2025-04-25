@@ -18,9 +18,12 @@ const ExtranetTechnique = () => {
   // Vérifier si l'utilisateur n'a pas encore défini de mot de passe
   useEffect(() => {
     // Si l'utilisateur vient de s'inscrire et n'a pas encore défini son mot de passe
-    // On peut détecter cela si c'est sa première connexion
-    if (user && user.user_metadata && user.user_metadata.first_login) {
-      setIsSettingsDialogOpen(true);
+    // Ou si l'utilisateur vient d'une réinitialisation de mot de passe
+    if (user && user.user_metadata) {
+      if (user.user_metadata.first_login || user.user_metadata.password_reset_required) {
+        console.log("Ouverture du dialogue de changement de mot de passe (première connexion ou reset)");
+        setIsSettingsDialogOpen(true);
+      }
     }
   }, [user]);
 
@@ -101,6 +104,7 @@ const ExtranetTechnique = () => {
       <UserPasswordSettingsDialog
         open={isSettingsDialogOpen}
         onOpenChange={setIsSettingsDialogOpen}
+        isRequired={user?.user_metadata?.first_login || user?.user_metadata?.password_reset_required}
       />
       
       <Footer />

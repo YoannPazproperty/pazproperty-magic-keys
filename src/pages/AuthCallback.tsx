@@ -350,6 +350,10 @@ const AuthCallback = () => {
                     }, 2000);
                   } else {
                     console.log("Connexion réussie après seconde tentative!");
+                    // Marquer que l'utilisateur a besoin de changer son mot de passe
+                    await supabase.auth.updateUser({
+                      data: { password_reset_required: true }
+                    });
                     toast.success("Connexion réussie!");
                     
                     // Rediriger vers la page appropriée
@@ -365,6 +369,10 @@ const AuthCallback = () => {
               }, 1500);
             } else {
               console.log("Connexion automatique réussie");
+              // Marquer que l'utilisateur a besoin de changer son mot de passe
+              await supabase.auth.updateUser({
+                data: { password_reset_required: true }
+              });
               toast.success("Connexion réussie!");
               
               // Redirection vers la page appropriée après un court délai
