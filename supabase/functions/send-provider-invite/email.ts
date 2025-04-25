@@ -18,15 +18,16 @@ export async function sendInvitationEmail(
   console.log(`Preparing invitation email for ${to}, isNewUser: ${isNewUser}`);
   
   const publicSiteUrl = siteUrl || 'https://pazproperty.pt';
-  const loginUrl = `${publicSiteUrl}/auth?provider=true`;
+  // Modifier l'URL de connexion pour rediriger vers l'Extranet technique
+  const loginUrl = `${publicSiteUrl}/extranet-technique-login`;
   
-  console.log(`Using login URL: ${loginUrl}`);
+  console.log(`Using login URL for provider: ${loginUrl}`);
   
   let emailHtml: string;
   let emailSubject: string;
   
   if (!isNewUser) {
-    console.log("Generating email for existing user");
+    console.log("Generating email for existing provider");
     emailSubject = "Acesso ao Extranet Técnica - PAZ Property";
     emailHtml = formatEmailWithSignature(`
       <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>
@@ -38,7 +39,7 @@ export async function sendInvitationEmail(
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
     `);
   } else {
-    console.log("Generating email for new user with temp password");
+    console.log("Generating email for new provider with temp password");
     emailSubject = "Suas credenciais de acesso - PAZ Property";
     emailHtml = formatEmailWithSignature(`
       <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>

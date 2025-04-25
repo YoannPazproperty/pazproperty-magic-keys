@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -52,13 +51,11 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
               </ProtectedRoute>
             } 
           />
-          {/* Rediriger /extranet vers /auth?provider=true si non authentifié */}
           <Route 
             path="/extranet-technique-login" 
             element={<Navigate to="/auth?provider=true" replace />} 
           />
           <Route path="/auth-provider" element={<Navigate to="/auth?provider=true" replace />} />
-          {/* AJOUTER TOUTES LES ROUTES PERSONNALISÉES AU-DESSUS DE LA ROUTE CATCH-ALL "*" */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
