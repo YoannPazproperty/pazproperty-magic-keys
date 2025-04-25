@@ -19,8 +19,10 @@ export async function sendInvitationEmail(
   
   // Corriger l'URL du site en supprimant le slash final s'il existe
   const publicSiteUrl = (siteUrl || 'https://pazproperty.pt').replace(/\/$/, '');
-  // Modifier l'URL de connexion pour rediriger vers l'Extranet technique
+  
+  // URLs spécifiques pour les différents cas
   const loginUrl = `${publicSiteUrl}/extranet-technique-login`;
+  const resetUrl = `${publicSiteUrl}/auth?provider=true&tab=forgot-password&email=${encodeURIComponent(to)}`;
   
   console.log(`Using login URL for provider: ${loginUrl}`);
   
@@ -35,8 +37,8 @@ export async function sendInvitationEmail(
       <p>Olá ${nome},</p>
       <p>Sua empresa foi adicionada como prestador de serviços na PAZ Property.</p>
       <p>Você pode acessar o Extranet Técnica com o email que já está registrado no sistema.</p>
-      <p>Por favor, acesse <a href="${loginUrl}">aqui</a> e faça login.</p>
-      <p>Se você esqueceu sua senha, pode usar a opção "Esqueci minha senha" na página de login.</p>
+      <p>Se você esqueceu sua senha, por favor <a href="${resetUrl}">clique aqui para redefini-la</a>.</p>
+      <p>Caso você se lembre da sua senha, pode <a href="${loginUrl}">fazer login diretamente aqui</a>.</p>
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
     `);
   } else {

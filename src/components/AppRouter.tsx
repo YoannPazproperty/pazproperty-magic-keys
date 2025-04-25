@@ -52,7 +52,7 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
               </ProtectedRoute>
             } 
           />
-          {/* S'assurer que cette route soit exactement celle utilisée dans l'email */}
+          {/* Rediriger vers la page d'authentification avec le flag provider=true */}
           <Route 
             path="/extranet-technique-login" 
             element={<Navigate to="/auth?provider=true" replace />} 

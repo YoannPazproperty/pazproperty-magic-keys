@@ -1,46 +1,40 @@
 
-import { useLocation, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
-  }, [location.pathname]);
-
-  // Check if this might be a provider trying to access the platform
-  const isLikelyProvider = location.pathname.includes("extranet") || 
-                          location.pathname.includes("techn") || 
-                          location.pathname.includes("prestador") ||
-                          location.pathname.includes("auth") ||
-                          location.search.includes("provider=true");
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center max-w-md p-6 bg-white rounded-lg shadow-md">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Página não encontrada</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md text-center space-y-6">
+        <h1 className="text-6xl font-bold text-primary">404</h1>
+        <h2 className="text-2xl font-semibold">Página não encontrada</h2>
+        <p className="text-gray-600">
+          A página que você está procurando não existe ou foi movida.
+        </p>
         
-        {isLikelyProvider ? (
-          <div className="mb-6">
-            <p className="text-gray-700 mb-4">
-              Se você é um prestador de serviços tentando acessar o Extranet Técnica, 
-              por favor use o link abaixo:
-            </p>
-            <Link to="/auth?provider=true" 
-                  className="text-white bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-md block mb-4">
-              Acesso para Prestadores de Serviços
-            </Link>
+        <div className="space-y-3">
+          <Button variant="default" asChild className="w-full">
+            <Link to="/">Ir para página inicial</Link>
+          </Button>
+          
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            <Button variant="outline" asChild>
+              <Link to="/extranet-technique-login">
+                Acesso para Prestadores de Serviços
+              </Link>
+            </Button>
+            
+            <Button variant="outline" asChild>
+              <Link to="/auth">
+                Admin Login
+              </Link>
+            </Button>
           </div>
-        ) : null}
+        </div>
         
-        <Link to="/" className="text-blue-500 hover:text-blue-700 underline">
-          Voltar para a Página Inicial
-        </Link>
+        <p className="text-sm text-gray-500 mt-8">
+          Se você acredita que isso é um erro, por favor contacte o suporte.
+        </p>
       </div>
     </div>
   );

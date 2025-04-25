@@ -59,7 +59,6 @@ const Auth = () => {
   const [prefilledEmail] = useState<string | null>(searchParams.get("email"));
   const isProviderLogin = searchParams.get("provider") === "true";
 
-  // Initialiser les formulaires
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -86,7 +85,6 @@ const Auth = () => {
     },
   });
 
-  // Effet pour pré-remplir les formulaires si l'email est fourni dans l'URL
   useEffect(() => {
     if (prefilledEmail) {
       loginForm.setValue("email", prefilledEmail);
@@ -216,12 +214,11 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Tabs remain the same, but we adjust the visibility of register tab for providers */}
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "register" | "forgot-password")}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Connexion</TabsTrigger>
-                {!isProviderLogin && <TabsTrigger value="register">S'inscrire</TabsTrigger>}
                 {isProviderLogin && <TabsTrigger value="forgot-password">Mot de passe oublié</TabsTrigger>}
+                {!isProviderLogin && <TabsTrigger value="register">S'inscrire</TabsTrigger>}
               </TabsList>
               
               <TabsContent value="login" className="mt-4">
@@ -271,24 +268,38 @@ const Auth = () => {
                   </form>
                 </Form>
                 
-                <div className="mt-4 relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Ou continuer avec</span>
-                  </div>
-                </div>
+                {!isProviderLogin && (
+                  <>
+                    <div className="mt-4 relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Ou continuer avec</span>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      type="button" 
+                      className="w-full mt-4 opacity-50"
+                      disabled={true}
+                    >
+                      <FcGoogle className="mr-2 h-6 w-6" />
+                      Google (désactivé temporairement)
+                    </Button>
+                  </>
+                )}
                 
-                <Button 
-                  variant="outline" 
-                  type="button" 
-                  className="w-full mt-4 opacity-50"
-                  disabled={true}
-                >
-                  <FcGoogle className="mr-2 h-6 w-6" />
-                  Google (désactivé temporairement)
-                </Button>
+                {isProviderLogin && (
+                  <Alert className="mt-4 bg-blue-50 border-blue-200">
+                    <Info className="h-4 w-4 text-blue-700" />
+                    <AlertDescription className="text-blue-700 text-sm">
+                      Se você é um novo prestador e recebeu um email com senha temporária, 
+                      utilize-a para fazer login. Você será solicitado a definir uma nova senha.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </TabsContent>
               
               <TabsContent value="register" className="mt-4">
@@ -479,7 +490,7 @@ const Auth = () => {
               <Info className="h-4 w-4 text-amber-700" />
               <AlertDescription className="text-xs text-amber-700">
                 {isProviderLogin 
-                  ? "Cette interface est réservée aux prestataires de services de Pazproperty."
+                  ? "Esta interface é reservada aos prestataires de serviços da Pazproperty."
                   : "Cette interface est réservée au personnel autorisé de Pazproperty."}
                 {activeTab === "login" && " Utilisez votre adresse e-mail professionnelle pour vous connecter."}
               </AlertDescription>

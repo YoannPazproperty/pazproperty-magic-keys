@@ -85,11 +85,18 @@ Deno.serve(async (req) => {
       
       let userId: string;
       let tempPassword: string | undefined;
+      let isNewUser = !existingUser;
       
-      // Create temporary password only for new users
-      if (!existingUser) {
-        tempPassword = crypto.randomUUID().split('-')[0];
-        console.log("Generated temporary password for new user");
+      // Create temporary password only for new users - Générer un mot de passe plus facile à retenir
+      if (isNewUser) {
+        // Générer un mot de passe temporaire plus simple et mémorisable
+        const adjectives = ["Happy", "Sunny", "Shiny", "Lucky", "Magic", "Super", "Mega"];
+        const nouns = ["Star", "Moon", "Sky", "Day", "Tech", "Team", "Hero"];
+        const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+        const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+        const randomNum = Math.floor(Math.random() * 1000);
+        tempPassword = `${randomAdjective}${randomNoun}${randomNum}`;
+        console.log(`Generated memorable temporary password for new user (masked): ${tempPassword.slice(0, 2)}****`);
       }
 
       try {
@@ -103,9 +110,12 @@ Deno.serve(async (req) => {
           });
           console.log("User metadata updated successfully");
         } else {
+          if (!tempPassword) {
+            throw new Error('No temporary password generated for new user');
+          }
           console.log(`Creating new user for email: ${provider.email}`);
           console.log("Using temporary password (masked):", "*".repeat(tempPassword?.length || 0));
-          const newUser = await createUser(supabase, provider.email, tempPassword!, {
+          const newUser = await createUser(supabase, provider.email, tempPassword, {
             provider_id: providerId,
             nome: provider.nome_gerente,
             empresa: provider.empresa
@@ -129,14 +139,14 @@ Deno.serve(async (req) => {
           console.log("Email parameters:", {
             to: provider.email,
             name: provider.nome_gerente,
-            isNewUser: !existingUser,
+            isNewUser: isNewUser,
             publicSiteUrl
           });
           emailResult = await sendInvitationEmail(
             resend,
             provider.email,
             provider.nome_gerente,
-            !existingUser,
+            isNewUser,
             tempPassword,
             publicSiteUrl
           );
@@ -155,7 +165,7 @@ Deno.serve(async (req) => {
         const responseData = {
           success: true,
           message: wasEmailSent ? 'Invitation sent successfully' : 'User account created/updated but email could not be sent',
-          isNewUser: !existingUser,
+          isNewUser: isNewUser,
           emailSent: wasEmailSent,
           emailError: emailError ? {
             message: emailError.message,
@@ -198,4 +208,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-

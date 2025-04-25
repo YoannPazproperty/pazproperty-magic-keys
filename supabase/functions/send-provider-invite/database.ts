@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
 import { ProviderData } from './types.ts';
 
@@ -63,9 +64,18 @@ export async function updateUserMetadata(supabase: any, userId: string, metadata
   console.log(`Updating metadata for user ${userId}:`, metadata);
   
   try {
+    // Ajouter first_login: false s'il existe déjà
+    const { data: currentUser } = await supabase.auth.admin.getUserById(userId);
+    const currentMetadata = currentUser?.user?.user_metadata || {};
+    const updatedMetadata = {
+      ...currentMetadata,
+      ...metadata,
+      first_login: false // Marquer que l'utilisateur n'est plus en première connexion
+    };
+    
     const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(
       userId,
-      { user_metadata: metadata }
+      { user_metadata: updatedMetadata }
     );
 
     if (updateError) {
@@ -88,13 +98,13 @@ export async function createUser(supabase: any, email: string, password: string,
     // Ajouter le flag first_login aux métadonnées
     const userMetadata = {
       ...metadata,
-      first_login: true
+      first_login: true // Indiquer que c'est la première connexion
     };
     
     const { data: authData, error: createUserError } = await supabase.auth.admin.createUser({
       email: email,
       password: password,
-      email_confirm: true,
+      email_confirm: true, // Ne pas exiger de confirmation d'email
       user_metadata: userMetadata
     });
 
