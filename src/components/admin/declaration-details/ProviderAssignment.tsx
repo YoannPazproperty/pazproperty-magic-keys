@@ -1,36 +1,15 @@
 
-import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import type { Declaration } from "@/services/types";
-import { useQuery } from "@tanstack/react-query";
+import { useProviders } from "@/hooks/useProviders";
 
 interface ProviderAssignmentProps {
   declaration: Declaration;
   onAssign: (providerId: string) => void;
 }
 
-const fetchProviders = async () => {
-  const { data, error } = await supabase
-    .from('prestadores_de_servicos')
-    .select('id, empresa, nome_gerente');
-    
-  if (error) {
-    throw error;
-  }
-  return data;
-};
-
 export const ProviderAssignment = ({ declaration, onAssign }: ProviderAssignmentProps) => {
-  const { data: providers, isLoading } = useQuery({
-    queryKey: ['providers'],
-    queryFn: fetchProviders
-  });
-
-  const handleAssignment = (providerId: string) => {
-    onAssign(providerId);
-  };
+  const { data: providers, isLoading } = useProviders();
 
   return (
     <div className="space-y-2">
@@ -38,7 +17,7 @@ export const ProviderAssignment = ({ declaration, onAssign }: ProviderAssignment
       <Select
         disabled={isLoading}
         value={declaration.prestador_id || ""}
-        onValueChange={handleAssignment}
+        onValueChange={onAssign}
       >
         <SelectTrigger>
           <SelectValue placeholder="Choisir un prestataire" />

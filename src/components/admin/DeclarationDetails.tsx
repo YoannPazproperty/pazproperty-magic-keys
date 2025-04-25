@@ -1,13 +1,11 @@
-
-import type { Declaration } from "@/services/types";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { Declaration } from "@/services/types";
 import { TenantInfo } from "./declaration-details/TenantInfo";
 import { ProblemInfo } from "./declaration-details/ProblemInfo";
 import { MediaFiles } from "./declaration-details/MediaFiles";
 import { StatusUpdate } from "./declaration-details/StatusUpdate";
 import { MondayInfo } from "./declaration-details/MondayInfo";
-import { ProviderAssignment } from "./ProviderAssignment";
+import { ProviderAssignment } from "./declaration-details/ProviderAssignment";
 
 interface DeclarationDetailsProps {
   declaration: Declaration;
