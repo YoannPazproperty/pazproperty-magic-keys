@@ -2,18 +2,20 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, User, Settings } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import TechnicienManager from "@/components/TechnicienManager";
 import { validateMondayConfig } from "@/services/monday";
 import { ServiceOrdersList } from "@/components/extranet/ServiceOrdersList";
+import { UserPasswordSettingsDialog } from "@/components/extranet/UserPasswordSettingsDialog";
 
 const ExtranetTechnique = () => {
   const [activeTab, setActiveTab] = useState("new");
   const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
   const { signOut, user } = useAuth();
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
   useEffect(() => {
     // Check API configuration status
@@ -24,6 +26,15 @@ const ExtranetTechnique = () => {
     
     checkApiStatus();
   }, []);
+
+  // Vérifier si l'utilisateur n'a pas encore défini de mot de passe
+  useEffect(() => {
+    // Si l'utilisateur vient de s'inscrire et n'a pas encore défini son mot de passe
+    // On peut détecter cela si c'est sa première connexion
+    if (user && user.user_metadata && user.user_metadata.first_login) {
+      setIsSettingsDialogOpen(true);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -46,13 +57,23 @@ const ExtranetTechnique = () => {
                 Gestão de intervenções técnicas e relatórios.
               </p>
             </div>
-            <Button 
-              variant="destructive" 
-              onClick={handleLogout} 
-              className="ml-4"
-            >
-              <LogOut className="mr-2 h-4 w-4" /> Déconnexion
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsSettingsDialogOpen(true)}
+                title="Paramètres du compte"
+              >
+                <User className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleLogout} 
+                className="ml-2"
+              >
+                <LogOut className="mr-2 h-4 w-4" /> Déconnexion
+              </Button>
+            </div>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -88,6 +109,11 @@ const ExtranetTechnique = () => {
           </Tabs>
         </div>
       </main>
+      
+      <UserPasswordSettingsDialog
+        open={isSettingsDialogOpen}
+        onOpenChange={setIsSettingsDialogOpen}
+      />
       
       <Footer />
     </div>

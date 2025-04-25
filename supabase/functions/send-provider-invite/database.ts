@@ -86,11 +86,17 @@ export async function createUser(supabase: any, email: string, password: string,
   console.log(`Creating new user with email ${email}`);
   
   try {
+    // Ajouter le flag first_login aux métadonnées
+    const userMetadata = {
+      ...metadata,
+      first_login: true
+    };
+    
     const { data: authData, error: createUserError } = await supabase.auth.admin.createUser({
       email: email,
       password: password,
       email_confirm: true,
-      user_metadata: metadata
+      user_metadata: userMetadata
     });
 
     if (createUserError) {

@@ -44,7 +44,8 @@ export async function sendInvitationEmail(
         <li>Senha temporária: ${tempPassword}</li>
       </ul>
       <p>Por favor, acesse <a href="${loginUrl}">aqui</a> e faça login com essas credenciais.</p>
-      <p>Por razões de segurança, recomendamos que você altere sua senha após o primeiro acesso.</p>
+      <p><strong>Importante:</strong> Na primeira conexão, você será convidado a definir uma nova senha pessoal. Esta etapa é obrigatória para garantir a segurança da sua conta.</p>
+      <p>Por razões de segurança, recomendamos que você não compartilhe suas credenciais com terceiros.</p>
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
     `;
   }
