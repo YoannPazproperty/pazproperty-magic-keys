@@ -15,6 +15,8 @@ export interface Declaration {
   nif?: string;
   mondayId?: string;
   mediaFiles?: string[];
+  prestador_id?: string;
+  prestador_assigned_at?: string;
 }
 
 // Technician report interface

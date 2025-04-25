@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Declaration } from "@/services/types";
@@ -5,6 +6,7 @@ import { translateIssueType, translateUrgency } from "@/utils/translationUtils";
 import { Info, Image, Video, FileIcon } from "lucide-react";
 import { ProviderAssignment } from "./ProviderAssignment";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DeclarationDetailsProps {
   declaration: Declaration;
