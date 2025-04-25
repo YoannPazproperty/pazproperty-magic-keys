@@ -1,6 +1,12 @@
-
 import { Resend } from "npm:resend@2.0.0";
 import { ContactFormData, ProcessResult } from "./types.ts";
+import { emailSignature } from "./signature.ts";
+
+// Function to format email content
+const formatEmailWithSignature = (content: string) => `
+  ${content}
+  ${emailSignature}
+`;
 
 // Email sending function
 export async function sendEmails(formData: ContactFormData): Promise<ProcessResult> {
@@ -27,8 +33,8 @@ export async function sendEmails(formData: ContactFormData): Promise<ProcessResu
     const recipient2 = "yoann@pazproperty.pt";
     console.log("📧 Recipients:", [recipient1, recipient2]);
     
-    // Email template to company
-    const html = `
+    // Email template to company with signature
+    const html = formatEmailWithSignature(`
       <h1>Nouveau contact via le site web</h1>
       <p><strong>Nom :</strong> ${formData.nome}</p>
       <p><strong>Email :</strong> ${formData.email}</p>
@@ -36,7 +42,7 @@ export async function sendEmails(formData: ContactFormData): Promise<ProcessResu
       <p><strong>Type :</strong> ${formData.tipo === 'proprietario' ? 'Propriétaire' : 'Locataire'}</p>
       <p><strong>Message :</strong></p>
       <p>${formData.mensagem.replace(/\n/g, "<br>")}</p>
-    `;
+    `);
     
     try {
       // Send company email
@@ -52,16 +58,16 @@ export async function sendEmails(formData: ContactFormData): Promise<ProcessResu
       const emailResponse = await resend.emails.send(emailParams);
       console.log("✅ Email to company sent, response:", emailResponse);
       
-      // Send confirmation to customer
+      // Send confirmation to customer with signature
       const confirmationParams = {
         from: "contact@pazproperty.pt",
         to: [formData.email],
         subject: "Nous avons bien reçu votre message - PAZ Property",
-        html: `
+        html: formatEmailWithSignature(`
           <h1>Merci pour votre message, ${formData.nome} !</h1>
           <p>Nous avons bien reçu votre message et nous vous recontacterons bientôt.</p>
           <p>Cordialement,<br>L'équipe PAZ Property</p>
-        `,
+        `),
       };
       
       console.log("📤 Sending confirmation email with params:", JSON.stringify(confirmationParams));

@@ -1,5 +1,11 @@
 
 import { Resend } from 'npm:resend@2.0.0';
+import { emailSignature } from '../send-contact-form/signature.ts';
+
+const formatEmailWithSignature = (content: string) => `
+  ${content}
+  ${emailSignature}
+`;
 
 export async function sendInvitationEmail(
   resend: Resend,
@@ -22,7 +28,7 @@ export async function sendInvitationEmail(
   if (!isNewUser) {
     console.log("Generating email for existing user");
     emailSubject = "Acesso ao Extranet Técnica - PAZ Property";
-    emailHtml = `
+    emailHtml = formatEmailWithSignature(`
       <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>
       <p>Olá ${nome},</p>
       <p>Sua empresa foi adicionada como prestador de serviços na PAZ Property.</p>
@@ -30,11 +36,11 @@ export async function sendInvitationEmail(
       <p>Por favor, acesse <a href="${loginUrl}">aqui</a> e faça login.</p>
       <p>Se você esqueceu sua senha, pode usar a opção "Esqueci minha senha" na página de login.</p>
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
-    `;
+    `);
   } else {
     console.log("Generating email for new user with temp password");
     emailSubject = "Suas credenciais de acesso - PAZ Property";
-    emailHtml = `
+    emailHtml = formatEmailWithSignature(`
       <h1>Bem-vindo ao Extranet Técnica da PAZ Property</h1>
       <p>Olá ${nome},</p>
       <p>A sua conta foi criada no Extranet Técnica da PAZ Property.</p>
@@ -47,7 +53,7 @@ export async function sendInvitationEmail(
       <p><strong>Importante:</strong> Na primeira conexão, você será convidado a definir uma nova senha pessoal. Esta etapa é obrigatória para garantir a segurança da sua conta.</p>
       <p>Por razões de segurança, recomendamos que você não compartilhe suas credenciais com terceiros.</p>
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
-    `;
+    `);
   }
 
   try {
