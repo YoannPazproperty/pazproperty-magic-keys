@@ -1,11 +1,11 @@
-import { toast } from "sonner";
-import type { Declaration } from "@/services/types";
+
 import { TenantInfo } from "./declaration-details/TenantInfo";
 import { ProblemInfo } from "./declaration-details/ProblemInfo";
 import { MediaFiles } from "./declaration-details/MediaFiles";
 import { StatusUpdate } from "./declaration-details/StatusUpdate";
 import { MondayInfo } from "./declaration-details/MondayInfo";
 import { ProviderAssignment } from "./declaration-details/ProviderAssignment";
+import type { Declaration } from "@/services/types";
 
 interface DeclarationDetailsProps {
   declaration: Declaration;
@@ -20,24 +20,6 @@ export const DeclarationDetails = ({
   getStatusBadgeColor,
   translateStatus
 }: DeclarationDetailsProps) => {
-  const handleProviderAssignment = async (providerId: string) => {
-    const { error } = await supabase
-      .from('declarations')
-      .update({ 
-        prestador_id: providerId,
-        prestador_assigned_at: new Date().toISOString()
-      })
-      .eq('id', declaration.id);
-
-    if (error) {
-      console.error('Error assigning provider:', error);
-      toast.error("Erreur lors de l'affectation du prestataire");
-      return;
-    }
-
-    toast.success("Prestataire affecté avec succès");
-  };
-
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
@@ -56,10 +38,7 @@ export const DeclarationDetails = ({
         </div>
       </div>
       
-      <ProviderAssignment 
-        declaration={declaration} 
-        onAssign={handleProviderAssignment}
-      />
+      <ProviderAssignment declaration={declaration} />
       
       <MediaFiles files={declaration.mediaFiles} />
       

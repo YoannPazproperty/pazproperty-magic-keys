@@ -2,14 +2,15 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Declaration } from "@/services/types";
 import { useProviders } from "@/hooks/useProviders";
+import { useProviderAssignment } from "@/hooks/useProviderAssignment";
 
 interface ProviderAssignmentProps {
   declaration: Declaration;
-  onAssign: (providerId: string) => void;
 }
 
-export const ProviderAssignment = ({ declaration, onAssign }: ProviderAssignmentProps) => {
+export const ProviderAssignment = ({ declaration }: ProviderAssignmentProps) => {
   const { data: providers, isLoading } = useProviders();
+  const { handleProviderAssignment } = useProviderAssignment();
 
   return (
     <div className="space-y-2">
@@ -17,7 +18,7 @@ export const ProviderAssignment = ({ declaration, onAssign }: ProviderAssignment
       <Select
         disabled={isLoading}
         value={declaration.prestador_id || ""}
-        onValueChange={onAssign}
+        onValueChange={(providerId) => handleProviderAssignment(declaration.id, providerId)}
       >
         <SelectTrigger>
           <SelectValue placeholder="Choisir un prestataire" />
