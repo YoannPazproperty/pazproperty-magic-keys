@@ -30,14 +30,20 @@ BEGIN
   -- Si aucun token trouvé ou expiré, renvoyer NULL
   IF token_record IS NULL THEN
     -- Ajouter du journalisation pour le débogage
-    INSERT INTO public.logs (message, data)
-    VALUES (
-      'Token de réinitialisation invalide ou expiré', 
-      jsonb_build_object(
-        'token', substring(token_param, 1, 8) || '...',
-        'timestamp', now()
-      )
-    );
+    BEGIN
+      INSERT INTO public.logs (message, data)
+      VALUES (
+        'Token de réinitialisation invalide ou expiré', 
+        jsonb_build_object(
+          'token', substring(token_param, 1, 8) || '...',
+          'timestamp', now()
+        )
+      );
+      EXCEPTION WHEN undefined_table THEN
+        -- Si la table logs n'existe pas, continuer sans erreur
+        NULL;
+    END;
+    
     RETURN;
   END IF;
   
@@ -49,14 +55,20 @@ BEGIN
   -- Si l'utilisateur existe, renvoyer ses informations
   IF user_record IS NULL THEN
     -- Ajouter du journalisation pour le débogage
-    INSERT INTO public.logs (message, data)
-    VALUES (
-      'Utilisateur non trouvé pour token valide', 
-      jsonb_build_object(
-        'token', substring(token_param, 1, 8) || '...',
-        'user_id', token_record.user_id
-      )
-    );
+    BEGIN
+      INSERT INTO public.logs (message, data)
+      VALUES (
+        'Utilisateur non trouvé pour token valide', 
+        jsonb_build_object(
+          'token', substring(token_param, 1, 8) || '...',
+          'user_id', token_record.user_id
+        )
+      );
+      EXCEPTION WHEN undefined_table THEN
+        -- Si la table logs n'existe pas, continuer sans erreur
+        NULL;
+    END;
+    
     RETURN;
   END IF;
   
@@ -66,26 +78,37 @@ BEGIN
   RETURN NEXT;
   
   -- Ajouter du journalisation pour le débogage
-  INSERT INTO public.logs (message, data)
-  VALUES (
-    'Token de réinitialisation vérifié avec succès', 
-    jsonb_build_object(
-      'token', substring(token_param, 1, 8) || '...',
-      'user_id', user_record.id,
-      'user_email', user_record.email
-    )
-  );
+  BEGIN
+    INSERT INTO public.logs (message, data)
+    VALUES (
+      'Token de réinitialisation vérifié avec succès', 
+      jsonb_build_object(
+        'token', substring(token_param, 1, 8) || '...',
+        'user_id', user_record.id,
+        'user_email', user_record.email
+      )
+    );
+    EXCEPTION WHEN undefined_table THEN
+      -- Si la table logs n'existe pas, continuer sans erreur
+      NULL;
+  END;
   
   EXCEPTION WHEN OTHERS THEN
     -- En cas d'erreur, journaliser et renvoyer NULL
-    INSERT INTO public.logs (message, data)
-    VALUES (
-      'Erreur lors de la vérification du token', 
-      jsonb_build_object(
-        'token', substring(token_param, 1, 8) || '...',
-        'error', SQLERRM
-      )
-    );
+    BEGIN
+      INSERT INTO public.logs (message, data)
+      VALUES (
+        'Erreur lors de la vérification du token', 
+        jsonb_build_object(
+          'token', substring(token_param, 1, 8) || '...',
+          'error', SQLERRM
+        )
+      );
+      EXCEPTION WHEN undefined_table THEN
+        -- Si la table logs n'existe pas, continuer sans erreur
+        NULL;
+    END;
+    
     RETURN;
 END;
 $$;

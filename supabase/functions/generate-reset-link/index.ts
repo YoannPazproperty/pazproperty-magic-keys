@@ -66,7 +66,7 @@ serve(async (req) => {
     }
 
     const userId = authUser.users[0].id;
-    const userEmail = email; // CORRECTION: Utiliser l'email fourni, pas celui de authUser pour éviter toute substitution
+    const userEmail = authUser.users[0].email; // Utiliser l'email réel de l'utilisateur trouvé
     
     // Générer un token et une date d'expiration
     const token = crypto.randomUUID();
@@ -141,7 +141,8 @@ serve(async (req) => {
       console.error("Exception lors de la vérification du token après création:", verifyErr);
     }
 
-    const baseUrl = "https://22c7e654-f304-419f-a370-324064acafb0.lovableproject.com";
+    // Utiliser le domaine de l'application pour les redirections
+    const baseUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://pazproperty-magic-keys.lovable.app";
     const resetLink = `${baseUrl}/auth/callback?type=recovery&token=${token}&email=${encodeURIComponent(userEmail)}`;
 
     // Envoyer l'email si Resend est configuré
