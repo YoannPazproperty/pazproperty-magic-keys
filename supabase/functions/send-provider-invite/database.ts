@@ -121,37 +121,40 @@ export async function ensureUserRole(supabase: any, userId: string, role: string
   console.log(`Ensuring user ${userId} has role: ${role}`);
   
   try {
-    // Check if role already exists
-    const { data: existingRole, error: roleCheckError } = await supabase
+    // First check if the user already has the specified role
+    const { data: existingRoles, error: roleCheckError } = await supabase
       .from('user_roles')
       .select('*')
       .eq('user_id', userId)
-      .eq('role', role)
-      .single();
+      .eq('role', role);
 
-    if (roleCheckError && roleCheckError.code !== 'PGRST116') {
-      console.error('Error checking existing role:', roleCheckError);
+    if (roleCheckError) {
+      console.error('Error checking existing roles:', roleCheckError);
+      throw new Error(`Error checking user roles: ${roleCheckError.message}`);
+    }
+    
+    // If user already has the role, log it and return
+    if (existingRoles && existingRoles.length > 0) {
+      console.log(`User ${userId} already has role ${role}, no action needed`);
+      return;
     }
 
-    // Add role if it doesn't exist
-    if (!existingRole) {
-      console.log(`Role ${role} not found for user ${userId}, adding it`);
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: role
-        });
+    console.log(`Role ${role} not found for user ${userId}, adding it`);
+    
+    // Add the role if it doesn't exist
+    const { error: roleError } = await supabase
+      .from('user_roles')
+      .insert({
+        user_id: userId,
+        role: role
+      });
 
-      if (roleError) {
-        console.error('Error setting user role:', roleError);
-        throw new Error(`Error setting user role: ${roleError.message}`);
-      }
-      
-      console.log(`Role ${role} added successfully for user ${userId}`);
-    } else {
-      console.log(`User ${userId} already has role ${role}`);
+    if (roleError) {
+      console.error('Error setting user role:', roleError);
+      throw new Error(`Error setting user role: ${roleError.message}`);
     }
+    
+    console.log(`Role ${role} added successfully for user ${userId}`);
   } catch (error) {
     console.error('Exception when ensuring user role:', error);
     throw error;
