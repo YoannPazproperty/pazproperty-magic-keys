@@ -121,37 +121,55 @@ export async function ensureUserRole(supabase: any, userId: string, role: string
   console.log(`Ensuring user ${userId} has role: ${role}`);
   
   try {
-    // First check if the user already has the specified role
+    // Vérifier si l'utilisateur a déjà un rôle (peu importe lequel)
     const { data: existingRoles, error: roleCheckError } = await supabase
       .from('user_roles')
       .select('*')
-      .eq('user_id', userId)
-      .eq('role', role);
+      .eq('user_id', userId);
 
     if (roleCheckError) {
       console.error('Error checking existing roles:', roleCheckError);
       throw new Error(`Error checking user roles: ${roleCheckError.message}`);
     }
     
-    // If user already has the role, log it and return
+    // Si l'utilisateur a déjà un rôle
     if (existingRoles && existingRoles.length > 0) {
-      console.log(`User ${userId} already has role ${role}, no action needed`);
+      const currentRole = existingRoles[0].role;
+      
+      // Si c'est déjà le bon rôle, ne rien faire
+      if (currentRole === role) {
+        console.log(`User ${userId} already has role ${role}, no action needed`);
+        return;
+      }
+      
+      // Sinon, mettre à jour le rôle existant
+      console.log(`User ${userId} has role ${currentRole}, updating to ${role}`);
+      const { error: updateError } = await supabase
+        .from('user_roles')
+        .update({ role: role })
+        .eq('user_id', userId);
+        
+      if (updateError) {
+        console.error('Error updating user role:', updateError);
+        throw new Error(`Error updating user role: ${updateError.message}`);
+      }
+      
+      console.log(`Role updated from ${currentRole} to ${role} for user ${userId}`);
       return;
     }
 
-    console.log(`Role ${role} not found for user ${userId}, adding it`);
-    
-    // Add the role if it doesn't exist
-    const { error: roleError } = await supabase
+    // Si l'utilisateur n'a pas encore de rôle, en ajouter un nouveau
+    console.log(`No role found for user ${userId}, adding role ${role}`);
+    const { error: insertError } = await supabase
       .from('user_roles')
       .insert({
         user_id: userId,
         role: role
       });
 
-    if (roleError) {
-      console.error('Error setting user role:', roleError);
-      throw new Error(`Error setting user role: ${roleError.message}`);
+    if (insertError) {
+      console.error('Error inserting user role:', insertError);
+      throw new Error(`Error setting user role: ${insertError.message}`);
     }
     
     console.log(`Role ${role} added successfully for user ${userId}`);
