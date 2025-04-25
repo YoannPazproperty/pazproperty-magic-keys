@@ -52,6 +52,8 @@ export type Database = {
           nif: string | null
           phone: string | null
           postalCode: string | null
+          prestador_assigned_at: string | null
+          prestador_id: string | null
           property: string | null
           status: Database["public"]["Enums"]["declaration_status"] | null
           submittedAt: string | null
@@ -69,6 +71,8 @@ export type Database = {
           nif?: string | null
           phone?: string | null
           postalCode?: string | null
+          prestador_assigned_at?: string | null
+          prestador_id?: string | null
           property?: string | null
           status?: Database["public"]["Enums"]["declaration_status"] | null
           submittedAt?: string | null
@@ -86,12 +90,22 @@ export type Database = {
           nif?: string | null
           phone?: string | null
           postalCode?: string | null
+          prestador_assigned_at?: string | null
+          prestador_id?: string | null
           property?: string | null
           status?: Database["public"]["Enums"]["declaration_status"] | null
           submittedAt?: string | null
           urgency?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "declarations_prestador_id_fkey"
+            columns: ["prestador_id"]
+            isOneToOne: false
+            referencedRelation: "prestadores_de_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       logs: {
         Row: {
@@ -444,15 +458,33 @@ export type Database = {
         Returns: boolean
       }
       has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["user_role"]
-        }
+        Args:
+          | {
+              _user_id: string
+              _role: Database["public"]["Enums"]["user_role"]
+            }
+          | { _user_id: string; _role: string }
         Returns: boolean
       }
       is_prestador: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      lv_prestador: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      lv_role: {
+        Args: { _user_id: string; _role: string }
+        Returns: boolean
+      }
+      lv_version: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      set_auth_security_settings: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       store_password_reset_token: {
         Args: {

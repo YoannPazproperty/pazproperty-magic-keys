@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import type { Declaration } from "@/services/types";
 import { translateIssueType, translateUrgency } from "@/utils/translationUtils";
 import { Info, Image, Video, FileIcon } from "lucide-react";
+import { ProviderAssignment } from "./ProviderAssignment";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DeclarationDetailsProps {
   declaration: Declaration;
@@ -17,6 +19,24 @@ export const DeclarationDetails = ({
   getStatusBadgeColor,
   translateStatus
 }: DeclarationDetailsProps) => {
+  const handleProviderAssignment = async (providerId: string) => {
+    const { error } = await supabase
+      .from('declarations')
+      .update({ 
+        prestador_id: providerId,
+        prestador_assigned_at: new Date().toISOString()
+      })
+      .eq('id', declaration.id);
+
+    if (error) {
+      console.error('Error assigning provider:', error);
+      toast.error("Erreur lors de l'affectation du prestataire");
+      return;
+    }
+
+    toast.success("Prestataire affecté avec succès");
+  };
+
   const getFileIcon = (fileUrl: string) => {
     if (fileUrl.includes('image') || fileUrl.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/)) {
       return <Image className="h-4 w-4 mr-1" />;
@@ -88,6 +108,11 @@ export const DeclarationDetails = ({
           <p>{declaration.description}</p>
         </div>
       </div>
+      
+      <ProviderAssignment 
+        declaration={declaration} 
+        onAssign={handleProviderAssignment}
+      />
       
       {declaration.mediaFiles && declaration.mediaFiles.length > 0 ? (
         <div className="space-y-2 py-2">
