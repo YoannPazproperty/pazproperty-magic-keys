@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -51,6 +52,7 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
               </ProtectedRoute>
             } 
           />
+          {/* S'assurer que cette route soit exactement celle utilisée dans l'email */}
           <Route 
             path="/extranet-technique-login" 
             element={<Navigate to="/auth?provider=true" replace />} 

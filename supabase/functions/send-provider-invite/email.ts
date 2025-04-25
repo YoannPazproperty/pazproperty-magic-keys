@@ -17,7 +17,8 @@ export async function sendInvitationEmail(
 ) {
   console.log(`Preparing invitation email for ${to}, isNewUser: ${isNewUser}`);
   
-  const publicSiteUrl = siteUrl || 'https://pazproperty.pt';
+  // Corriger l'URL du site en supprimant le slash final s'il existe
+  const publicSiteUrl = (siteUrl || 'https://pazproperty.pt').replace(/\/$/, '');
   // Modifier l'URL de connexion pour rediriger vers l'Extranet technique
   const loginUrl = `${publicSiteUrl}/extranet-technique-login`;
   

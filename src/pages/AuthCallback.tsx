@@ -24,6 +24,7 @@ const AuthCallback = () => {
   const [testLoginResult, setTestLoginResult] = useState<any | null>(null);
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [processingComplete, setProcessingComplete] = useState(false);
+  const [isProviderReset, setIsProviderReset] = useState(false);
 
   useEffect(() => {
     // Traiter le callback d'authentification
@@ -49,6 +50,8 @@ const AuthCallback = () => {
         const type = urlParams.get("type") || hashParams.get("type");
         const email = urlParams.get("email");
         const explicitToken = urlParams.get("token");
+        const isProvider = urlParams.get("provider") === "true";
+        setIsProviderReset(isProvider);
         
         // Récupérer le token soit des paramètres URL soit du hash
         const accessToken = explicitToken || hashParams.get("access_token") || urlParams.get("access_token");
@@ -61,7 +64,8 @@ const AuthCallback = () => {
           email: email || "non spécifié",
           hash: window.location.hash,
           search: window.location.search,
-          fullUrl: window.location.href
+          fullUrl: window.location.href,
+          isProvider
         };
         
         console.log("Debug paramètres:", debugData);
@@ -155,7 +159,13 @@ const AuthCallback = () => {
             } else if (data.session) {
               console.log("Session créée avec succès via échange de code");
               toast.success("Connexion réussie");
-              navigate("/admin");
+              
+              // Rediriger vers la page appropriée selon que c'est un provider ou non
+              if (isProvider) {
+                navigate("/extranet-technique");
+              } else {
+                navigate("/admin");
+              }
             } else {
               console.error("Aucune session retournée après l'échange de code");
               setError("Impossible de finaliser la connexion");
@@ -182,7 +192,27 @@ const AuthCallback = () => {
           } else if (data?.session) {
             console.log("Session récupérée avec succès");
             toast.success("Connexion réussie");
-            navigate("/admin");
+            
+            // Vérifier si l'utilisateur est un prestataire ou un admin
+            try {
+              const { data: roleData } = await supabase
+                .from('prestadores_roles')
+                .select('*')
+                .eq('user_id', data.session.user.id)
+                .maybeSingle();
+                
+              if (roleData) {
+                // C'est un prestataire
+                navigate("/extranet-technique");
+              } else {
+                // C'est probablement un admin
+                navigate("/admin");
+              }
+            } catch (roleError) {
+              console.error("Erreur lors de la vérification du rôle:", roleError);
+              // Par défaut, rediriger vers l'admin
+              navigate("/admin");
+            }
           } else {
             // Si pas de code et pas de session, rediriger vers l'authentification
             console.log("Aucun code trouvé dans l'URL et pas de session active");
@@ -310,14 +340,24 @@ const AuthCallback = () => {
                       description: "Veuillez vous connecter manuellement avec votre nouveau mot de passe."
                     });
                     
-                    // Rediriger vers la page de connexion avec l'email pré-rempli
+                    // Rediriger vers la page de connexion appropriée avec l'email pré-rempli
                     setTimeout(() => {
-                      navigate(`/auth?email=${encodeURIComponent(resetEmail)}`);
+                      if (isProviderReset) {
+                        navigate(`/auth?provider=true&email=${encodeURIComponent(resetEmail)}`);
+                      } else {
+                        navigate(`/auth?email=${encodeURIComponent(resetEmail)}`);
+                      }
                     }, 2000);
                   } else {
                     console.log("Connexion réussie après seconde tentative!");
                     toast.success("Connexion réussie!");
-                    navigate("/admin");
+                    
+                    // Rediriger vers la page appropriée
+                    if (isProviderReset) {
+                      navigate("/extranet-technique");
+                    } else {
+                      navigate("/admin");
+                    }
                   }
                 } catch (retryErr) {
                   console.error("Erreur lors de la seconde tentative:", retryErr);
@@ -327,9 +367,13 @@ const AuthCallback = () => {
               console.log("Connexion automatique réussie");
               toast.success("Connexion réussie!");
               
-              // Redirection vers la page admin après un court délai
+              // Redirection vers la page appropriée après un court délai
               setTimeout(() => {
-                navigate("/admin");
+                if (isProviderReset) {
+                  navigate("/extranet-technique");
+                } else {
+                  navigate("/admin");
+                }
               }, 1000);
             }
           } catch (err: any) {
@@ -337,14 +381,28 @@ const AuthCallback = () => {
             toast.error("Erreur technique", {
               description: "Connexion impossible: " + (err.message || "erreur inconnue")
             });
-            setTimeout(() => navigate(`/auth?email=${encodeURIComponent(resetEmail)}`), 3000);
+            
+            // Rediriger vers la page de connexion appropriée
+            setTimeout(() => {
+              if (isProviderReset) {
+                navigate(`/auth?provider=true&email=${encodeURIComponent(resetEmail)}`);
+              } else {
+                navigate(`/auth?email=${encodeURIComponent(resetEmail)}`);
+              }
+            }, 3000);
           }
         } else {
           // Si pas d'email disponible pour la connexion automatique
           toast.info("Veuillez vous connecter avec votre nouveau mot de passe", {
             duration: 5000,
           });
-          setTimeout(() => navigate("/auth"), 2000);
+          setTimeout(() => {
+            if (isProviderReset) {
+              navigate("/auth?provider=true");
+            } else {
+              navigate("/auth");
+            }
+          }, 2000);
         }
       }
     } catch (err: any) {
@@ -372,7 +430,14 @@ const AuthCallback = () => {
         toast.success("Test de connexion réussi", {
           description: "La connexion fonctionne correctement, vous allez être redirigé."
         });
-        setTimeout(() => navigate("/admin"), 2000);
+        
+        setTimeout(() => {
+          if (isProviderReset) {
+            navigate("/extranet-technique");
+          } else {
+            navigate("/admin");
+          }
+        }, 2000);
       } else {
         toast.error("Échec du test de connexion", {
           description: result.message || "La connexion a échoué pour une raison inconnue."
@@ -406,6 +471,7 @@ const AuthCallback = () => {
               <p className="text-sm flex items-center text-blue-800">
                 <Info className="h-4 w-4 mr-2" />
                 Réinitialisation du mot de passe pour: <span className="font-medium ml-1">{userEmail}</span>
+                {isProviderReset && <span className="ml-1 text-xs">(Prestataire de services)</span>}
               </p>
             </div>
           )}
@@ -466,7 +532,13 @@ const AuthCallback = () => {
               <button
                 type="button"
                 className="w-full mt-2 border border-gray-300 py-2 px-4 rounded-md"
-                onClick={() => navigate("/auth?tab=forgot-password")}
+                onClick={() => {
+                  if (isProviderReset) {
+                    navigate("/auth?provider=true&tab=forgot-password");
+                  } else {
+                    navigate("/auth?tab=forgot-password");
+                  }
+                }}
               >
                 Demander un nouveau lien de réinitialisation
               </button>
