@@ -9,6 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 export const ApiSettings = () => {
   return (
@@ -20,9 +22,13 @@ export const ApiSettings = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">
-          Aucune intégration externe n'est actuellement configurée.
-        </p>
+        <Alert>
+          <InfoIcon className="h-4 w-4" />
+          <AlertDescription>
+            Les intégrations externes ont été désactivées. Si vous souhaitez configurer une nouvelle intégration, 
+            veuillez contacter votre administrateur.
+          </AlertDescription>
+        </Alert>
       </CardContent>
     </Card>
   );

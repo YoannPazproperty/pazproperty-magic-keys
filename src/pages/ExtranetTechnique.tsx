@@ -2,30 +2,18 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import TechnicienManager from "@/components/TechnicienManager";
-import { validateMondayConfig } from "@/services/monday";
 import { ServiceOrdersList } from "@/components/extranet/ServiceOrdersList";
 import { UserPasswordSettingsDialog } from "@/components/extranet/UserPasswordSettingsDialog";
 
 const ExtranetTechnique = () => {
   const [activeTab, setActiveTab] = useState("new");
-  const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
   const { signOut, user } = useAuth();
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    // Check API configuration status
-    const checkApiStatus = async () => {
-      const status = await validateMondayConfig();
-      setApiStatus(status);
-    };
-    
-    checkApiStatus();
-  }, []);
 
   // Vérifier si l'utilisateur n'a pas encore défini de mot de passe
   useEffect(() => {

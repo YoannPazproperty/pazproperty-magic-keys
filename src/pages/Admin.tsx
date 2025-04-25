@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -6,6 +7,7 @@ import { ApiSettings } from "@/components/admin/ApiSettings";
 import { NotificationSettings } from "@/components/admin/NotificationSettings";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { getDeclarations, updateDeclarationStatus } from "@/services/declarationService";
 import type { Declaration } from "@/services/types";
 import { useNavigate } from "react-router-dom";
 import { getContactsList } from "@/services/contacts/contactQueries";
