@@ -143,6 +143,7 @@ serve(async (req) => {
 
     // Utiliser le domaine de l'application pour les redirections
     const baseUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://pazproperty-magic-keys.lovable.app";
+    // S'assurer qu'il n'y a pas de double slash dans l'URL
     const resetLink = `${baseUrl}/auth/callback?type=recovery&token=${token}&email=${encodeURIComponent(userEmail)}`;
 
     // Envoyer l'email si Resend est configuré
