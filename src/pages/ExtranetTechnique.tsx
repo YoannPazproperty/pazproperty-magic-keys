@@ -13,7 +13,7 @@ import { ServiceOrdersList } from "@/components/extranet/ServiceOrdersList";
 const ExtranetTechnique = () => {
   const [activeTab, setActiveTab] = useState("new");
   const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
 
   useEffect(() => {
     // Check API configuration status
@@ -24,6 +24,14 @@ const ExtranetTechnique = () => {
     
     checkApiStatus();
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -40,7 +48,7 @@ const ExtranetTechnique = () => {
             </div>
             <Button 
               variant="destructive" 
-              onClick={signOut} 
+              onClick={handleLogout} 
               className="ml-4"
             >
               <LogOut className="mr-2 h-4 w-4" /> Déconnexion
