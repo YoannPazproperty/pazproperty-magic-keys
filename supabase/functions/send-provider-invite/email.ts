@@ -1,6 +1,6 @@
 
 import { Resend } from 'npm:resend@2.0.0';
-import { emailSignature } from '../send-contact-form/signature.ts';
+import { emailSignature } from './signature.ts';
 
 const formatEmailWithSignature = (content: string) => `
   ${content}
