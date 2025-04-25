@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
 import { ProviderData } from './types.ts';
 
@@ -121,58 +120,83 @@ export async function ensureUserRole(supabase: any, userId: string, role: string
   console.log(`Ensuring user ${userId} has role: ${role}`);
   
   try {
-    // Vérifier si l'utilisateur a déjà un rôle (peu importe lequel)
-    const { data: existingRoles, error: roleCheckError } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('user_id', userId);
+    // Si c'est un rôle de prestataire, utiliser la nouvelle table prestadores_roles
+    if (role === 'prestadores_externos') {
+      const { data: existingRole, error: roleCheckError } = await supabase
+        .from('prestadores_roles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
-    if (roleCheckError) {
-      console.error('Error checking existing roles:', roleCheckError);
-      throw new Error(`Error checking user roles: ${roleCheckError.message}`);
-    }
-    
-    // Si l'utilisateur a déjà un rôle
-    if (existingRoles && existingRoles.length > 0) {
-      const currentRole = existingRoles[0].role;
-      
-      // Si c'est déjà le bon rôle, ne rien faire
-      if (currentRole === role) {
-        console.log(`User ${userId} already has role ${role}, no action needed`);
-        return;
+      if (roleCheckError && roleCheckError.code !== 'PGRST116') {
+        console.error('Error checking existing prestador role:', roleCheckError);
+        throw new Error(`Error checking prestador role: ${roleCheckError.message}`);
       }
       
-      // Sinon, mettre à jour le rôle existant
-      console.log(`User ${userId} has role ${currentRole}, updating to ${role}`);
-      const { error: updateError } = await supabase
-        .from('user_roles')
-        .update({ role: role })
-        .eq('user_id', userId);
-        
-      if (updateError) {
-        console.error('Error updating user role:', updateError);
-        throw new Error(`Error updating user role: ${updateError.message}`);
+      if (!existingRole) {
+        console.log(`Adding prestador role for user ${userId}`);
+        const { error: insertError } = await supabase
+          .from('prestadores_roles')
+          .insert({
+            user_id: userId,
+            nivel: 'standard'  // Niveau d'accès par défaut
+          });
+
+        if (insertError) {
+          console.error('Error setting prestador role:', insertError);
+          throw new Error(`Error setting prestador role: ${insertError.message}`);
+        }
+      } else {
+        console.log(`User ${userId} already has prestador role, no action needed`);
       }
-      
-      console.log(`Role updated from ${currentRole} to ${role} for user ${userId}`);
       return;
     }
-
-    // Si l'utilisateur n'a pas encore de rôle, en ajouter un nouveau
-    console.log(`No role found for user ${userId}, adding role ${role}`);
-    const { error: insertError } = await supabase
+    
+    // Sinon, utiliser la table user_roles existante pour les rôles internes
+    const { data: existingRole, error: roleCheckError } = await supabase
       .from('user_roles')
-      .insert({
-        user_id: userId,
-        role: role
-      });
+      .select('*')
+      .eq('user_id', userId)
+      .single();
 
-    if (insertError) {
-      console.error('Error inserting user role:', insertError);
-      throw new Error(`Error setting user role: ${insertError.message}`);
+    if (roleCheckError && roleCheckError.code !== 'PGRST116') {
+      console.error('Error checking existing user role:', roleCheckError);
+      throw new Error(`Error checking user role: ${roleCheckError.message}`);
+    }
+
+    if (existingRole) {
+      // Si le rôle est différent, le mettre à jour
+      if (existingRole.role !== role) {
+        console.log(`Updating role from ${existingRole.role} to ${role} for user ${userId}`);
+        const { error: updateError } = await supabase
+          .from('user_roles')
+          .update({ role: role })
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('Error updating user role:', updateError);
+          throw new Error(`Error updating user role: ${updateError.message}`);
+        }
+      } else {
+        console.log(`User ${userId} already has role ${role}, no action needed`);
+      }
+    } else {
+      // Si aucun rôle n'existe, en créer un nouveau
+      console.log(`Adding role ${role} for user ${userId}`);
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: role
+        });
+
+      if (insertError) {
+        console.error('Error setting user role:', insertError);
+        throw new Error(`Error setting user role: ${insertError.message}`);
+      }
     }
     
-    console.log(`Role ${role} added successfully for user ${userId}`);
+    console.log(`Role ${role} handled successfully for user ${userId}`);
   } catch (error) {
     console.error('Exception when ensuring user role:', error);
     throw error;

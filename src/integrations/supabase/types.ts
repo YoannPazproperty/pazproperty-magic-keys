@@ -293,6 +293,38 @@ export type Database = {
         }
         Relationships: []
       }
+      prestadores_roles: {
+        Row: {
+          created_at: string
+          id: string
+          nivel: string
+          prestador_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nivel?: string
+          prestador_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nivel?: string
+          prestador_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prestadores_roles_prestador_id_fkey"
+            columns: ["prestador_id"]
+            isOneToOne: false
+            referencedRelation: "prestadores_de_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       technician_reports: {
         Row: {
           address: string | null
@@ -416,6 +448,10 @@ export type Database = {
           _user_id: string
           _role: Database["public"]["Enums"]["user_role"]
         }
+        Returns: boolean
+      }
+      is_prestador: {
+        Args: { _user_id: string }
         Returns: boolean
       }
       store_password_reset_token: {
