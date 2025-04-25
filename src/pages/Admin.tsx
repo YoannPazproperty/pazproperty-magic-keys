@@ -5,8 +5,6 @@ import { DeclarationList } from "@/components/admin/DeclarationList";
 import { ApiSettings } from "@/components/admin/ApiSettings";
 import { NotificationSettings } from "@/components/admin/NotificationSettings";
 import { toast } from "sonner";
-import { saveMondayConfig, validateMondayConfig, getMondayConfig } from "@/services/monday";
-import { getDeclarations, updateDeclarationStatus } from "@/services/declarationService";
 import { useAuth } from "@/hooks/useAuth";
 import type { Declaration } from "@/services/types";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +18,6 @@ import { ProvidersList } from "@/components/admin/ProvidersList";
 const Admin = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [apiStatus, setApiStatus] = useState({ valid: false, message: "" });
   const [activeTab, setActiveTab] = useState("declarations");
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,15 +25,8 @@ const Admin = () => {
   const [isLoadingContacts, setIsLoadingContacts] = useState(false);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState(false);
-  const { apiKey, boardId, techBoardId } = getMondayConfig();
 
   useEffect(() => {
-    const checkApiStatus = async () => {
-      const validation = await validateMondayConfig();
-      setApiStatus(validation);
-    };
-    
-    checkApiStatus();
     loadDeclarations();
   }, []);
 
@@ -122,20 +112,12 @@ const Admin = () => {
     setActiveTab(value);
   };
 
-  const handleSaveApiConfig = (apiKey: string, boardId: string, techBoardId: string) => {
-    saveMondayConfig(apiKey, boardId, techBoardId);
-    
-    validateMondayConfig().then(validation => {
-      setApiStatus(validation);
-    });
-  };
-
   return (
     <AdminLayout 
       activeTab={activeTab} 
       onTabChange={handleTabChange}
       onLogout={handleLogout}
-      apiConnected={apiStatus.valid}
+      apiConnected={false}
       user={user}
     >
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
