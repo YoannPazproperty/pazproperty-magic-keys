@@ -136,60 +136,92 @@ export function ServiceProviderFormDialog({
       // Get the anon key for authentication
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVienRqanhtbGRvZ3B3YXdjbnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyODU4MjMsImV4cCI6MjA1OTg2MTgyM30.779CoUY0U1WO7RXXx9OWV1axrXS-UYXuleh_NvH0V8U";
       
-      // Utiliser fetch directement pour résoudre le problème CORS
-      const response = await fetch(edgeFunctionUrl, {
-        method: 'POST',
-        headers: {
+      // Utiliser fetch directement avec structure try/catch complète pour un meilleur diagnostic
+      try {
+        console.log("Sending fetch request with headers:", {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-          'apikey': SUPABASE_ANON_KEY
-        },
-        body: JSON.stringify(requestBody)
-      });
+          'Authorization': `Bearer ${accessToken ? accessToken.substring(0, 10) + '...' : 'none'}`,
+          'apikey': SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 10) + '...' : 'none'
+        });
+        
+        const response = await fetch(edgeFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+            'apikey': SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        console.log("Response status:", response.status);
+        console.log("Response status text:", response.statusText);
+        
+        // Vérifier les entêtes de la réponse pour le débogage
+        const responseHeaders: Record<string, string> = {};
+        response.headers.forEach((value, key) => {
+          responseHeaders[key] = value;
+        });
+        console.log("Response headers:", responseHeaders);
 
-      if (!response.ok) {
-        console.error("Error status from Edge function:", response.status, response.statusText);
-        const errorText = await response.text();
-        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log("Invite response:", data);
-
-      if (!data.success) {
-        console.error("Error in response data:", data.error);
-        throw new Error(data.error || "Erro ao processar convite");
-      }
-
-      if (data.emailError) {
-        setEmailError(data.emailError);
-        setInviteStatus("Conta configurada, mas erro no envio de email");
-      }
-
-      if (data && data.isNewUser) {
-        if (data.emailSent) {
-          setInviteStatus("Conta criada e convite enviado com sucesso");
-          toast.success("Convite enviado com sucesso", {
-            description: "Um email com as credenciais foi enviado ao prestador"
-          });
-        } else {
-          setInviteStatus("Conta criada, mas erro no envio de email");
-          toast.warning("Conta criada com sucesso", {
-            description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
-          });
+        if (!response.ok) {
+          console.error("Error status from Edge function:", response.status, response.statusText);
+          let errorText = "";
+          try {
+            errorText = await response.text();
+          } catch (textError) {
+            console.error("Could not read response text:", textError);
+          }
+          throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
         }
-      } else {
-        if (data.emailSent) {
-          setInviteStatus("Convite enviado com sucesso");
-          toast.success("Convite enviado com sucesso", {
-            description: "O prestador já possui uma conta e foi notificado"
-          });
-        } else {
-          setInviteStatus("Permissões atualizadas, mas erro no envio de email");
-          toast.warning("Permissões atualizadas", {
-            description: "O prestador já possui uma conta e suas permissões foram atualizadas, mas ocorreu um erro ao enviar o email"
-          });
+        
+        let data;
+        try {
+          data = await response.json();
+          console.log("Invite response:", data);
+        } catch (jsonError) {
+          console.error("Error parsing JSON response:", jsonError);
+          throw new Error("Failed to parse server response");
         }
+
+        if (!data.success) {
+          console.error("Error in response data:", data.error);
+          throw new Error(data.error || "Erro ao processar convite");
+        }
+
+        if (data.emailError) {
+          setEmailError(data.emailError);
+          setInviteStatus("Conta configurada, mas erro no envio de email");
+        }
+
+        if (data && data.isNewUser) {
+          if (data.emailSent) {
+            setInviteStatus("Conta criada e convite enviado com sucesso");
+            toast.success("Convite enviado com sucesso", {
+              description: "Um email com as credenciais foi enviado ao prestador"
+            });
+          } else {
+            setInviteStatus("Conta criada, mas erro no envio de email");
+            toast.warning("Conta criada com sucesso", {
+              description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
+            });
+          }
+        } else {
+          if (data.emailSent) {
+            setInviteStatus("Convite enviado com sucesso");
+            toast.success("Convite enviado com sucesso", {
+              description: "O prestador já possui uma conta e foi notificado"
+            });
+          } else {
+            setInviteStatus("Permissões atualizadas, mas erro no envio de email");
+            toast.warning("Permissões atualizadas", {
+              description: "O prestador já possui uma conta e suas permissões foram atualizadas, mas ocorreu um erro ao enviar o email"
+            });
+          }
+        }
+      } catch (fetchError: any) {
+        console.error("Fetch error:", fetchError);
+        throw new Error(`Erro na comunicação com o servidor: ${fetchError.message}`);
       }
     } catch (error: any) {
       console.error('Error sending invite:', error);

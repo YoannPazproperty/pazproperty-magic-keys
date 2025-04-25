@@ -53,6 +53,7 @@ export async function sendInvitationEmail(
     console.log("Sending email via Resend to:", to);
     console.log("From address: PAZ Property <contact@pazproperty.pt>");
     console.log("Email subject:", emailSubject);
+    console.log("Login URL in email:", loginUrl);
     
     const { data: emailData, error: sendError } = await resend.emails.send({
       from: 'PAZ Property <contact@pazproperty.pt>',

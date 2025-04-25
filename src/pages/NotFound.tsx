@@ -15,7 +15,9 @@ const NotFound = () => {
   // Check if this might be a provider trying to access the platform
   const isLikelyProvider = location.pathname.includes("extranet") || 
                           location.pathname.includes("techn") || 
-                          location.pathname.includes("prestador");
+                          location.pathname.includes("prestador") ||
+                          location.pathname.includes("auth") ||
+                          location.search.includes("provider=true");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
