@@ -22,7 +22,7 @@ export async function sendInvitationEmail(
   
   // URLs spécifiques pour les différents cas
   const loginUrl = `${publicSiteUrl}/extranet-technique-login`;
-  const resetUrl = `${publicSiteUrl}/auth?provider=true&tab=forgot-password&email=${encodeURIComponent(to)}`;
+  const resetUrl = `${publicSiteUrl}/auth?provider=true&tab=forgot-password&email=${encodeURIComponent(to)}&force_reset=true`;
   
   console.log(`Using login URL for provider: ${loginUrl}`);
   
@@ -37,7 +37,8 @@ export async function sendInvitationEmail(
       <p>Olá ${nome},</p>
       <p>Sua empresa foi adicionada como prestador de serviços na PAZ Property.</p>
       <p>Você pode acessar o Extranet Técnica com o email que já está registrado no sistema.</p>
-      <p>Se você esqueceu sua senha, por favor <a href="${resetUrl}">clique aqui para redefini-la</a>. <strong>Importante:</strong> Você precisará definir uma nova senha para acessar o sistema.</p>
+      <p>Se você esqueceu sua senha, por favor <a href="${resetUrl}">clique aqui para redefini-la</a>.</p>
+      <p><strong>Importante:</strong> Após clicar no link, você será redirecionado para uma página onde você deverá definir uma nova senha. Esta etapa é obrigatória para garantir a segurança da sua conta.</p>
       <p>Caso você se lembre da sua senha, pode <a href="${loginUrl}">fazer login diretamente aqui</a>.</p>
       <p>Atenciosamente,<br>Equipe PAZ Property</p>
     `);

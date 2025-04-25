@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,15 @@ export function UserPasswordSettingsDialog({ open, onOpenChange, isRequired = fa
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Ajouter un effet pour réinitialiser les champs quand la boîte de dialogue s'ouvre
+  useEffect(() => {
+    if (open) {
+      setPassword("");
+      setConfirmPassword("");
+      setError(null);
+    }
+  }, [open]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +74,8 @@ export function UserPasswordSettingsDialog({ open, onOpenChange, isRequired = fa
       await supabase.auth.updateUser({
         data: {
           first_login: false,
-          password_reset_required: false
+          password_reset_required: false,
+          password_reset_at: new Date().toISOString()
         }
       });
       

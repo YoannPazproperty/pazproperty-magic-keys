@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +50,7 @@ const AuthCallback = () => {
         const email = urlParams.get("email");
         const explicitToken = urlParams.get("token");
         const isProvider = urlParams.get("provider") === "true";
+        const forceReset = urlParams.get("force_reset") === "true";
         setIsProviderReset(isProvider);
         
         // Récupérer le token soit des paramètres URL soit du hash
@@ -64,15 +64,15 @@ const AuthCallback = () => {
           email: email || "non spécifié",
           hash: window.location.hash,
           search: window.location.search,
-          fullUrl: window.location.href,
-          isProvider
+          isProvider,
+          forceReset
         };
         
         console.log("Debug paramètres:", debugData);
         setDebugInfo(debugData);
         
         // Si c'est un reset de mot de passe ou si on a un token dans le hash/search
-        if (isReset || type === "recovery" || accessToken) {
+        if (isReset || type === "recovery" || accessToken || forceReset) {
           console.log("Détection d'un flux de réinitialisation de mot de passe");
           setIsPasswordReset(true);
           
@@ -256,15 +256,15 @@ const AuthCallback = () => {
     try {
       console.log("Tentative de réinitialisation du mot de passe");
       
-      if (!token) {
-        console.error("Aucun token d'accès trouvé");
+      if (!token && !userEmail) {
+        console.error("Aucun token d'accès ou email trouvé");
         setPasswordError("Lien de réinitialisation invalide ou expiré");
         setLoading(false);
         return;
       }
 
       // Utiliser notre fonction Edge personnalisée pour réinitialiser le mot de passe
-      console.log("Utilisation de la fonction Edge personnalisée avec le token:", token.substring(0, 8) + "...");
+      console.log("Utilisation de la fonction Edge personnalisée avec le token:", token ? token.substring(0, 8) + "..." : "non disponible");
       console.log("Email utilisateur (si disponible):", userEmail);
       
       const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
@@ -278,7 +278,6 @@ const AuthCallback = () => {
           body: JSON.stringify({
             password: newPassword,
             recoveryToken: token,
-            // Inclure l'email dans la requête si disponible
             email: userEmail || undefined
           })
         }
@@ -352,7 +351,10 @@ const AuthCallback = () => {
                     console.log("Connexion réussie après seconde tentative!");
                     // Marquer que l'utilisateur a besoin de changer son mot de passe
                     await supabase.auth.updateUser({
-                      data: { password_reset_required: true }
+                      data: { 
+                        password_reset_required: isProviderReset ? true : false,
+                        password_reset_at: new Date().toISOString()
+                      }
                     });
                     toast.success("Connexion réussie!");
                     
@@ -371,7 +373,10 @@ const AuthCallback = () => {
               console.log("Connexion automatique réussie");
               // Marquer que l'utilisateur a besoin de changer son mot de passe
               await supabase.auth.updateUser({
-                data: { password_reset_required: true }
+                data: { 
+                  password_reset_required: isProviderReset ? true : false,
+                  password_reset_at: new Date().toISOString() 
+                }
               });
               toast.success("Connexion réussie!");
               
