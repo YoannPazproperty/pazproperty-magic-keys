@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogOut, Users, FileText, LayoutDashboard, Building } from "lucide-react";
+import { LogOut, Users, FileText, LayoutDashboard, Building, Home } from "lucide-react";
 import { User } from "@supabase/supabase-js";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -143,6 +144,17 @@ export const AdminLayout = ({
           <div className="md:hidden flex-1 text-center font-bold">Administration</div>
 
           <div className="flex items-center space-x-4">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              title="Retour à la page d'accueil" 
+              asChild
+            >
+              <Link to="/">
+                <Home className="h-5 w-5" />
+              </Link>
+            </Button>
+
             <div className={`h-2 w-2 rounded-full ${apiConnected ? "bg-green-500" : "bg-red-500"}`}></div>
             <span className="text-sm text-gray-500 hidden md:inline">
               API Monday.com: {apiConnected ? "Connecté" : "Non connecté"}
