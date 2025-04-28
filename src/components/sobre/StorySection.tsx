@@ -34,8 +34,8 @@ const StorySection = () => {
           </div>
           <div className="rounded-xl overflow-hidden shadow-xl">
             <img 
-              src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1296&q=80" 
-              alt="Lisboa vista panorâmica" 
+              src="/lovable-uploads/c402d587-5321-456e-a8f4-ab4ba600d11e.png" 
+              alt="Vista do Tejo com barcos e a Ponte 25 de Abril" 
               className="w-full h-full object-cover"
             />
           </div>
@@ -46,4 +46,3 @@ const StorySection = () => {
 };
 
 export default StorySection;
-
