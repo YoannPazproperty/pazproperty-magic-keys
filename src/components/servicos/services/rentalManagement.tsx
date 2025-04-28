@@ -15,7 +15,7 @@ export const rentalManagementService: ServiceDataItem = {
     { text: "Relatórios financeiros mensais detalhados" }
   ],
   icon: <Home className="h-10 w-10 text-primary" />,
-  imageSrc: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1296&q=80",
-  imageAlt: "Gestão locativa em Lisboa",
+  imageSrc: "/lovable-uploads/1aca01d1-54fe-4fe5-b248-4e23956c8320.png",
+  imageAlt: "Vista panorâmica de Lisboa",
   reverse: false
 };
