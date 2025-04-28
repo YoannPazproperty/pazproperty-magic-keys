@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -36,8 +35,8 @@ const Index = () => {
       <section className="relative h-[80vh] w-full">
         <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1296&q=80" 
-            alt="Lisboa vista panorâmica" 
+            src="/lovable-uploads/2d70be6f-7312-431c-8772-40356da4ada1.png"
+            alt="Tramway historique de Lisbonne la nuit" 
             className="w-full h-full object-cover brightness-50"
           />
         </div>
