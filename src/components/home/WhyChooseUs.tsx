@@ -62,7 +62,7 @@ const ImageGrid = () => (
   <div className="grid grid-cols-2 gap-4">
     <div className="rounded-lg overflow-hidden shadow-md">
       <img 
-        src="/lovable-uploads/8eadb346-8ff0-4a3c-9719-32549b26cbfa.png" 
+        src="/lovable-uploads/fed62806-8b0e-4a0c-975a-f2bf09cb04f2.png" 
         alt="Edificio moderno em Lisboa" 
         className="w-full h-full object-cover"
       />
