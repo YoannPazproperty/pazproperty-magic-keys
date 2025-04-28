@@ -62,29 +62,29 @@ const ImageGrid = () => (
   <div className="grid grid-cols-2 gap-4">
     <div className="rounded-lg overflow-hidden shadow-md">
       <img 
-        src="https://images.unsplash.com/photo-1567016526105-22da7c13f707?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=880&q=80" 
-        alt="Propriedade em Lisboa" 
+        src="/lovable-uploads/8eadb346-8ff0-4a3c-9719-32549b26cbfa.png" 
+        alt="Edificio moderno em Lisboa" 
         className="w-full h-full object-cover"
       />
     </div>
     <div className="rounded-lg overflow-hidden shadow-md mt-8">
       <img 
-        src="https://images.unsplash.com/photo-1460317442991-0ec209397118?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=880&q=80" 
-        alt="Interior moderno" 
+        src="/lovable-uploads/cf3cf6fe-029e-4753-814c-8ed65cf25830.png" 
+        alt="Fachada de azulejos portuguesa" 
         className="w-full h-full object-cover"
       />
     </div>
     <div className="rounded-lg overflow-hidden shadow-md">
       <img 
-        src="https://images.unsplash.com/photo-1597211833712-5e41faa202e2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=863&q=80" 
-        alt="Bairro lisboeta" 
+        src="/lovable-uploads/15c3a624-ede3-49fa-ac79-da48ffd1da44.png" 
+        alt="Hotel histórico em Lisboa" 
         className="w-full h-full object-cover"
       />
     </div>
     <div className="rounded-lg overflow-hidden shadow-md mt-8">
       <img 
-        src="https://images.unsplash.com/photo-1537726235470-8504e3beef77?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80" 
-        alt="Detalhe arquitetônico" 
+        src="/lovable-uploads/c73fd8db-f2c2-47a6-972c-cdcd2b79a21b.png" 
+        alt="Fonte Rossio em Lisboa" 
         className="w-full h-full object-cover"
       />
     </div>
