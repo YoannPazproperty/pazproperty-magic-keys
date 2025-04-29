@@ -78,8 +78,12 @@ export interface TechnicianReportResult {
   reportId?: string;
 }
 
-// Fonction pour envoyer des notifications par email
-export const sendNotificationEmail = async (to: string, subject: string, content: string): Promise<boolean> => {
+// Fonction pour envoyer des notifications par email - updated to match usage
+export const sendNotificationEmail = async (
+  to: string, 
+  subject: string, 
+  content: string
+): Promise<boolean> => {
   // Cette fonction est un placeholder, elle sera implémentée ailleurs
   console.log(`Sending email to ${to} with subject ${subject}`);
   return true;

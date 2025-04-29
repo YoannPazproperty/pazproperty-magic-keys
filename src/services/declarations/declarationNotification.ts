@@ -78,12 +78,11 @@ const logNotification = async (notificationData: any): Promise<boolean> => {
 // Send notification when a declaration status changes
 export const notifyStatusChange = async (declaration: Declaration): Promise<boolean> => {
   try {
-    // Send email notification
+    // Send email notification - updating to match the expected parameter count
     await sendNotificationEmail(
-      declaration.email,
-      "tenant",
-      "statusUpdate",
-      declaration
+      declaration.email || '',
+      "Status Update",
+      `Your declaration status has been updated to: ${declaration.status}`
     );
     
     // Store notification
@@ -104,12 +103,11 @@ export const notifyStatusChange = async (declaration: Declaration): Promise<bool
 // Send initial notification for new declaration
 export const notifyNewDeclaration = async (declaration: Declaration): Promise<boolean> => {
   try {
-    // Send email notification
+    // Send email notification - updating to match the expected parameter count
     await sendNotificationEmail(
-      declaration.email,
-      "tenant",
-      "declarationReceived",
-      declaration
+      declaration.email || '',
+      "Declaration Received",
+      `Thank you for submitting your declaration. We will process it shortly.`
     );
     
     // Store notification
