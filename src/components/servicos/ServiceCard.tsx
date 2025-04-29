@@ -2,15 +2,7 @@
 import React, { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-
-interface ServiceCardProps {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  linkTo: string;
-  linkText: string;
-  linkStyle?: string;
-}
+import { ServiceCardProps } from "./types";
 
 const ServiceCard = ({ 
   icon, 

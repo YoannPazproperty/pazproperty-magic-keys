@@ -3,10 +3,10 @@ export interface ServiceCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
-  link?: string;
-  linkTo?: string;
-  linkText?: string;
+  linkTo: string;  // Made required to match ServiceCard implementation
+  linkText: string; // Made required to match ServiceCard implementation
   linkStyle?: string;
+  link?: string;
 }
 
 export interface ServiceSectionProps {
