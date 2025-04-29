@@ -12,7 +12,7 @@ const Navbar = () => {
   const { t } = useLanguage();
   const location = useLocation();
   
-  // Vérifier si la page actuelle est Admin ou Extranet Technique
+  // Check if current page is Admin or Extranet Technique
   const isRestrictedPage = location.pathname.startsWith('/admin') || 
                          location.pathname.startsWith('/extranet-technique');
 
@@ -31,44 +31,53 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop menu */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="font-medium text-gray-700 hover:text-primary transition-colors">
-            {t('nav.home')}
-          </Link>
-          <Link to="/servicos" className="font-medium text-gray-700 hover:text-primary transition-colors">
-            {t('nav.services')}
-          </Link>
-          <Link to="/propriedades" className="font-medium text-gray-700 hover:text-primary transition-colors">
-            {t('nav.properties')}
-          </Link>
-          <Link to="/sobre" className="font-medium text-gray-700 hover:text-primary transition-colors">
-            {t('nav.about')}
-          </Link>
-          <Link to="/contacto" className="font-medium text-gray-700 hover:text-primary transition-colors">
-            {t('nav.contact')}
-          </Link>
-          <Button asChild className="bg-brand-blue hover:bg-primary/90">
-            <Link to="/area-cliente">{t('nav.declaration')}</Link>
-          </Button>
-          <Button asChild variant="outline" size="icon" title="Espace Technique Monday.com" className="ml-2">
-            <Link to="/extranet-technique"><Wrench className="h-5 w-5" /></Link>
-          </Button>
-          <Button asChild variant="ghost" size="icon" title="Administration">
-            <Link to="/admin"><Shield className="h-5 w-5" /></Link>
-          </Button>
-          
-          {/* Language selector (seulement pour les pages non restreintes) */}
-          {!isRestrictedPage && (
-            <div className="ml-2">
-              <LanguageSelector />
-            </div>
-          )}
-        </nav>
+        <div className="hidden md:flex items-center gap-6">
+          <nav className="flex items-center gap-6">
+            <Link to="/" className="font-medium text-gray-700 hover:text-primary transition-colors">
+              {t('nav.home')}
+            </Link>
+            <Link to="/servicos" className="font-medium text-gray-700 hover:text-primary transition-colors">
+              {t('nav.services')}
+            </Link>
+            <Link to="/propriedades" className="font-medium text-gray-700 hover:text-primary transition-colors">
+              {t('nav.properties')}
+            </Link>
+            <Link to="/sobre" className="font-medium text-gray-700 hover:text-primary transition-colors">
+              {t('nav.about')}
+            </Link>
+            <Link to="/contacto" className="font-medium text-gray-700 hover:text-primary transition-colors">
+              {t('nav.contact')}
+            </Link>
+            <Button asChild className="bg-brand-blue hover:bg-primary/90">
+              <Link to="/area-cliente">{t('nav.declaration')}</Link>
+            </Button>
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="icon" title="Espace Technique Monday.com">
+              <Link to="/extranet-technique"><Wrench className="h-5 w-5" /></Link>
+            </Button>
+            <Button asChild variant="ghost" size="icon" title="Administration">
+              <Link to="/admin"><Shield className="h-5 w-5" /></Link>
+            </Button>
+            
+            {/* Language selector (only for non-restricted pages) */}
+            {!isRestrictedPage && (
+              <div className="relative z-20">
+                <LanguageSelector />
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Mobile menu */}
         <div className="flex items-center gap-4 md:hidden">
-          {/* Language selector pour mobile (seulement pour les pages non restreintes) */}
-          {!isRestrictedPage && <LanguageSelector />}
+          {/* Language selector for mobile (only for non-restricted pages) */}
+          {!isRestrictedPage && (
+            <div className="z-20">
+              <LanguageSelector />
+            </div>
+          )}
           
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>

@@ -20,16 +20,16 @@ const LanguageSelector = () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-gray-100 transition-colors">
-        <Globe className="h-4 w-4" />
-        <span className="hidden md:inline">{languages.find(lang => lang.code === language)?.name}</span>
+      <DropdownMenuTrigger className="flex items-center gap-2 py-2 px-3 rounded-md hover:bg-gray-100 transition-colors border border-gray-200 shadow-sm">
+        <Globe className="h-5 w-5 text-brand-blue" />
+        <span className="text-sm font-medium">{languages.find(lang => lang.code === language)?.name}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {languages.map((lang) => (
           <DropdownMenuItem 
             key={lang.code}
             onClick={() => setLanguage(lang.code)}
-            className={`cursor-pointer ${language === lang.code ? 'bg-gray-100' : ''}`}
+            className={`cursor-pointer ${language === lang.code ? 'bg-gray-100 font-medium' : ''}`}
           >
             {lang.name}
           </DropdownMenuItem>
