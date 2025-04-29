@@ -1,4 +1,3 @@
-
 // Types pour l'objet de traductions
 type TranslationData = Record<string, string>;
 type TranslationsType = Record<string, TranslationData>;
@@ -18,7 +17,8 @@ export const translations: TranslationsType = {
     'nav.admin': 'Administration',
     
     // Hero Section
-    'hero.title': 'Gestão de Arrendamentos Simplificada em Lisboa, Grande Lisboa e Margem Sul',
+    'hero.title': 'Gestão de Arrendamentos em Lisboa, Grande Lisboa e Margem Sul',
+    'hero.simplified': 'Simplificada',
     'hero.tagline1': 'Your keys, our responsibilities',
     'hero.tagline2': 'As suas chaves, a nossa missão',
     'hero.contact': 'Fale Connosco',
@@ -151,7 +151,8 @@ export const translations: TranslationsType = {
     'nav.admin': 'Administration',
     
     // Hero Section
-    'hero.title': 'Gestion Locative Simplifiée à Lisbonne, Grand Lisbonne et Rive Sud',
+    'hero.title': 'Gestion Locative à Lisbonne, Grand Lisbonne et Rive Sud',
+    'hero.simplified': 'Simplifiée',
     'hero.tagline1': 'Your keys, our responsibilities',
     'hero.tagline2': 'Vos clés, notre mission',
     'hero.contact': 'Contactez-nous',
@@ -284,7 +285,8 @@ export const translations: TranslationsType = {
     'nav.admin': 'Administration',
     
     // Hero Section
-    'hero.title': 'Simplified Property Management in Lisbon, Greater Lisbon and South Bank',
+    'hero.title': 'Property Management in Lisbon, Greater Lisbon and South Bank',
+    'hero.simplified': 'Simplified',
     'hero.tagline1': 'Your keys, our responsibilities',
     'hero.tagline2': 'Your keys, our mission',
     'hero.contact': 'Contact Us',
