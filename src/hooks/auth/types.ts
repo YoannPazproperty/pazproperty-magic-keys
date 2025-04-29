@@ -11,8 +11,14 @@ export interface AuthContextType {
     error: any | null;
     success: boolean;
   }>;
-  signInWithGoogle: () => Promise<void>;
-  signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<{
+    error: any | null;
+    success: boolean;
+  }>;
+  signOut: () => Promise<{
+    error: any | null;
+    success: boolean;
+  }>;
   resetPassword: (email: string) => Promise<{
     error: any | null;
     success: boolean;
