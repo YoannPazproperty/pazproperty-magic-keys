@@ -3,16 +3,19 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const WhyChooseUs = () => {
+  const { t } = useLanguage();
+  
   return (
     <section className="py-20">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Por Que Escolher a Pazproperty?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">{t('why.title')}</h2>
             <p className="text-gray-600 mb-8">
-              Com anos de experiência no mercado imobiliário lisboeta, oferecemos um serviço completo e personalizado para proprietários que valorizam tranquilidade, eficiência e confiança.
+              {t('why.subtitle')}
             </p>
             
             <FeatureList />
@@ -25,26 +28,30 @@ const WhyChooseUs = () => {
   );
 };
 
-const FeatureList = () => (
-  <div className="space-y-4">
-    <Feature
-      title="Equipa Local"
-      description="Conhecemos Lisboa como a palma da nossa mão."
-    />
-    <Feature
-      title="Disponibilidade 24/7"
-      description="Sempre prontos para responder a qualquer emergência."
-    />
-    <Feature
-      title="Tecnologia Avançada"
-      description="Sistema de gestão online para acompanhar tudo em tempo real."
-    />
-    <Feature
-      title="Transparência Total"
-      description="Relatórios detalhados e comunicação constante."
-    />
-  </div>
-);
+const FeatureList = () => {
+  const { t } = useLanguage();
+  
+  return (
+    <div className="space-y-4">
+      <Feature
+        title={t('why.local')}
+        description={t('why.local.desc')}
+      />
+      <Feature
+        title={t('why.availability')}
+        description={t('why.availability.desc')}
+      />
+      <Feature
+        title={t('why.tech')}
+        description={t('why.tech.desc')}
+      />
+      <Feature
+        title={t('why.transparency')}
+        description={t('why.transparency.desc')}
+      />
+    </div>
+  );
+};
 
 const Feature = ({ title, description }: { title: string; description: string }) => (
   <div className="flex items-start">

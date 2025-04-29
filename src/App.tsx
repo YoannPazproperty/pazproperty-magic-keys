@@ -3,6 +3,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { AppProviders } from "./components/AppProviders";
 import { AppRouter } from "./components/AppRouter";
 import { useSupabaseInit } from "./hooks/useSupabaseInit";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 // Configure the query client
 const queryClient = new QueryClient({
@@ -19,7 +20,9 @@ const App = () => {
   
   return (
     <AppProviders queryClient={queryClient}>
-      <AppRouter connectionStatus={connectionStatus} />
+      <LanguageProvider>
+        <AppRouter connectionStatus={connectionStatus} />
+      </LanguageProvider>
     </AppProviders>
   );
 };
