@@ -449,6 +449,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      ensure_prestadores_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       fix_confirmation_tokens: {
         Args: Record<PropertyKey, never>
         Returns: string
