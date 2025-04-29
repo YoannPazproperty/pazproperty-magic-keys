@@ -13,8 +13,9 @@ const Navbar = () => {
   const location = useLocation();
   
   // Check if current page is Admin or Extranet Technique
-  const isRestrictedPage = location.pathname.startsWith('/admin') || 
-                         location.pathname.startsWith('/extranet-technique');
+  const isAdminPage = location.pathname.startsWith('/admin');
+  const isExtranetPage = location.pathname.startsWith('/extranet-technique');
+  const isRestrictedPage = isAdminPage || isExtranetPage;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
@@ -54,11 +55,33 @@ const Navbar = () => {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button asChild variant="outline" size="icon" title="Espace Technique Monday.com">
-              <Link to="/extranet-technique"><Wrench className="h-5 w-5" /></Link>
+            <Button 
+              asChild 
+              variant="outline" 
+              size="icon" 
+              title="Espace Technique Monday.com"
+              className="relative group"
+            >
+              <Link to="/extranet-technique-login">
+                <Wrench className="h-5 w-5" />
+                <span className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-white text-xs px-1 py-0.5 rounded-md">
+                  Prestataires
+                </span>
+              </Link>
             </Button>
-            <Button asChild variant="ghost" size="icon" title="Administration">
-              <Link to="/admin"><Shield className="h-5 w-5" /></Link>
+            <Button 
+              asChild 
+              variant="ghost" 
+              size="icon" 
+              title="Administration"
+              className="relative group"
+            >
+              <Link to="/admin-login">
+                <Shield className="h-5 w-5" />
+                <span className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-white text-xs px-1 py-0.5 rounded-md">
+                  Admin
+                </span>
+              </Link>
             </Button>
             
             {/* Language selector (only for non-restricted pages) */}
@@ -127,19 +150,21 @@ const Navbar = () => {
                     {t('nav.declaration')}
                   </Link>
                 </Button>
+                <div className="border-t border-gray-200 my-2"></div>
+                <div className="px-4 py-2 font-medium text-gray-600">Espaces privés:</div>
                 <Link 
-                  to="/extranet-technique" 
+                  to="/extranet-technique-login" 
                   className="px-4 py-2 text-lg font-medium hover:bg-gray-100 rounded-md flex items-center" 
                   onClick={() => setIsOpen(false)}
                 >
-                  <Wrench className="h-5 w-5 mr-2" /> {t('nav.tech')}
+                  <Wrench className="h-5 w-5 mr-2" /> Accès Prestataires
                 </Link>
                 <Link 
-                  to="/admin" 
+                  to="/admin-login" 
                   className="px-4 py-2 text-lg font-medium hover:bg-gray-100 rounded-md flex items-center" 
                   onClick={() => setIsOpen(false)}
                 >
-                  <Shield className="h-5 w-5 mr-2" /> {t('nav.admin')}
+                  <Shield className="h-5 w-5 mr-2" /> Accès Admin
                 </Link>
               </nav>
             </SheetContent>

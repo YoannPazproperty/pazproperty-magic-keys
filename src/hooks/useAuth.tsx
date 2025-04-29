@@ -39,19 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRoleLoading(true);
       console.log("Récupération du rôle pour l'utilisateur:", userId);
       
-      // Vérifier si la table user_roles existe - CORRECTION: cette requête provoquait l'erreur
-      // Nous allons simplifier la requête pour éviter l'erreur de syntaxe
-      const { data: tableData, error: tableError } = await supabase
-        .from('user_roles')
-        .select('id')
-        .limit(1);
+      // Vérifier d'abord si l'utilisateur est un prestataire externe
+      const { data: prestadorRole, error: prestadorError } = await supabase
+        .from('prestadores_roles')
+        .select('nivel')
+        .eq('user_id', userId)
+        .maybeSingle();
         
-      if (tableError) {
-        console.error("Erreur lors de la vérification de la table user_roles:", tableError);
-        return null;
+      if (prestadorRole) {
+        console.log("Utilisateur identifié comme prestataire externe:", prestadorRole);
+        return 'manager'; // Les prestataires sont toujours 'manager'
       }
       
-      // Si la table existe, récupérer le rôle
+      // Si pas un prestataire, vérifier les rôles internes
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -65,19 +65,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error.code === 'PGRST116') {
           console.log("Aucun rôle trouvé pour l'utilisateur, attribution du rôle par défaut");
           
-          // Attribuer un rôle par défaut à l'utilisateur
-          const { error: insertError } = await supabase
-            .from('user_roles')
-            .insert({ 
-              user_id: userId,
-              role: 'user'
-            });
-            
-          if (insertError) {
-            console.error("Erreur lors de l'attribution du rôle par défaut:", insertError);
+          // Vérifier si l'utilisateur a une adresse email pazproperty.pt
+          const userEmail = user?.email || '';
+          if (userEmail.endsWith('@pazproperty.pt')) {
+            // Attribuer un rôle admin pour les emails @pazproperty.pt
+            const { error: insertError } = await supabase
+              .from('user_roles')
+              .insert({ 
+                user_id: userId,
+                role: 'admin'
+              });
+              
+            if (insertError) {
+              console.error("Erreur lors de l'attribution du rôle admin:", insertError);
+            } else {
+              console.log("Rôle 'admin' attribué automatiquement pour adresse @pazproperty.pt");
+              return 'admin';
+            }
           } else {
-            console.log("Rôle 'user' attribué avec succès");
-            return 'user';
+            // Attribuer un rôle par défaut (user) pour les autres
+            const { error: insertError } = await supabase
+              .from('user_roles')
+              .insert({ 
+                user_id: userId,
+                role: 'user'
+              });
+              
+            if (insertError) {
+              console.error("Erreur lors de l'attribution du rôle par défaut:", insertError);
+            } else {
+              console.log("Rôle 'user' attribué avec succès");
+              return 'user';
+            }
           }
         }
         
@@ -114,15 +133,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (newSession?.user?.id) {
               setTimeout(async () => {
                 try {
+                  // Vérifier si c'est un prestataire externe d'abord
+                  const { data: prestadorData } = await supabase
+                    .from('prestadores_roles')
+                    .select('nivel')
+                    .eq('user_id', newSession.user.id)
+                    .maybeSingle();
+                  
+                  if (prestadorData) {
+                    // C'est un prestataire externe, rediriger vers l'extranet technique
+                    setUserRole('manager');
+                    navigate("/extranet-technique");
+                    return;
+                  }
+                  
+                  // Si ce n'est pas un prestataire, vérifier les rôles internes
                   const role = await fetchUserRole(newSession.user.id);
                   setUserRole(role);
                   
                   // Rediriger en fonction du rôle
                   if (role === 'admin') {
-                    navigate("/admin");
-                  } else if (role === 'manager') {
-                    // Rediriger les prestataires (manager) vers l'extranet technique
-                    navigate("/extranet-technique");
+                    // Vérifier si l'email est @pazproperty.pt
+                    const userEmail = newSession.user.email || '';
+                    if (userEmail.endsWith('@pazproperty.pt')) {
+                      navigate("/admin");
+                    } else {
+                      // Si le rôle est admin mais pas @pazproperty.pt, c'est une erreur
+                      console.warn("Utilisateur avec rôle admin mais sans email @pazproperty.pt");
+                      toast.warning("Accès restreint", {
+                        description: "L'espace Admin est réservé aux employés de Pazproperty"
+                      });
+                      navigate("/");
+                    }
                   } else if (role === 'user') {
                     navigate("/");
                   } else {

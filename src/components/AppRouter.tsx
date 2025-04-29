@@ -39,7 +39,10 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
           <Route 
             path="/admin" 
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute 
+                requiredRole="admin" 
+                emailDomain="pazproperty.pt"
+              >
                 <Admin />
               </ProtectedRoute>
             } 
@@ -52,11 +55,12 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
               </ProtectedRoute>
             } 
           />
-          {/* Rediriger vers la page d'authentification avec le flag provider=true */}
+          {/* Redirection vers les pages d'authentification appropriées */}
           <Route 
             path="/extranet-technique-login" 
             element={<Navigate to="/auth?provider=true" replace />} 
           />
+          <Route path="/admin-login" element={<Navigate to="/auth?admin=true" replace />} />
           <Route path="/auth-provider" element={<Navigate to="/auth?provider=true" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

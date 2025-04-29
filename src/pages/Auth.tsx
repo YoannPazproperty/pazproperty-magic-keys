@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Info, Wrench } from "lucide-react";
+import { AlertCircle, Info, Shield, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { fixConfirmationTokens, generatePasswordResetLink } from "@/services/supabase/auth";
 
@@ -57,8 +57,11 @@ const Auth = () => {
   const [isFixingTokens, setIsFixingTokens] = useState(false);
   const [resetLink, setResetLink] = useState<string | null>(null);
   const [prefilledEmail] = useState<string | null>(searchParams.get("email"));
+  
+  // Déterminer le type d'interface de connexion en fonction des paramètres d'URL
   const isProviderLogin = searchParams.get("provider") === "true";
-
+  const isAdminLogin = searchParams.get("admin") === "true";
+  
   const loginForm = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -93,7 +96,7 @@ const Auth = () => {
     }
   }, [prefilledEmail, loginForm, forgotPasswordForm, registerForm]);
 
-  const onLoginSubmit = async (values: LoginValues) => {
+  const onLoginSubmit = async (values: any) => {
     setLoading(true);
     try {
       console.log("Tentative de connexion avec:", values.email);
@@ -205,20 +208,27 @@ const Auth = () => {
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">
-              {isProviderLogin ? "Extranet Técnica - Acesso" : "Pazproperty Admin"}
+              {isProviderLogin 
+                ? "Extranet Técnica - Acesso" 
+                : isAdminLogin 
+                  ? "Administration Pazproperty" 
+                  : "Pazproperty"}
             </CardTitle>
             <CardDescription className="text-center">
               {isProviderLogin 
                 ? "Acesse o Extranet Técnica para gerenciar suas ordens de serviço"
-                : "Connectez-vous pour accéder à l'interface d'administration"}
+                : isAdminLogin
+                  ? "Espace réservé aux employés de Pazproperty" 
+                  : "Connectez-vous pour accéder à votre compte"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "register" | "forgot-password")}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Connexion</TabsTrigger>
-                {isProviderLogin && <TabsTrigger value="forgot-password">Mot de passe oublié</TabsTrigger>}
-                {!isProviderLogin && <TabsTrigger value="register">S'inscrire</TabsTrigger>}
+                <TabsTrigger value="login">
+                  {isProviderLogin ? "Connexion Prestataire" : isAdminLogin ? "Connexion Admin" : "Connexion"}
+                </TabsTrigger>
+                <TabsTrigger value="forgot-password">Mot de passe oublié</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login" className="mt-4">
@@ -268,38 +278,32 @@ const Auth = () => {
                   </form>
                 </Form>
                 
-                {!isProviderLogin && (
-                  <>
-                    <div className="mt-4 relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">Ou continuer avec</span>
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      variant="outline" 
-                      type="button" 
-                      className="w-full mt-4 opacity-50"
-                      disabled={true}
-                    >
-                      <FcGoogle className="mr-2 h-6 w-6" />
-                      Google (désactivé temporairement)
-                    </Button>
-                  </>
-                )}
-                
-                {isProviderLogin && (
-                  <Alert className="mt-4 bg-blue-50 border-blue-200">
-                    <Info className="h-4 w-4 text-blue-700" />
-                    <AlertDescription className="text-blue-700 text-sm">
-                      Se você é um novo prestador e recebeu um email com senha temporária, 
-                      utilize-a para fazer login. Você será solicitado a definir uma nova senha.
-                    </AlertDescription>
-                  </Alert>
-                )}
+                <Alert className="mt-4 bg-blue-50 border-blue-200">
+                  {isAdminLogin ? (
+                    <>
+                      <Shield className="h-4 w-4 text-blue-700" />
+                      <AlertDescription className="text-blue-700 text-sm">
+                        Cet espace est réservé exclusivement aux employés de Pazproperty. 
+                        Seules les adresses email @pazproperty.pt sont autorisées.
+                      </AlertDescription>
+                    </>
+                  ) : isProviderLogin ? (
+                    <>
+                      <Wrench className="h-4 w-4 text-blue-700" />
+                      <AlertDescription className="text-blue-700 text-sm">
+                        Se você é un nouveau prestador e recebeu um email com senha temporária, 
+                        utilize-a para fazer login. Vous sera solicité a définir une nouvelle password.
+                      </AlertDescription>
+                    </>
+                  ) : (
+                    <>
+                      <Info className="h-4 w-4 text-blue-700" />
+                      <AlertDescription className="text-blue-700 text-sm">
+                        Pour accéder à votre espace personnel, veuillez vous connecter.
+                      </AlertDescription>
+                    </>
+                  )}
+                </Alert>
               </TabsContent>
               
               <TabsContent value="register" className="mt-4">
@@ -491,7 +495,9 @@ const Auth = () => {
               <AlertDescription className="text-xs text-amber-700">
                 {isProviderLogin 
                   ? "Esta interface é reservada aos prestataires de serviços da Pazproperty."
-                  : "Cette interface est réservée au personnel autorisé de Pazproperty."}
+                  : isAdminLogin
+                    ? "Cette interface est réservée au personnel autorisé de Pazproperty."
+                    : "Cette interface permet d'accéder à votre espace personnel."}
                 {activeTab === "login" && " Utilisez votre adresse e-mail professionnelle pour vous connecter."}
               </AlertDescription>
             </Alert>
