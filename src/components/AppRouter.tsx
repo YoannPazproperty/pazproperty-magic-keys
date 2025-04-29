@@ -50,12 +50,12 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
           <Route 
             path="/extranet-technique" 
             element={
-              <ProtectedRoute requiredRole="manager">
+              <ProtectedRoute requiredRole="prestadores_tecnicos">
                 <ExtranetTechnique />
               </ProtectedRoute>
             } 
           />
-          {/* Redirection vers les pages d'authentification appropriées */}
+          {/* Redirection to appropriate authentication pages */}
           <Route 
             path="/extranet-technique-login" 
             element={<Navigate to="/auth?provider=true" replace />} 

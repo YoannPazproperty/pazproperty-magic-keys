@@ -1,15 +1,32 @@
 
--- S'assurer que le type enum existe
+-- Ensure that the enum type exists
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-    CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'user');
+    CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'prestadores_tecnicos', 'user');
   END IF;
 EXCEPTION
   WHEN duplicate_object THEN NULL;
 END$$;
 
--- Assurer que la table des rôles existe
+-- Make sure we can add the new enum value if it's missing
+DO $$
+BEGIN
+  -- Check if prestadores_tecnicos is already part of the enum
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_enum e 
+    JOIN pg_type t ON e.enumtypid = t.oid 
+    WHERE t.typname = 'user_role' AND e.enumlabel = 'prestadores_tecnicos'
+  ) THEN
+    -- Add the new enum value
+    ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'prestadores_tecnicos';
+  END IF;
+EXCEPTION
+  WHEN others THEN 
+    RAISE NOTICE 'Error adding enum value: %', SQLERRM;
+END$$;
+
+-- Ensure that the roles table exists
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -17,13 +34,13 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
--- Activer RLS sur la table user_roles si elle ne l'est pas déjà
+-- Enable RLS on the user_roles table if not already enabled
 ALTER TABLE IF EXISTS public.user_roles ENABLE ROW LEVEL SECURITY;
 
--- Créer des politiques RLS pour protéger la table user_roles
+-- Create RLS policies to protect the user_roles table
 DO $$
 BEGIN
-  -- Politique pour permettre aux utilisateurs de voir leur propre rôle
+  -- Policy to allow users to view their own role
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'user_roles' AND policyname = 'Users can view their own roles'
   ) THEN
@@ -31,7 +48,7 @@ BEGIN
       FOR SELECT USING (auth.uid() = user_id);
   END IF;
   
-  -- Politique pour permettre aux administrateurs de gérer tous les rôles
+  -- Policy to allow administrators to manage all roles
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'user_roles' AND policyname = 'Admins can manage all roles'
   ) THEN
@@ -44,7 +61,7 @@ BEGIN
       );
   END IF;
   
-  -- Politique pour permettre au rôle de service d'accéder à tout
+  -- Policy to allow the service role to access everything
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE tablename = 'user_roles' AND policyname = 'Service role has full access'
   ) THEN
@@ -53,7 +70,7 @@ BEGIN
   END IF;
 END$$;
 
--- Assurer que la table des logs existe pour le débogage
+-- Ensure that the logs table exists for debugging
 CREATE TABLE IF NOT EXISTS public.logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   message TEXT NOT NULL,
@@ -61,15 +78,15 @@ CREATE TABLE IF NOT EXISTS public.logs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Activer RLS sur la table logs si elle ne l'est pas déjà
+-- Enable RLS on the logs table if not already enabled
 ALTER TABLE IF EXISTS public.logs ENABLE ROW LEVEL SECURITY;
 
--- Politique pour les logs
+-- Policy for logs
 DROP POLICY IF EXISTS "Service role can manage logs" ON public.logs;
 CREATE POLICY "Service role can manage logs" ON public.logs
   FOR ALL TO service_role USING (true);
 
--- Créer une fonction helper pour exécuter du SQL dynamique
+-- Create a helper function to execute dynamic SQL
 CREATE OR REPLACE FUNCTION public.run_sql(query text)
 RETURNS SETOF RECORD LANGUAGE plpgsql AS $$
 BEGIN
@@ -79,12 +96,12 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
--- Assurons-nous que tous les utilisateurs existants ont un rôle
+-- Make sure all existing users have a role
 DO $$
 DECLARE
   u RECORD;
 BEGIN
-  -- Pour chaque utilisateur sans rôle
+  -- For each user without a role
   FOR u IN 
     SELECT au.id 
     FROM auth.users au
@@ -95,7 +112,7 @@ BEGIN
     VALUES (u.id, 'user');
   END LOOP;
 
-  -- Promouvoir alexa@pazproperty.pt et yoann@pazproperty.pt en admin s'ils existent
+  -- Promote alexa@pazproperty.pt and yoann@pazproperty.pt to admin if they exist
   UPDATE public.user_roles
   SET role = 'admin'
   WHERE user_id IN (

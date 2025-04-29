@@ -15,13 +15,13 @@ const ExtranetTechnique = () => {
   const { signOut, user } = useAuth();
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
-  // Vérifier si l'utilisateur n'a pas encore défini de mot de passe
+  // Check if user hasn't set a password yet
   useEffect(() => {
-    // Si l'utilisateur vient de s'inscrire et n'a pas encore défini son mot de passe
-    // Ou si l'utilisateur vient d'une réinitialisation de mot de passe
+    // If user just registered and hasn't set a password yet
+    // Or if user is coming from a password reset
     if (user && user.user_metadata) {
       if (user.user_metadata.first_login || user.user_metadata.password_reset_required) {
-        console.log("Ouverture du dialogue de changement de mot de passe (première connexion ou reset)");
+        console.log("Opening password change dialog (first login or reset)");
         setIsSettingsDialogOpen(true);
       }
     }

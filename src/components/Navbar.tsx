@@ -59,7 +59,7 @@ const Navbar = () => {
               asChild 
               variant="outline" 
               size="icon" 
-              title="Espace Technique Monday.com"
+              title="Espace Technique pour Prestataires"
               className="relative group"
             >
               <Link to="/extranet-technique-login">
@@ -73,7 +73,7 @@ const Navbar = () => {
               asChild 
               variant="ghost" 
               size="icon" 
-              title="Administration"
+              title="Administration (Pazproperty uniquement)"
               className="relative group"
             >
               <Link to="/admin-login">
@@ -157,14 +157,14 @@ const Navbar = () => {
                   className="px-4 py-2 text-lg font-medium hover:bg-gray-100 rounded-md flex items-center" 
                   onClick={() => setIsOpen(false)}
                 >
-                  <Wrench className="h-5 w-5 mr-2" /> Accès Prestataires
+                  <Wrench className="h-5 w-5 mr-2" /> Extranet Prestataires
                 </Link>
                 <Link 
                   to="/admin-login" 
                   className="px-4 py-2 text-lg font-medium hover:bg-gray-100 rounded-md flex items-center" 
                   onClick={() => setIsOpen(false)}
                 >
-                  <Shield className="h-5 w-5 mr-2" /> Accès Admin
+                  <Shield className="h-5 w-5 mr-2" /> Admin Pazproperty
                 </Link>
               </nav>
             </SheetContent>

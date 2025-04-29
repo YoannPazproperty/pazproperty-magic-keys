@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
@@ -20,7 +19,7 @@ interface AuthContextType {
     success: boolean;
     message?: string;
   }>;
-  getUserRole: () => Promise<"admin" | "manager" | "user" | null>;
+  getUserRole: () => Promise<"admin" | "manager" | "prestadores_tecnicos" | "user" | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,16 +29,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState<"admin" | "manager" | "user" | null>(null);
+  const [userRole, setUserRole] = useState<"admin" | "manager" | "prestadores_tecnicos" | "user" | null>(null);
   const [roleLoading, setRoleLoading] = useState(false);
 
-  // Fonction pour récupérer le rôle en utilisant l'ID utilisateur
-  const fetchUserRole = async (userId: string): Promise<"admin" | "manager" | "user" | null> => {
+  // Function to retrieve the role using user ID
+  const fetchUserRole = async (userId: string): Promise<"admin" | "manager" | "prestadores_tecnicos" | "user" | null> => {
     try {
       setRoleLoading(true);
-      console.log("Récupération du rôle pour l'utilisateur:", userId);
+      console.log("Retrieving role for user:", userId);
       
-      // Vérifier d'abord si l'utilisateur est un prestataire externe
+      // First check if the user is a technical service provider (prestadores_tecnicos)
       const { data: prestadorRole, error: prestadorError } = await supabase
         .from('prestadores_roles')
         .select('nivel')
@@ -47,11 +46,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .maybeSingle();
         
       if (prestadorRole) {
-        console.log("Utilisateur identifié comme prestataire externe:", prestadorRole);
-        return 'manager'; // Les prestataires sont toujours 'manager'
+        console.log("User identified as an external service provider:", prestadorRole);
+        return 'prestadores_tecnicos'; // External service providers are always 'prestadores_tecnicos'
       }
       
-      // Si pas un prestataire, vérifier les rôles internes
+      // If not a service provider, check for internal roles
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -59,16 +58,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
         
       if (error) {
-        console.error("Erreur lors de la récupération du rôle:", error);
+        console.error("Error retrieving role:", error);
         
-        // Vérifier si l'erreur est due à l'absence d'enregistrements
+        // Check if error is due to lack of records
         if (error.code === 'PGRST116') {
-          console.log("Aucun rôle trouvé pour l'utilisateur, attribution du rôle par défaut");
+          console.log("No role found for the user, assigning default role");
           
-          // Vérifier si l'utilisateur a une adresse email pazproperty.pt
+          // Check if user has a pazproperty.pt email address
           const userEmail = user?.email || '';
           if (userEmail.endsWith('@pazproperty.pt')) {
-            // Attribuer un rôle admin pour les emails @pazproperty.pt
+            // Assign admin role for @pazproperty.pt emails
             const { error: insertError } = await supabase
               .from('user_roles')
               .insert({ 
@@ -77,13 +76,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               });
               
             if (insertError) {
-              console.error("Erreur lors de l'attribution du rôle admin:", insertError);
+              console.error("Error assigning admin role:", insertError);
             } else {
-              console.log("Rôle 'admin' attribué automatiquement pour adresse @pazproperty.pt");
+              console.log("'admin' role automatically assigned for @pazproperty.pt address");
               return 'admin';
             }
           } else {
-            // Attribuer un rôle par défaut (user) pour les autres
+            // Assign default role (user) for others
             const { error: insertError } = await supabase
               .from('user_roles')
               .insert({ 
@@ -92,9 +91,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               });
               
             if (insertError) {
-              console.error("Erreur lors de l'attribution du rôle par défaut:", insertError);
+              console.error("Error assigning default role:", insertError);
             } else {
-              console.log("Rôle 'user' attribué avec succès");
+              console.log("'user' role assigned successfully");
               return 'user';
             }
           }
@@ -103,10 +102,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
       
-      console.log("Rôle récupéré pour l'utilisateur:", data?.role);
-      return data?.role as "admin" | "manager" | "user" || null;
+      console.log("Role retrieved for user:", data?.role);
+      return data?.role as "admin" | "manager" | "prestadores_tecnicos" | "user" || null;
     } catch (err) {
-      console.error("Erreur inattendue lors de la récupération du rôle:", err);
+      console.error("Unexpected error retrieving role:", err);
       return null;
     } finally {
       setRoleLoading(false);
@@ -118,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.email);
         
-        // Utiliser setTimeout pour éviter des blocages potentiels dans le callback
+        // Use setTimeout to avoid potential blocking in the callback
         setTimeout(() => {
           setSession(newSession);
           setUser(newSession?.user ?? null);
@@ -127,13 +126,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             navigate("/auth");
             setUserRole(null);
           } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-            console.log("Utilisateur connecté ou token rafraîchi");
+            console.log("User logged in or token refreshed");
             
-            // Vérifier le rôle de l'utilisateur pour la redirection
+            // Check user's role for redirection
             if (newSession?.user?.id) {
               setTimeout(async () => {
                 try {
-                  // Vérifier si c'est un prestataire externe d'abord
+                  // Check if this is an external technical service provider first
                   const { data: prestadorData } = await supabase
                     .from('prestadores_roles')
                     .select('nivel')
@@ -141,39 +140,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     .maybeSingle();
                   
                   if (prestadorData) {
-                    // C'est un prestataire externe, rediriger vers l'extranet technique
-                    setUserRole('manager');
+                    // This is a technical service provider, redirect to extranet technique
+                    setUserRole('prestadores_tecnicos');
                     navigate("/extranet-technique");
                     return;
                   }
                   
-                  // Si ce n'est pas un prestataire, vérifier les rôles internes
+                  // If not a service provider, check internal roles
                   const role = await fetchUserRole(newSession.user.id);
                   setUserRole(role);
                   
-                  // Rediriger en fonction du rôle
+                  // Redirect based on role
                   if (role === 'admin') {
-                    // Vérifier si l'email est @pazproperty.pt
+                    // Check if email is @pazproperty.pt
                     const userEmail = newSession.user.email || '';
                     if (userEmail.endsWith('@pazproperty.pt')) {
                       navigate("/admin");
                     } else {
-                      // Si le rôle est admin mais pas @pazproperty.pt, c'est une erreur
-                      console.warn("Utilisateur avec rôle admin mais sans email @pazproperty.pt");
-                      toast.warning("Accès restreint", {
-                        description: "L'espace Admin est réservé aux employés de Pazproperty"
+                      // If role is admin but not @pazproperty.pt, there's an error
+                      console.warn("User with admin role but without @pazproperty.pt email");
+                      toast.warning("Restricted access", {
+                        description: "The Admin space is reserved for Pazproperty employees"
                       });
                       navigate("/");
                     }
                   } else if (role === 'user') {
                     navigate("/");
                   } else {
-                    // Si pas de rôle, rediriger vers une page par défaut
+                    // If no role, redirect to a default page
                     navigate("/");
                   }
                 } catch (err) {
-                  console.error("Erreur lors de la vérification du rôle:", err);
-                  // Rediriger vers une page par défaut en cas d'erreur
+                  console.error("Error checking role:", err);
+                  // Redirect to default page in case of error
                   navigate("/");
                 }
               }, 0);
@@ -190,12 +189,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Erreur lors de la récupération de la session initiale:", error);
+          console.error("Error retrieving initial session:", error);
         } else {
           setSession(data.session);
           setUser(data.session?.user ?? null);
           
-          // Récupérer le rôle si l'utilisateur est connecté
+          // Retrieve role if user is logged in
           if (data.session?.user) {
             const role = await fetchUserRole(data.session.user.id);
             setUserRole(role);
@@ -204,7 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setLoading(false);
       } catch (err) {
-        console.error("Erreur inattendue lors de la récupération de la session:", err);
+        console.error("Unexpected error retrieving session:", err);
         setLoading(false);
       }
     };
@@ -422,15 +421,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const getUserRole = async (): Promise<"admin" | "manager" | "user" | null> => {
+  const getUserRole = async (): Promise<"admin" | "manager" | "prestadores_tecnicos" | "user" | null> => {
     if (!user) return null;
     
-    // Si le rôle est déjà chargé et que nous ne sommes pas en train de le charger
+    // If role is already loaded and we're not currently loading it
     if (userRole && !roleLoading) {
       return userRole;
     }
     
-    // Sinon, récupérer le rôle
+    // Otherwise, retrieve the role
     const role = await fetchUserRole(user.id);
     setUserRole(role);
     return role;

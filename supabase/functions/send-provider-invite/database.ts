@@ -1,214 +1,158 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
-import { ProviderData } from './types.ts';
+import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
 
-export async function getProviderData(supabase: any, providerId: string): Promise<ProviderData> {
-  console.log(`Fetching provider data for ID: ${providerId}`);
-  
-  const { data: provider, error: providerError } = await supabase
-    .from('prestadores_de_servicos')
-    .select('*')
-    .eq('id', providerId)
-    .single();
-
-  if (providerError) {
-    console.error('Provider query error:', providerError);
-    throw new Error(`Provider not found: ${providerError.message}`);
-  }
-
-  if (!provider) {
-    console.error('No provider data returned');
-    throw new Error('Provider not found');
-  }
-
-  console.log('Provider data retrieved successfully:', {
-    id: provider.id,
-    empresa: provider.empresa,
-    email: provider.email,
-    nome_gerente: provider.nome_gerente
-  });
-  
-  return provider;
+interface ProviderData {
+  id: string;
+  empresa: string;
+  email: string;
+  nome_gerente: string;
+  telefone?: string;
+  tipo_de_obras?: string;
 }
 
-export async function getUserByEmail(supabase: any, email: string) {
-  console.log(`Checking if user exists with email: ${email}`);
-  
+/**
+ * Gets provider data from the database
+ */
+export const getProviderData = async (supabase: SupabaseClient, providerId: string): Promise<ProviderData> => {
   try {
-    const { data: existingUsers, error: userCheckError } = await supabase.auth.admin
-      .listUsers({
-        filter: {
-          email: email
-        }
-      });
-
-    if (userCheckError) {
-      console.error('Error checking existing users:', userCheckError);
-      throw userCheckError;
-    }
-
-    if (existingUsers?.users?.length > 0) {
-      console.log(`User found with email ${email}, user ID:`, existingUsers.users[0].id);
-      return existingUsers.users[0];
-    }
-    
-    console.log(`No user found with email ${email}`);
-    return null;
-  } catch (error) {
-    console.error('Exception when checking for user by email:', error);
-    throw error;
-  }
-}
-
-export async function updateUserMetadata(supabase: any, userId: string, metadata: any) {
-  console.log(`Updating metadata for user ${userId}:`, metadata);
-  
-  try {
-    // Ajouter first_login: false s'il existe déjà
-    const { data: currentUser } = await supabase.auth.admin.getUserById(userId);
-    const currentMetadata = currentUser?.user?.user_metadata || {};
-    const updatedMetadata = {
-      ...currentMetadata,
-      ...metadata,
-      first_login: false // Marquer que l'utilisateur n'est plus en première connexion
-    };
-    
-    const { data: updateData, error: updateError } = await supabase.auth.admin.updateUserById(
-      userId,
-      { user_metadata: updatedMetadata }
-    );
-
-    if (updateError) {
-      console.error('Error updating user metadata:', updateError);
-      throw new Error(`Error updating user metadata: ${updateError.message}`);
-    }
-
-    console.log('User metadata updated successfully:', updateData);
-    return updateData;
-  } catch (error) {
-    console.error('Exception when updating user metadata:', error);
-    throw error;
-  }
-}
-
-export async function createUser(supabase: any, email: string, password: string, metadata: any) {
-  console.log(`Creating new user with email ${email}`);
-  
-  try {
-    // Ajouter le flag first_login aux métadonnées
-    const userMetadata = {
-      ...metadata,
-      first_login: true // Indiquer que c'est la première connexion
-    };
-    
-    const { data: authData, error: createUserError } = await supabase.auth.admin.createUser({
-      email: email,
-      password: password,
-      email_confirm: true, // Ne pas exiger de confirmation d'email
-      user_metadata: userMetadata
-    });
-
-    if (createUserError) {
-      console.error('Error creating user:', createUserError);
-      throw new Error(`Error creating user: ${createUserError.message}`);
-    }
-
-    if (!authData || !authData.user) {
-      console.error('No user data returned after creation');
-      throw new Error('Failed to create user account');
-    }
-
-    console.log('User created successfully with ID:', authData.user.id);
-    return authData.user;
-  } catch (error) {
-    console.error('Exception when creating user:', error);
-    throw error;
-  }
-}
-
-export async function ensureUserRole(supabase: any, userId: string, role: string) {
-  console.log(`Ensuring user ${userId} has role: ${role}`);
-  
-  try {
-    // Si c'est un rôle de prestataire, utiliser la nouvelle table prestadores_roles
-    if (role === 'prestadores_externos') {
-      const { data: existingRole, error: roleCheckError } = await supabase
-        .from('prestadores_roles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (roleCheckError && roleCheckError.code !== 'PGRST116') {
-        console.error('Error checking existing prestador role:', roleCheckError);
-        throw new Error(`Error checking prestador role: ${roleCheckError.message}`);
-      }
-      
-      if (!existingRole) {
-        console.log(`Adding prestador role for user ${userId}`);
-        const { error: insertError } = await supabase
-          .from('prestadores_roles')
-          .insert({
-            user_id: userId,
-            nivel: 'standard'  // Niveau d'accès par défaut
-          });
-
-        if (insertError) {
-          console.error('Error setting prestador role:', insertError);
-          throw new Error(`Error setting prestador role: ${insertError.message}`);
-        }
-      } else {
-        console.log(`User ${userId} already has prestador role, no action needed`);
-      }
-      return;
-    }
-    
-    // Sinon, utiliser la table user_roles existante pour les rôles internes
-    const { data: existingRole, error: roleCheckError } = await supabase
-      .from('user_roles')
-      .select('*')
-      .eq('user_id', userId)
+    const { data, error } = await supabase
+      .from('prestadores_de_servicos')
+      .select('id, empresa, email, nome_gerente, telefone, tipo_de_obras')
+      .eq('id', providerId)
       .single();
 
-    if (roleCheckError && roleCheckError.code !== 'PGRST116') {
-      console.error('Error checking existing user role:', roleCheckError);
-      throw new Error(`Error checking user role: ${roleCheckError.message}`);
+    if (error) {
+      console.error('Error getting provider data:', error);
+      throw new Error(`Failed to retrieve provider: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error(`Provider with ID ${providerId} not found`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Exception getting provider data:', error);
+    throw error;
+  }
+};
+
+/**
+ * Checks if a user with the given email exists
+ */
+export const getUserByEmail = async (supabase: SupabaseClient, email: string) => {
+  try {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      filter: {
+        email: email
+      }
+    });
+
+    if (error) {
+      console.error('Error checking user existence:', error);
+      throw new Error(`Failed to check user: ${error.message}`);
+    }
+
+    return data.users.length > 0 ? data.users[0] : null;
+  } catch (error) {
+    console.error('Exception checking user:', error);
+    throw error;
+  }
+};
+
+/**
+ * Updates user metadata
+ */
+export const updateUserMetadata = async (supabase: SupabaseClient, userId: string, metadata: Record<string, any>) => {
+  try {
+    const { data, error } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: metadata
+    });
+
+    if (error) {
+      console.error('Error updating user metadata:', error);
+      throw new Error(`Failed to update user metadata: ${error.message}`);
+    }
+
+    return data.user;
+  } catch (error) {
+    console.error('Exception updating user metadata:', error);
+    throw error;
+  }
+};
+
+/**
+ * Creates a new user
+ */
+export const createUser = async (supabase: SupabaseClient, email: string, password: string, metadata: Record<string, any>) => {
+  try {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        ...metadata,
+        first_login: true // Mark that this is the user's first login
+      }
+    });
+
+    if (error) {
+      console.error('Error creating user:', error);
+      throw new Error(`Failed to create user: ${error.message}`);
+    }
+
+    return data.user;
+  } catch (error) {
+    console.error('Exception creating user:', error);
+    throw error;
+  }
+};
+
+/**
+ * Ensures the user has the specified role
+ */
+export const ensureUserRole = async (supabase: SupabaseClient, userId: string, role: string) => {
+  try {
+    // First check for an existing prestadores_roles entry
+    const { data: existingRole, error: selectError } = await supabase
+      .from('prestadores_roles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (selectError) {
+      console.error('Error checking existing provider role:', selectError);
     }
 
     if (existingRole) {
-      // Si le rôle est différent, le mettre à jour
-      if (existingRole.role !== role) {
-        console.log(`Updating role from ${existingRole.role} to ${role} for user ${userId}`);
-        const { error: updateError } = await supabase
-          .from('user_roles')
-          .update({ role: role })
-          .eq('user_id', userId);
+      // Update the existing role entry
+      const { error: updateError } = await supabase
+        .from('prestadores_roles')
+        .update({ nivel: role })
+        .eq('user_id', userId);
 
-        if (updateError) {
-          console.error('Error updating user role:', updateError);
-          throw new Error(`Error updating user role: ${updateError.message}`);
-        }
-      } else {
-        console.log(`User ${userId} already has role ${role}, no action needed`);
+      if (updateError) {
+        console.error('Error updating provider role:', updateError);
+        throw new Error(`Failed to update provider role: ${updateError.message}`);
       }
     } else {
-      // Si aucun rôle n'existe, en créer un nouveau
-      console.log(`Adding role ${role} for user ${userId}`);
+      // Create a new role entry
       const { error: insertError } = await supabase
-        .from('user_roles')
+        .from('prestadores_roles')
         .insert({
           user_id: userId,
-          role: role
+          nivel: role
         });
 
       if (insertError) {
-        console.error('Error setting user role:', insertError);
-        throw new Error(`Error setting user role: ${insertError.message}`);
+        console.error('Error assigning provider role:', insertError);
+        throw new Error(`Failed to assign provider role: ${insertError.message}`);
       }
     }
-    
-    console.log(`Role ${role} handled successfully for user ${userId}`);
+
+    return true;
   } catch (error) {
-    console.error('Exception when ensuring user role:', error);
+    console.error('Exception ensuring user role:', error);
     throw error;
   }
-}
+};

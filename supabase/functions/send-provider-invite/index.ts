@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const publicSiteUrl = Deno.env.get('PUBLIC_SITE_URL') || 'https://pazproperty.pt';
 
-    // Log environment variable status (pas leurs valeurs pour sécurité)
+    // Log environment variable status (not their values for security)
     console.log("Environment check:", { 
       hasResendKey: !!resendApiKey, 
       hasSupabaseUrl: !!supabaseUrl, 
@@ -87,9 +87,9 @@ Deno.serve(async (req) => {
       let tempPassword: string | undefined;
       let isNewUser = !existingUser;
       
-      // Create temporary password only for new users - Générer un mot de passe plus facile à retenir
+      // Create temporary password only for new users - Generate an easier-to-remember password
       if (isNewUser) {
-        // Générer un mot de passe temporaire plus simple et mémorisable
+        // Generate a simpler and more memorable temporary password
         const adjectives = ["Happy", "Sunny", "Shiny", "Lucky", "Magic", "Super", "Mega"];
         const nouns = ["Star", "Moon", "Sky", "Day", "Tech", "Team", "Hero"];
         const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
@@ -124,10 +124,10 @@ Deno.serve(async (req) => {
           console.log(`New user created with ID: ${userId}`);
         }
 
-        // Ensure user has manager role
-        console.log(`Ensuring user ${userId} has manager role`);
-        await ensureUserRole(supabase, userId, 'manager');
-        console.log("Manager role assigned successfully");
+        // Ensure user has prestadores_tecnicos role
+        console.log(`Ensuring user ${userId} has prestadores_tecnicos role`);
+        await ensureUserRole(supabase, userId, 'prestadores_tecnicos');
+        console.log("prestadores_tecnicos role assigned successfully");
 
         // Send invitation email
         let emailResult = null;
