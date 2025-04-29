@@ -73,6 +73,7 @@ export const updateProvider = async (id: string, provider: Partial<ServiceProvid
 
 export const deleteProvider = async (id: string): Promise<boolean> => {
   try {
+    // La fonction archive_provider sera déclenchée automatiquement via le trigger
     const { error } = await supabase
       .from('prestadores_de_servicos')
       .delete()

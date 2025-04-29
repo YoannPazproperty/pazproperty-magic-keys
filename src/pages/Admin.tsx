@@ -14,19 +14,25 @@ import { getContactsList } from "@/services/contacts/contactQueries";
 import { ContactsList } from "@/components/admin/ContactsList";
 import type { CommercialContact } from "@/services/types";
 import { getProvidersList } from "@/services/providers/providerQueries";
+import { getArchivedProvidersList } from "@/services/providers/providerArchiveQueries";
 import type { ServiceProvider } from "@/services/types";
 import { ProvidersList } from "@/components/admin/ProvidersList";
+import { ArchivedProvidersList } from "@/components/admin/ArchivedProvidersList";
+import { Tabs as TabsSecondary, TabsList as TabsListSecondary, TabsTrigger as TabsTriggerSecondary } from "@/components/ui/tabs";
 
 const Admin = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("declarations");
+  const [activeProvidersTab, setActiveProvidersTab] = useState("active");
   const [declarations, setDeclarations] = useState<Declaration[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [contacts, setContacts] = useState<CommercialContact[]>([]);
   const [isLoadingContacts, setIsLoadingContacts] = useState(false);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
+  const [archivedProviders, setArchivedProviders] = useState<ServiceProvider[]>([]);
   const [isLoadingProviders, setIsLoadingProviders] = useState(false);
+  const [isLoadingArchivedProviders, setIsLoadingArchivedProviders] = useState(false);
 
   useEffect(() => {
     loadDeclarations();
@@ -71,6 +77,19 @@ const Admin = () => {
       setIsLoadingProviders(false);
     }
   };
+  
+  const loadArchivedProviders = async () => {
+    setIsLoadingArchivedProviders(true);
+    try {
+      const archivedProvs = await getArchivedProvidersList();
+      setArchivedProviders(archivedProvs);
+    } catch (error) {
+      console.error("Error loading archived providers:", error);
+      toast.error("Erro ao carregar prestadores arquivados");
+    } finally {
+      setIsLoadingArchivedProviders(false);
+    }
+  };
 
   useEffect(() => {
     if (activeTab === "crm") {
@@ -81,8 +100,11 @@ const Admin = () => {
   useEffect(() => {
     if (activeTab === "prestadores") {
       loadProviders();
+      if (activeProvidersTab === "archived") {
+        loadArchivedProviders();
+      }
     }
-  }, [activeTab]);
+  }, [activeTab, activeProvidersTab]);
 
   const handleStatusUpdate = async (id: string, status: Declaration["status"]) => {
     try {
@@ -112,6 +134,10 @@ const Admin = () => {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+  };
+  
+  const handleProvidersTabChange = (value: string) => {
+    setActiveProvidersTab(value);
   };
 
   return (
@@ -158,11 +184,29 @@ const Admin = () => {
         </TabsContent>
         
         <TabsContent value="prestadores" className="space-y-4">
-          <ProvidersList 
-            providers={providers}
-            isLoading={isLoadingProviders}
-            onRefresh={loadProviders}
-          />
+          <Tabs value={activeProvidersTab} onValueChange={handleProvidersTabChange} className="w-full">
+            <TabsList className="inline-flex mb-4">
+              <TabsTrigger value="active">Ativos</TabsTrigger>
+              <TabsTrigger value="archived">Arquivados</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="active">
+              <ProvidersList 
+                providers={providers}
+                isLoading={isLoadingProviders}
+                onRefresh={loadProviders}
+              />
+            </TabsContent>
+            
+            <TabsContent value="archived">
+              <ArchivedProvidersList 
+                providers={archivedProviders}
+                isLoading={isLoadingArchivedProviders}
+                onRefresh={loadArchivedProviders}
+                onRestoreSuccess={loadProviders}
+              />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </AdminLayout>
