@@ -1,13 +1,16 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Send, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubmitButtonProps {
   isSubmitting: boolean;
 }
 
-const SubmitButton = ({ isSubmitting }: SubmitButtonProps) => {
+const SubmitButton: React.FC<SubmitButtonProps> = ({ isSubmitting }) => {
+  const { t } = useLanguage();
+  
   return (
     <Button 
       type="submit" 
@@ -15,15 +18,12 @@ const SubmitButton = ({ isSubmitting }: SubmitButtonProps) => {
       disabled={isSubmitting}
     >
       {isSubmitting ? (
-        <span className="flex items-center">
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-          A enviar...
-        </span>
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          {t('contact.form.sending')}
+        </>
       ) : (
-        <span className="flex items-center">
-          <Send className="mr-2 h-4 w-4" /> 
-          Enviar Mensagem
-        </span>
+        t('contact.form.submit')
       )}
     </Button>
   );

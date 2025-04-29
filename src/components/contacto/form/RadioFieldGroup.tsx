@@ -1,35 +1,66 @@
 
 import React from "react";
-import { Home } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import FormField from "./FormField";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface RadioFieldGroupProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-const RadioFieldGroup = ({ value, onChange }: RadioFieldGroupProps) => {
+const RadioFieldGroup: React.FC<RadioFieldGroupProps> = ({ value, onChange }) => {
+  const { t } = useLanguage();
+  
   return (
-    <FormField id="tipo-usuario" label="É proprietário ou inquilino?" icon={<Home className="h-4 w-4" />}>
-      <RadioGroup
-        id="tipo-usuario"
-        defaultValue="proprietario"
-        value={value}
-        onValueChange={onChange}
-        className="flex flex-col space-y-1 sm:flex-row sm:space-x-6 sm:space-y-0"
-      >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="proprietario" id="proprietario" />
-          <Label htmlFor="proprietario">Proprietário</Label>
+    <div>
+      <p className="mb-2 font-medium">Tipo de utilizador:</p>
+      
+      <div className="flex flex-wrap gap-4">
+        <div className="flex items-center">
+          <input
+            type="radio"
+            id="proprietario"
+            name="tipo"
+            value="proprietario"
+            checked={value === "proprietario"}
+            onChange={() => onChange("proprietario")}
+            className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
+          />
+          <label htmlFor="proprietario" className="ml-2 text-gray-700">
+            {t('contact.form.type.owner')}
+          </label>
         </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="inquilino" id="inquilino" />
-          <Label htmlFor="inquilino">Inquilino</Label>
+        
+        <div className="flex items-center">
+          <input
+            type="radio"
+            id="inquilino"
+            name="tipo"
+            value="inquilino"
+            checked={value === "inquilino"}
+            onChange={() => onChange("inquilino")}
+            className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
+          />
+          <label htmlFor="inquilino" className="ml-2 text-gray-700">
+            {t('contact.form.type.tenant')}
+          </label>
         </div>
-      </RadioGroup>
-    </FormField>
+        
+        <div className="flex items-center">
+          <input
+            type="radio"
+            id="prospecto"
+            name="tipo"
+            value="prospecto"
+            checked={value === "prospecto"}
+            onChange={() => onChange("prospecto")}
+            className="w-4 h-4 text-primary border-gray-300 focus:ring-primary"
+          />
+          <label htmlFor="prospecto" className="ml-2 text-gray-700">
+            {t('contact.form.type.prospect')}
+          </label>
+        </div>
+      </div>
+    </div>
   );
 };
 

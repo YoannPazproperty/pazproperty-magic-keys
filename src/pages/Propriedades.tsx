@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import { Search, BedDouble, Bath, Square, MapPin } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Define a type for the property to ensure consistency
 type Property = {
@@ -70,6 +71,7 @@ const Propriedades = () => {
   const [pesquisa, setPesquisa] = useState("");
   const [filtroQuartos, setFiltroQuartos] = useState("");
   const [filtroLocalizacao, setFiltroLocalizacao] = useState("");
+  const { t } = useLanguage();
   
   // Filtrar propriedades com base nos critérios
   const propriedadesFiltradas = propriedadesData.filter(prop => {
@@ -89,10 +91,9 @@ const Propriedades = () => {
       <section className="pt-32 pb-20 px-4 bg-gray-50">
         <div className="container mx-auto">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Propriedades Geridas</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">{t('properties.hero.title')}</h1>
             <p className="text-xl text-gray-600">
-              Descubra a seleção de propriedades de alta qualidade que gerimos em Lisboa. 
-              Cada uma é cuidada com a máxima atenção aos detalhes.
+              {t('properties.hero.description')}
             </p>
           </div>
         </div>
@@ -107,7 +108,7 @@ const Propriedades = () => {
                 <div className="relative">
                   <Input
                     type="text"
-                    placeholder="Pesquisar propriedades..."
+                    placeholder={t('properties.search')}
                     value={pesquisa}
                     onChange={(e) => setPesquisa(e.target.value)}
                     className="pl-10"
@@ -123,12 +124,12 @@ const Propriedades = () => {
                     value={filtroQuartos}
                     onChange={(e) => setFiltroQuartos(e.target.value)}
                   >
-                    <option value="">Nº de Quartos</option>
-                    <option value="0">Estúdio</option>
-                    <option value="1">1 Quarto</option>
-                    <option value="2">2 Quartos</option>
-                    <option value="3">3 Quartos</option>
-                    <option value="4">4+ Quartos</option>
+                    <option value="">{t('properties.rooms')}</option>
+                    <option value="0">{t('properties.studio')}</option>
+                    <option value="1">1 {t('properties.bedroom')}</option>
+                    <option value="2">2 {t('properties.bedrooms')}</option>
+                    <option value="3">3 {t('properties.bedrooms')}</option>
+                    <option value="4">4+ {t('properties.bedrooms')}</option>
                   </select>
                 </div>
                 
@@ -138,7 +139,7 @@ const Propriedades = () => {
                     value={filtroLocalizacao}
                     onChange={(e) => setFiltroLocalizacao(e.target.value)}
                   >
-                    <option value="">Localização</option>
+                    <option value="">{t('properties.location')}</option>
                     <option value="Anjos">Anjos</option>
                     <option value="Foz do Arelho">Foz do Arelho</option>
                   </select>
@@ -175,7 +176,7 @@ const Propriedades = () => {
                       <div className="flex items-center text-gray-600">
                         <BedDouble className="h-4 w-4 mr-1" />
                         <span className="text-sm mr-3">
-                          {propriedade.quartos === 0 ? "Estúdio" : `${propriedade.quartos} Quarto${propriedade.quartos > 1 ? 's' : ''}`}
+                          {propriedade.quartos === 0 ? t('properties.studio') : `${propriedade.quartos} ${propriedade.quartos > 1 ? t('properties.bedrooms') : t('properties.bedroom')}`}
                         </span>
                         <Bath className="h-4 w-4 mr-1" />
                         <span className="text-sm mr-3">{propriedade.banheiros} WC</span>
@@ -185,9 +186,9 @@ const Propriedades = () => {
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-xl font-bold text-primary">{propriedade.preco}€<span className="text-sm text-gray-600">/mês</span></span>
+                      <span className="text-xl font-bold text-primary">{propriedade.preco}€<span className="text-sm text-gray-600">{t('properties.month')}</span></span>
                       <Button asChild size="sm" className="bg-brand-blue hover:bg-primary/90">
-                        <Link to={`/propriedades/${propriedade.id}`}>Ver Detalhes</Link>
+                        <Link to={`/propriedades/${propriedade.id}`}>{t('properties.details')}</Link>
                       </Button>
                     </div>
                   </div>
@@ -196,8 +197,8 @@ const Propriedades = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <h3 className="text-xl font-bold mb-2">Nenhuma propriedade encontrada</h3>
-              <p className="text-gray-600">Tente ajustar os seus critérios de pesquisa.</p>
+              <h3 className="text-xl font-bold mb-2">{t('properties.notfound')}</h3>
+              <p className="text-gray-600">{t('properties.adjustsearch')}</p>
             </div>
           )}
         </div>
@@ -206,13 +207,12 @@ const Propriedades = () => {
       {/* CTA Section */}
       <section className="py-20 bg-primary text-white mt-10">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Procura gestão para a sua propriedade?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">{t('properties.cta.title')}</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            A Pazproperty oferece serviços completos de gestão que maximizam o retorno do seu investimento 
-            enquanto minimizam as suas preocupações.
+            {t('properties.cta.description')}
           </p>
           <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90">
-            <Link to="/contacto">Fale Connosco Hoje</Link>
+            <Link to="/contacto">{t('properties.cta.button')}</Link>
           </Button>
         </div>
       </section>

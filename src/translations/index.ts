@@ -66,6 +66,76 @@ export const translations: TranslationsType = {
     'lang.pt': 'Português',
     'lang.fr': 'Français',
     'lang.en': 'English',
+    
+    // Services Page
+    'services.hero.title': 'Nossos Serviços',
+    'services.hero.subtitle': 'Soluções personalizadas para proprietários em Lisboa',
+    'services.hero.description': 'Descubra como a nossa gestão especializada pode maximizar o potencial do seu imóvel enquanto lhe oferece total tranquilidade.',
+    
+    // Services Page - CTA
+    'services.cta.title': 'Pronto para começar?',
+    'services.cta.description': 'Entre em contacto connosco para discutir as suas necessidades e como podemos ajudar a maximizar o valor do seu imóvel em Lisboa.',
+    'services.cta.button': 'Fale Connosco Hoje',
+    
+    // Services Grid
+    'services.grid.title': 'Todos os Nossos Serviços',
+    'services.grid.description': 'Conheça a gama completa de serviços que oferecemos para garantir uma gestão imobiliária sem complicações.',
+    
+    // Properties Page
+    'properties.hero.title': 'Propriedades Geridas',
+    'properties.hero.description': 'Descubra a seleção de propriedades de alta qualidade que gerimos em Lisboa. Cada uma é cuidada com a máxima atenção aos detalhes.',
+    'properties.search': 'Pesquisar propriedades...',
+    'properties.rooms': 'Nº de Quartos',
+    'properties.studio': 'Estúdio',
+    'properties.bedroom': 'Quarto',
+    'properties.bedrooms': 'Quartos',
+    'properties.location': 'Localização',
+    'properties.details': 'Ver Detalhes',
+    'properties.month': '/mês',
+    'properties.notfound': 'Nenhuma propriedade encontrada',
+    'properties.adjustsearch': 'Tente ajustar os seus critérios de pesquisa.',
+    
+    // Properties CTA
+    'properties.cta.title': 'Procura gestão para a sua propriedade?',
+    'properties.cta.description': 'A Pazproperty oferece serviços completos de gestão que maximizam o retorno do seu investimento enquanto minimizam as suas preocupações.',
+    'properties.cta.button': 'Fale Connosco Hoje',
+    
+    // Contact Page
+    'contact.hero.title': 'Entre em Contacto',
+    
+    // Contact Form
+    'contact.info.title': 'Informações de Contacto',
+    'contact.phone': 'Telefone',
+    'contact.phone.hours': 'Seg-Sex: 9:00 - 18:00',
+    'contact.email': 'Email',
+    'contact.email.response': 'Respondemos em 24 horas',
+    'contact.address': 'Morada',
+    'contact.address.hours': 'Seg-Sex: 9:00 - 18:00 (com marcação)',
+    
+    'contact.hours.title': 'Horário de Funcionamento',
+    'contact.hours.monday': 'Segunda-Feira',
+    'contact.hours.tuesday': 'Terça-Feira',
+    'contact.hours.wednesday': 'Quarta-Feira',
+    'contact.hours.thursday': 'Quinta-Feira',
+    'contact.hours.friday': 'Sexta-Feira',
+    'contact.hours.saturday': 'Sábado',
+    'contact.hours.sunday': 'Domingo',
+    'contact.hours.closed': 'Fechado',
+    
+    'contact.form.title': 'Envie-nos uma Mensagem',
+    'contact.form.name': 'Nome Completo',
+    'contact.form.name.placeholder': 'Seu nome completo',
+    'contact.form.email': 'Email',
+    'contact.form.email.placeholder': 'Seu email',
+    'contact.form.phone': 'Telefone',
+    'contact.form.phone.placeholder': 'Seu telefone',
+    'contact.form.message': 'Mensagem',
+    'contact.form.message.placeholder': 'Como podemos ajudar?',
+    'contact.form.submit': 'Enviar Mensagem',
+    'contact.form.sending': 'A enviar...',
+    'contact.form.type.owner': 'Proprietário',
+    'contact.form.type.tenant': 'Inquilino',
+    'contact.form.type.prospect': 'Potencial Cliente',
   },
   
   // Français
@@ -129,6 +199,76 @@ export const translations: TranslationsType = {
     'lang.pt': 'Português',
     'lang.fr': 'Français',
     'lang.en': 'English',
+    
+    // Services Page
+    'services.hero.title': 'Nos Services',
+    'services.hero.subtitle': 'Solutions personnalisées pour propriétaires à Lisbonne',
+    'services.hero.description': 'Découvrez comment notre gestion spécialisée peut maximiser le potentiel de votre bien immobilier tout en vous offrant une tranquillité totale.',
+    
+    // Services Page - CTA
+    'services.cta.title': 'Prêt à commencer?',
+    'services.cta.description': 'Contactez-nous pour discuter de vos besoins et comment nous pouvons vous aider à maximiser la valeur de votre propriété à Lisbonne.',
+    'services.cta.button': 'Contactez-Nous Aujourd\'hui',
+    
+    // Services Grid
+    'services.grid.title': 'Tous Nos Services',
+    'services.grid.description': 'Découvrez la gamme complète de services que nous offrons pour garantir une gestion immobilière sans complications.',
+    
+    // Properties Page
+    'properties.hero.title': 'Propriétés Gérées',
+    'properties.hero.description': 'Découvrez notre sélection de propriétés de haute qualité que nous gérons à Lisbonne. Chacune est entretenue avec la plus grande attention aux détails.',
+    'properties.search': 'Rechercher des propriétés...',
+    'properties.rooms': 'Nombre de Chambres',
+    'properties.studio': 'Studio',
+    'properties.bedroom': 'Chambre',
+    'properties.bedrooms': 'Chambres',
+    'properties.location': 'Emplacement',
+    'properties.details': 'Voir Détails',
+    'properties.month': '/mois',
+    'properties.notfound': 'Aucune propriété trouvée',
+    'properties.adjustsearch': 'Essayez d\'ajuster vos critères de recherche.',
+    
+    // Properties CTA
+    'properties.cta.title': 'Vous recherchez une gestion pour votre propriété?',
+    'properties.cta.description': 'Pazproperty offre des services complets de gestion qui maximisent le retour sur votre investissement tout en minimisant vos préoccupations.',
+    'properties.cta.button': 'Contactez-Nous Aujourd\'hui',
+    
+    // Contact Page
+    'contact.hero.title': 'Contactez-Nous',
+    
+    // Contact Form
+    'contact.info.title': 'Informations de Contact',
+    'contact.phone': 'Téléphone',
+    'contact.phone.hours': 'Lun-Ven: 9:00 - 18:00',
+    'contact.email': 'Email',
+    'contact.email.response': 'Nous répondons sous 24 heures',
+    'contact.address': 'Adresse',
+    'contact.address.hours': 'Lun-Ven: 9:00 - 18:00 (sur rendez-vous)',
+    
+    'contact.hours.title': 'Heures d\'Ouverture',
+    'contact.hours.monday': 'Lundi',
+    'contact.hours.tuesday': 'Mardi',
+    'contact.hours.wednesday': 'Mercredi',
+    'contact.hours.thursday': 'Jeudi',
+    'contact.hours.friday': 'Vendredi',
+    'contact.hours.saturday': 'Samedi',
+    'contact.hours.sunday': 'Dimanche',
+    'contact.hours.closed': 'Fermé',
+    
+    'contact.form.title': 'Envoyez-nous un Message',
+    'contact.form.name': 'Nom Complet',
+    'contact.form.name.placeholder': 'Votre nom complet',
+    'contact.form.email': 'Email',
+    'contact.form.email.placeholder': 'Votre email',
+    'contact.form.phone': 'Téléphone',
+    'contact.form.phone.placeholder': 'Votre téléphone',
+    'contact.form.message': 'Message',
+    'contact.form.message.placeholder': 'Comment pouvons-nous vous aider?',
+    'contact.form.submit': 'Envoyer le Message',
+    'contact.form.sending': 'Envoi en cours...',
+    'contact.form.type.owner': 'Propriétaire',
+    'contact.form.type.tenant': 'Locataire',
+    'contact.form.type.prospect': 'Prospect',
   },
   
   // English
@@ -192,5 +332,75 @@ export const translations: TranslationsType = {
     'lang.pt': 'Português',
     'lang.fr': 'Français',
     'lang.en': 'English',
+    
+    // Services Page
+    'services.hero.title': 'Our Services',
+    'services.hero.subtitle': 'Custom solutions for property owners in Lisbon',
+    'services.hero.description': 'Discover how our specialized management can maximize your property\'s potential while providing you with complete peace of mind.',
+    
+    // Services Page - CTA
+    'services.cta.title': 'Ready to get started?',
+    'services.cta.description': 'Contact us to discuss your needs and how we can help maximize the value of your property in Lisbon.',
+    'services.cta.button': 'Contact Us Today',
+    
+    // Services Grid
+    'services.grid.title': 'All Our Services',
+    'services.grid.description': 'Explore the full range of services we offer to ensure hassle-free property management.',
+    
+    // Properties Page
+    'properties.hero.title': 'Managed Properties',
+    'properties.hero.description': 'Discover our selection of high-quality properties that we manage in Lisbon. Each one is maintained with the utmost attention to detail.',
+    'properties.search': 'Search properties...',
+    'properties.rooms': 'Number of Rooms',
+    'properties.studio': 'Studio',
+    'properties.bedroom': 'Bedroom',
+    'properties.bedrooms': 'Bedrooms',
+    'properties.location': 'Location',
+    'properties.details': 'View Details',
+    'properties.month': '/month',
+    'properties.notfound': 'No properties found',
+    'properties.adjustsearch': 'Try adjusting your search criteria.',
+    
+    // Properties CTA
+    'properties.cta.title': 'Looking for management for your property?',
+    'properties.cta.description': 'Pazproperty offers complete management services that maximize the return on your investment while minimizing your worries.',
+    'properties.cta.button': 'Contact Us Today',
+    
+    // Contact Page
+    'contact.hero.title': 'Contact Us',
+    
+    // Contact Form
+    'contact.info.title': 'Contact Information',
+    'contact.phone': 'Phone',
+    'contact.phone.hours': 'Mon-Fri: 9:00 - 18:00',
+    'contact.email': 'Email',
+    'contact.email.response': 'We respond within 24 hours',
+    'contact.address': 'Address',
+    'contact.address.hours': 'Mon-Fri: 9:00 - 18:00 (by appointment)',
+    
+    'contact.hours.title': 'Business Hours',
+    'contact.hours.monday': 'Monday',
+    'contact.hours.tuesday': 'Tuesday',
+    'contact.hours.wednesday': 'Wednesday',
+    'contact.hours.thursday': 'Thursday',
+    'contact.hours.friday': 'Friday',
+    'contact.hours.saturday': 'Saturday',
+    'contact.hours.sunday': 'Sunday',
+    'contact.hours.closed': 'Closed',
+    
+    'contact.form.title': 'Send Us a Message',
+    'contact.form.name': 'Full Name',
+    'contact.form.name.placeholder': 'Your full name',
+    'contact.form.email': 'Email',
+    'contact.form.email.placeholder': 'Your email',
+    'contact.form.phone': 'Phone',
+    'contact.form.phone.placeholder': 'Your phone number',
+    'contact.form.message': 'Message',
+    'contact.form.message.placeholder': 'How can we help you?',
+    'contact.form.submit': 'Send Message',
+    'contact.form.sending': 'Sending...',
+    'contact.form.type.owner': 'Owner',
+    'contact.form.type.tenant': 'Tenant',
+    'contact.form.type.prospect': 'Prospect',
   }
 };
