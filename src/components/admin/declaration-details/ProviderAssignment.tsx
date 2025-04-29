@@ -1,6 +1,6 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Declaration } from "@/services/types";
+import type { Declaration, ServiceProvider } from "@/services/types";
 import { useProviders } from "@/hooks/useProviders";
 import { useProviderAssignment } from "@/hooks/useProviderAssignment";
 
