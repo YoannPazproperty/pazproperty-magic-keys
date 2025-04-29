@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const HeroSection = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   return (
     <section className="relative h-[80vh] w-full">
@@ -19,7 +19,7 @@ const HeroSection = () => {
       <div className="relative z-10 container mx-auto h-full flex items-center justify-center px-4">
         <div className="text-center text-white max-w-4xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            {t('hero.title')} <span className="text-gradient">Simplificada</span>
+            {t('hero.title')}
           </h1>
           <div className="text-xl mb-8">
             <p><em>{t('hero.tagline1')}</em></p>

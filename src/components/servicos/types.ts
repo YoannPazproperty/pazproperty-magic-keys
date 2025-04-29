@@ -1,26 +1,16 @@
 
-import { ReactNode } from "react";
-
-export interface ServiceFeature {
-  text: string;
+export interface ServiceCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  link?: string;
 }
 
-export interface ServiceDataItem {
+export interface ServiceSectionProps {
   id: string;
   title: string;
   description: string;
-  features: ServiceFeature[];
-  icon: ReactNode;
-  imageSrc: string;
-  imageAlt: string;
-  reverse?: boolean;
-}
-
-export interface GridServiceItem {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  linkTo: string;
-  linkText: string;
-  linkStyle?: string;
+  image?: string;
+  reversed?: boolean;
+  children?: React.ReactNode;
 }
