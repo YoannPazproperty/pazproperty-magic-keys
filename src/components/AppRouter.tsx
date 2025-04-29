@@ -1,6 +1,6 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "@/hooks/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "../pages/Index";
 import Servicos from "../pages/Servicos";
