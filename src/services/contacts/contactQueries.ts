@@ -14,7 +14,18 @@ export const getContactsList = async (): Promise<CommercialContact[]> => {
       return [];
     }
     
-    return data || [];
+    // Cast data as CommercialContact[] après avoir vérifié que tipo est valide
+    return (data || []).map(item => {
+      // S'assurer que le tipo est l'un des types valides
+      const validTipo = ["Proprietario", "Inquilino", "Outros", "Agente Imobiliario"].includes(item.tipo) 
+        ? (item.tipo as CommercialContact["tipo"])
+        : "Outros"; // Valeur par défaut
+
+      return {
+        ...item,
+        tipo: validTipo
+      } as CommercialContact;
+    });
   } catch (err) {
     console.error('Error in getContactsList:', err);
     return [];
@@ -34,7 +45,11 @@ export const createContact = async (contact: Omit<CommercialContact, 'id' | 'cre
       return null;
     }
     
-    return data;
+    // Cast data as CommercialContact
+    return {
+      ...data,
+      tipo: data.tipo as CommercialContact["tipo"]
+    } as CommercialContact;
   } catch (err) {
     console.error('Error in createContact:', err);
     return null;
@@ -55,7 +70,11 @@ export const updateContact = async (id: string, contact: Partial<CommercialConta
       return null;
     }
     
-    return data;
+    // Cast data as CommercialContact
+    return {
+      ...data,
+      tipo: data.tipo as CommercialContact["tipo"]
+    } as CommercialContact;
   } catch (err) {
     console.error('Error in updateContact:', err);
     return null;

@@ -1,87 +1,55 @@
 
-import { Image, Video, FileIcon } from "lucide-react";
+import React from "react";
 
 interface MediaFilesProps {
-  files?: string[];
+  files: string[] | string | null;
 }
 
 export const MediaFiles = ({ files }: MediaFilesProps) => {
-  const getFileIcon = (fileUrl: string) => {
-    if (fileUrl.includes('image') || fileUrl.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/)) {
-      return <Image className="h-4 w-4 mr-1" />;
-    } else if (fileUrl.includes('video') || fileUrl.toLowerCase().match(/\.(mp4|mov|avi|wmv|mkv)$/)) {
-      return <Video className="h-4 w-4 mr-1" />;
-    } else {
-      return <FileIcon className="h-4 w-4 mr-1" />;
-    }
-  };
-
-  const getFileName = (fileUrl: string): string => {
-    if (fileUrl.includes('storage/v1/object/public/')) {
-      const matches = fileUrl.match(/([^\/]+)(?=\?|$)/);
-      if (matches && matches[0]) {
-        const parts = matches[0].split('-');
-        if (parts.length > 1 && parts[0].length === 36) {
-          return parts.slice(1).join('-');
-        }
-        return matches[0];
-      }
-    }
-    
-    if (fileUrl.includes('/api/files/')) {
-      return `Fichier ${fileUrl.split('/').pop()?.substring(0, 8)}...`;
-    }
-    
-    return fileUrl.split('/').pop() || 'Fichier';
-  };
-
-  if (!files || files.length === 0) {
+  if (!files) {
     return (
       <div className="space-y-2 py-2">
-        <h3 className="font-semibold">Fichiers médias</h3>
-        <div className="bg-gray-50 p-3 rounded-md border text-gray-500">
-          Aucun fichier média n'a été téléchargé pour cette déclaration.
-        </div>
+        <h3 className="font-semibold">Fichiers attachés</h3>
+        <p className="text-muted-foreground">Aucun fichier attaché.</p>
       </div>
     );
   }
 
+  // Convertir en tableau si c'est une chaîne
+  const mediaFiles: string[] = Array.isArray(files) ? files : 
+    typeof files === 'string' ? 
+      files.startsWith('[') ? JSON.parse(files) : [files] 
+      : [];
+
   return (
     <div className="space-y-2 py-2">
-      <h3 className="font-semibold">Fichiers médias</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {files.map((fileUrl, index) => {
-          const isPreviewableImage = fileUrl.includes('image') || 
-            fileUrl.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)$/);
+      <h3 className="font-semibold">Fichiers attachés</h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {mediaFiles.map((file, index) => {
+          const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file);
           
-          return (
+          return isImage ? (
             <a 
+              key={index} 
+              href={file} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="block aspect-square overflow-hidden rounded-md border hover:opacity-90 transition-opacity"
+            >
+              <img src={file} alt={`Attachment ${index + 1}`} className="w-full h-full object-cover" />
+            </a>
+          ) : (
+            <a
               key={index}
-              href={fileUrl}
+              href={file}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col p-3 bg-blue-50 rounded border border-blue-100 text-blue-600 hover:bg-blue-100 transition-colors"
+              className="flex flex-col items-center justify-center aspect-square border rounded-md p-2 hover:bg-gray-50"
             >
-              {isPreviewableImage && (
-                <div className="w-full h-32 mb-2 overflow-hidden rounded bg-white">
-                  <img 
-                    src={fileUrl} 
-                    alt={`Aperçu ${index + 1}`}
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      (e.target as HTMLImageElement).parentElement!.innerHTML = 
-                        '<div class="flex items-center justify-center h-full text-gray-400"><span>Aperçu non disponible</span></div>';
-                    }}
-                  />
-                </div>
-              )}
-              <div className="flex items-center">
-                {getFileIcon(fileUrl)}
-                <span className="truncate">
-                  {getFileName(fileUrl)}
-                </span>
+              <div className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full mb-1">
+                <span className="text-xs">Fichier</span>
               </div>
+              <span className="text-xs text-center truncate w-full">Pièce jointe {index + 1}</span>
             </a>
           );
         })}

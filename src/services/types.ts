@@ -28,7 +28,7 @@ export interface Declaration {
   issueType: string | null;
   urgency: string | null;
   description: string | null;
-  mediaFiles: string | null;
+  mediaFiles: string[] | null;  // Changé de string à string[]
   submittedAt: string | null;
   status: "Novo" | "Transmitido" | "Orçamento recebido" | "Em curso de reparação" | "Resolvido";
   mondayId: string | null;
@@ -56,6 +56,34 @@ export interface NotificationPreference {
   recipientEmail: string | null;
   recipientPhone: string | null;
 }
+
+// Types pour les rapports techniciens
+export interface TechnicianReport {
+  interventionId: number;
+  clientName: string;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  address: string | null;
+  needsIntervention: boolean | null;
+  problemCategory: string | null;
+  diagnoseDescription: string | null;
+  estimateAmount: string | null;
+  workDescription: string | null;
+  date: string | null;
+}
+
+export interface TechnicianReportResult {
+  success: boolean;
+  message: string;
+  reportId?: string;
+}
+
+// Fonction pour envoyer des notifications par email
+export const sendNotificationEmail = async (to: string, subject: string, content: string): Promise<boolean> => {
+  // Cette fonction est un placeholder, elle sera implémentée ailleurs
+  console.log(`Sending email to ${to} with subject ${subject}`);
+  return true;
+};
 
 // N'effacer pas le bloc de commentaire suivant, c'est important pour le fonctionnement du type d'extension
 // Ce fichier n'étant pas disponible en édition directe, nous allons ajouter une définition de type pour deleted_at

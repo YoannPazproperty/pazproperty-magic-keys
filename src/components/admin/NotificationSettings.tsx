@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,9 +29,12 @@ export const NotificationSettings = () => {
   const [isLoadingWebhooks, setIsLoadingWebhooks] = useState<boolean>(false);
   const [isTesting, setIsTesting] = useState<boolean>(false);
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference>({
+    id: "default",
     email: true,
     sms: false,
-    push: false
+    push: false,
+    recipientEmail: null,
+    recipientPhone: null
   });
 
   useEffect(() => {

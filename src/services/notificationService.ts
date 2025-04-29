@@ -11,9 +11,12 @@ export const getNotificationPreferences = (): NotificationPreference => {
   
   // Default preferences
   return {
+    id: "default",
     email: true,
     sms: false,
-    push: false
+    push: false,
+    recipientEmail: null,
+    recipientPhone: null
   };
 };
 

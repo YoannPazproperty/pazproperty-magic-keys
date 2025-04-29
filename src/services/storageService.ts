@@ -1,4 +1,5 @@
 
+import { toast } from "sonner";
 import { Declaration, NotificationPreference } from "./types";
 
 // Example/mock declarations to start with
@@ -14,6 +15,13 @@ const initialDeclarations: Declaration[] = [
     urgency: "high",
     status: "Em curso de reparação", // Updated from "in_progress"
     submittedAt: "2024-03-18T14:30:00Z",
+    nif: null,
+    city: null,
+    postalCode: null,
+    mediaFiles: [],
+    mondayId: null,
+    prestador_id: null,
+    prestador_assigned_at: null
   },
   {
     id: "2",
@@ -26,6 +34,13 @@ const initialDeclarations: Declaration[] = [
     urgency: "medium",
     status: "Novo", // Updated from "pending"
     submittedAt: "2024-03-17T10:15:00Z",
+    nif: null,
+    city: null,
+    postalCode: null,
+    mediaFiles: [],
+    mondayId: null,
+    prestador_id: null,
+    prestador_assigned_at: null
   },
   {
     id: "3",
@@ -38,6 +53,13 @@ const initialDeclarations: Declaration[] = [
     urgency: "medium",
     status: "Novo", // Updated from "pending"
     submittedAt: "2024-03-16T08:45:00Z",
+    nif: null,
+    city: null,
+    postalCode: null,
+    mediaFiles: [],
+    mondayId: null,
+    prestador_id: null,
+    prestador_assigned_at: null
   },
   {
     id: "4",
@@ -50,14 +72,24 @@ const initialDeclarations: Declaration[] = [
     urgency: "low",
     status: "Resolvido", // Updated from "resolved"
     submittedAt: "2024-03-15T16:20:00Z",
+    nif: null,
+    city: null,
+    postalCode: null,
+    mediaFiles: [],
+    mondayId: null,
+    prestador_id: null,
+    prestador_assigned_at: null
   },
 ];
 
 // Default notification preferences
 const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreference = {
+  id: "default",
   email: true,
   sms: false,
-  push: false
+  push: false,
+  recipientEmail: null,
+  recipientPhone: null
 };
 
 // Default Monday.com board IDs

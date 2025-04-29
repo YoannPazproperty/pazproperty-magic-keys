@@ -51,7 +51,7 @@ export const addWithMedia = async (
       id: generateUniqueId(),
       status: "Novo", // Update from "pending" to "Novo"
       submittedAt: new Date().toISOString(),
-      mediaFiles: mediaUrls
+      mediaFiles: mediaUrls  // Ça va être un tableau de string
     };
     
     console.log("declarationCreation: New declaration created:", newDeclaration);
