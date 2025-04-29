@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { NotificationPreference } from "./types";
 
@@ -144,5 +143,13 @@ export const sendNotification = async (
   }
 };
 
-// Expose necessary functions from the original service
-export { sendNotificationEmail } from './types';
+// Send notification email
+export const sendNotificationEmail = async (
+  to: string, 
+  subject: string, 
+  content: string
+): Promise<boolean> => {
+  // This function is a placeholder, it will be implemented elsewhere
+  console.log(`Sending email to ${to} with subject ${subject}`);
+  return true;
+};

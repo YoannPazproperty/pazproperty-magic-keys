@@ -2,7 +2,7 @@
 // Re-export everything from our modules
 export * from './declarations/declarationStorage';
 export * from './declarations/declarationCreation';
-export * from './declarations/declarationNotification';
+export * from './declarations/declarationNotification'; // This now re-exports from the notifications folder
 export * from './declarations/externalIntegration';
 export * from './declarations/supabaseDeclarationStorage';
 export * from './declarations/supabaseDeclarationQueries';
