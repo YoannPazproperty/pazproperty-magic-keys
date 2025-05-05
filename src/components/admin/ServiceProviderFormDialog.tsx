@@ -85,24 +85,30 @@ export function ServiceProviderFormDialog({
           providerId = newProvider.id;
           
           // Envoi automatique de l'invitation pour les nouveaux prestataires
-          const inviteResult = await handleInvite(newProvider.id);
-          
-          if (inviteResult.success) {
-            if (inviteResult.emailSent) {
-              toast.success("Convite enviado com sucesso", {
-                description: inviteResult.isNewUser 
-                  ? "Um email com as credenciais foi enviado ao prestador"
-                  : "O prestador foi notificado"
-              });
+          if (providerId) {
+            const inviteResult = await handleInvite(providerId);
+            
+            if (inviteResult && 'success' in inviteResult && inviteResult.success) {
+              if ('emailSent' in inviteResult && inviteResult.emailSent) {
+                toast.success("Convite enviado com sucesso", {
+                  description: 'isNewUser' in inviteResult && inviteResult.isNewUser 
+                    ? "Um email com as credenciais foi enviado ao prestador"
+                    : "O prestador foi notificado"
+                });
+              } else {
+                toast.warning("Erro no envio do email", {
+                  description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
+                });
+              }
             } else {
-              toast.warning("Erro no envio do email", {
-                description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
+              const errorMessage = inviteResult && 'emailError' in inviteResult 
+                ? inviteResult.emailError?.message 
+                : "Verifique os logs para mais detalhes";
+              
+              toast.error("Erro ao enviar convite", { 
+                description: errorMessage
               });
             }
-          } else {
-            toast.error("Erro ao enviar convite", { 
-              description: inviteResult.emailError?.message || "Verifique os logs para mais detalhes" 
-            });
           }
         } else {
           toast.error("Erro ao criar prestador");
@@ -122,10 +128,11 @@ export function ServiceProviderFormDialog({
   const handleProviderInvite = async () => {
     if (isEditing && providerToEdit) {
       const inviteResult = await handleInvite(providerToEdit.id);
-      if (inviteResult.success) {
-        if (inviteResult.emailSent) {
+      
+      if (inviteResult && 'success' in inviteResult && inviteResult.success) {
+        if ('emailSent' in inviteResult && inviteResult.emailSent) {
           toast.success("Convite enviado com sucesso", {
-            description: inviteResult.isNewUser 
+            description: 'isNewUser' in inviteResult && inviteResult.isNewUser 
               ? "Um email com as credenciais foi enviado ao prestador" 
               : "O prestador foi notificado"
           });
@@ -135,8 +142,12 @@ export function ServiceProviderFormDialog({
           });
         }
       } else {
+        const errorMessage = inviteResult && 'emailError' in inviteResult 
+          ? inviteResult.emailError?.message 
+          : "Verifique os logs para mais detalhes";
+          
         toast.error("Erro ao enviar convite", { 
-          description: inviteResult.emailError?.message || "Verifique os logs para mais detalhes" 
+          description: errorMessage
         });
       }
     }
