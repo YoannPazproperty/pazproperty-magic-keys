@@ -96,7 +96,11 @@ export const useProviderInvite = () => {
 
   const handleInvite = async (providerId: string) => {
     if (!providerId) {
-      return false;
+      return {
+        success: false,
+        emailSent: false,
+        emailError: { message: "ID do prestador não encontrado", code: "MISSING_ID" }
+      };
     }
     
     setIsSendingInvite(true);
