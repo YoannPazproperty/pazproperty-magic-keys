@@ -20,6 +20,8 @@ const ExtranetTechnique = () => {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
   const { providerDetails, loading: loadingProvider, error: providerError } = useProviderDetails();
+  
+  console.log("Provider details in ExtranetTechnique:", providerDetails);
 
   // Check if user hasn't set a password yet
   useEffect(() => {
@@ -99,10 +101,10 @@ const ExtranetTechnique = () => {
       
       <main className="flex-1 pt-32 pb-20">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-start justify-between mb-8">
+          <div className="flex flex-col md:flex-row items-start justify-between mb-4">
             <div className="flex-grow">
               <h1 className="text-3xl md:text-4xl font-bold mb-2">Extranet Technique</h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-4">
                 Gestão de intervenções técnicas e relatórios.
               </p>
             </div>
@@ -125,7 +127,7 @@ const ExtranetTechnique = () => {
             </div>
           </div>
           
-          {/* Provider information card */}
+          {/* Provider information card - now with better visibility */}
           <ProviderInfoCard 
             provider={providerDetails}
             loading={loadingProvider}

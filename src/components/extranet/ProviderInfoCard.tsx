@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Building, MapPin, Phone, Mail, Loader2 } from 'lucide-react';
 import type { ServiceProvider } from "@/services/types";
 
@@ -33,21 +34,22 @@ export function ProviderInfoCard({ provider, loading, error }: ProviderInfoCardP
   }
 
   if (!provider) {
+    console.log("No provider data available to display");
     return null;
   }
 
-  const formattedAddress = [provider.endereco, provider.codigo_postal, provider.cidade]
-    .filter(Boolean)
-    .join(", ");
+  console.log("Rendering provider info:", provider);
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 border border-gray-200">
       <CardContent className="py-4">
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center">
-            <Building className="h-4 w-4 mr-2 text-gray-500" />
-            <span className="font-semibold">{provider.empresa}</span>
+            <Building className="h-4 w-4 mr-2 text-primary" />
+            <span className="font-semibold text-lg">{provider.empresa}</span>
           </div>
+          
+          <Separator className="my-2" />
           
           {provider.endereco && (
             <div className="flex items-center">
@@ -74,10 +76,12 @@ export function ProviderInfoCard({ provider, loading, error }: ProviderInfoCardP
             </div>
           )}
           
-          <div className="flex items-center">
-            <Mail className="h-4 w-4 mr-2 text-gray-500" />
-            <span>{provider.email}</span>
-          </div>
+          {provider.email && (
+            <div className="flex items-center">
+              <Mail className="h-4 w-4 mr-2 text-gray-500" />
+              <span>{provider.email}</span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -18,6 +18,8 @@ export const useProviderDetails = () => {
       }
 
       try {
+        console.log("Fetching provider details for user:", user.id);
+        
         // First, check if the user has a provider role by querying prestadores_roles
         const { data: roleData, error: roleError } = await supabase
           .from('prestadores_roles')
@@ -26,10 +28,14 @@ export const useProviderDetails = () => {
           .maybeSingle();
 
         if (roleError) {
+          console.error("Error fetching provider role:", roleError);
           throw roleError;
         }
 
+        console.log("Role data:", roleData);
+
         if (!roleData || !roleData.prestador_id) {
+          console.log("No provider role found for user:", user.id);
           setLoading(false);
           return;
         }
@@ -42,9 +48,11 @@ export const useProviderDetails = () => {
           .single();
 
         if (providerError) {
+          console.error("Error fetching provider details:", providerError);
           throw providerError;
         }
 
+        console.log("Provider details retrieved:", providerData);
         setProviderDetails(providerData as ServiceProvider);
       } catch (err: any) {
         console.error('Error fetching provider details:', err);
