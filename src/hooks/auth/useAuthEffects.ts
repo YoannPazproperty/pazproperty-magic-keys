@@ -1,7 +1,9 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchUserRole, resolveRedirectPathByRole } from "./roleService";
+import { UserRole } from "./types";
 
 interface AuthEffectsProps {
   setUser: (user: any) => void;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import TechnicienManager from "@/components/TechnicienManager";
 import { ServiceOrdersList } from "@/components/extranet/ServiceOrdersList";
 import { UserPasswordSettingsDialog } from "@/components/extranet/UserPasswordSettingsDialog";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const ExtranetTechnique = () => {
   const [activeTab, setActiveTab] = useState("new");
