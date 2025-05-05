@@ -1,7 +1,7 @@
 
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
 import { Resend } from 'npm:resend@2.0.0';
-import { getProviderData, getUserByEmail, updateUserMetadata, createUser, ensureUserRole } from './database.ts';
+import { getProviderData, getUserByEmail, updateUserMetadata, createUser, ensureUserRole } from './db/index.ts';
 import { sendInvitationEmail } from './email.ts';
 
 /**
