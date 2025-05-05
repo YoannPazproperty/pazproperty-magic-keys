@@ -21,16 +21,26 @@ export const signInWithPassword = async (email: string, password: string) => {
     if (userExists) {
       console.log("Utilisateur trouvé dans la base de données:", userExists.id);
     } else {
-      console.log("Utilisateur non trouvé dans la table users, vérification dans auth.users...");
+      console.log("Utilisateur non trouvé dans la table users, vérification dans auth.users impossible directement");
       
-      // Vérification supplémentaire directe dans auth.users (uniquement en mode service_role)
+      // Au lieu d'utiliser une fonction RPC non existante, nous utilisons l'edge function qui peut vérifier dans auth.users
       try {
-        const { data: authUsers } = await supabase.rpc('check_user_exists', { 
-          email_param: email 
-        });
-        console.log("Résultat de vérification dans auth.users:", authUsers);
-      } catch (rpcErr) {
-        console.log("Impossible de vérifier dans auth.users (normal sans droits service_role)");
+        const supabaseUrl = 'https://ubztjjxmldogpwawcnrj.supabase.co';
+        const response = await fetch(
+          `${supabaseUrl}/functions/v1/check-user-auth`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email })
+          }
+        );
+        
+        const authUserCheck = await response.json();
+        console.log("Résultat de vérification via edge function:", authUserCheck);
+      } catch (edgeFuncErr) {
+        console.log("Impossible de vérifier dans auth.users via edge function:", edgeFuncErr);
       }
     }
     
