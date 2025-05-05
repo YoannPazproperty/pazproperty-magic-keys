@@ -155,8 +155,8 @@ serve(async (req) => {
           user_metadata: {
             ...userData2.user.user_metadata,
             is_provider: isProvider || false,
-            first_login: true,
-            password_reset_required: true,
+            first_login: false, // Mark that first login is complete
+            password_reset_required: false, // Mark that password has been reset
             password_reset_at: new Date().toISOString()
           }
         }
@@ -256,6 +256,33 @@ serve(async (req) => {
               console.error("Erreur lors de la mise à jour du rôle:", updateRoleError);
             } else {
               console.log("Rôle mis à jour avec succès pour l'utilisateur:", userId);
+            }
+          }
+        }
+        
+        // If this is a provider, also ensure they have an entry in prestadores_roles
+        if (isProvider) {
+          const { data: providerRoleExists, error: providerCheckError } = await adminClient
+            .from('prestadores_roles')
+            .select('id')
+            .eq('user_id', userId)
+            .maybeSingle();
+            
+          if (providerCheckError) {
+            console.error("Erreur lors de la vérification du rôle prestataire:", providerCheckError);
+          } else if (!providerRoleExists) {
+            console.log("Ajout du rôle prestadores_tecnicos pour l'utilisateur:", userId);
+            const { error: insertProviderError } = await adminClient
+              .from('prestadores_roles')
+              .insert({
+                user_id: userId,
+                nivel: 'standard'
+              });
+              
+            if (insertProviderError) {
+              console.error("Erreur lors de l'attribution du rôle prestataire:", insertProviderError);
+            } else {
+              console.log("Rôle prestataire attribué avec succès");
             }
           }
         }

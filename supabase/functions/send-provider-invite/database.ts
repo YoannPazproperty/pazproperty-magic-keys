@@ -1,3 +1,4 @@
+
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
 
 interface ProviderData {
@@ -64,8 +65,14 @@ export const getUserByEmail = async (supabase: SupabaseClient, email: string) =>
  */
 export const updateUserMetadata = async (supabase: SupabaseClient, userId: string, metadata: Record<string, any>) => {
   try {
+    // Make sure to preserve existing metadata and add specific provider metadata
     const { data, error } = await supabase.auth.admin.updateUserById(userId, {
-      user_metadata: metadata
+      user_metadata: {
+        ...metadata,
+        is_provider: true, 
+        password_reset_required: true,
+        password_reset_at: new Date().toISOString()
+      }
     });
 
     if (error) {
@@ -103,7 +110,7 @@ export const createUser = async (supabase: SupabaseClient, email: string, passwo
       throw new Error(`Failed to create user: ${error.message}`);
     }
 
-    // Créer le rôle provider pour l'utilisateur
+    // Create provider role for the user
     const { error: roleError } = await supabase
       .from('user_roles')
       .insert({ 
@@ -113,8 +120,8 @@ export const createUser = async (supabase: SupabaseClient, email: string, passwo
 
     if (roleError) {
       console.error('Error creating provider role:', roleError);
-      // Ne pas échouer si le rôle existe déjà
-      if (roleError.code !== '23505') { // Code d'erreur pour violation de contrainte unique
+      // Don't fail if the role already exists
+      if (roleError.code !== '23505') { // Error code for unique constraint violation
         throw new Error(`Failed to create provider role: ${roleError.message}`);
       }
     }
@@ -131,7 +138,36 @@ export const createUser = async (supabase: SupabaseClient, email: string, passwo
  */
 export const ensureUserRole = async (supabase: SupabaseClient, userId: string, role: string) => {
   try {
-    // First check for an existing prestadores_roles entry
+    // First check for existing role in user_roles table
+    const { data: existingRoleInUserRoles, error: roleError } = await supabase
+      .from('user_roles')
+      .select('id, role')
+      .eq('user_id', userId)
+      .maybeSingle();
+      
+    if (roleError) {
+      console.error('Error checking user_roles:', roleError);
+    }
+    
+    // If no role in user_roles, create it
+    if (!existingRoleInUserRoles) {
+      console.log(`Creating provider role in user_roles for user ${userId}`);
+      const { error: insertRoleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          role: 'provider'
+        });
+        
+      if (insertRoleError) {
+        console.error('Error creating role in user_roles:', insertRoleError);
+        if (insertRoleError.code !== '23505') { // Skip unique constraint errors
+          throw new Error(`Failed to create role in user_roles: ${insertRoleError.message}`);
+        }
+      }
+    }
+    
+    // Also check for an existing prestadores_roles entry
     const { data: existingRole, error: selectError } = await supabase
       .from('prestadores_roles')
       .select('id')

@@ -51,19 +51,39 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
             return 'admin';
           }
         } else {
-          // Assign default role (user) for others
-          const { error: insertError } = await supabase
-            .from('user_roles')
-            .insert({ 
-              user_id: userId,
-              role: 'user'
-            });
-            
-          if (insertError) {
-            console.error("Error assigning default role:", insertError);
+          // Check if user metadata indicates this is a provider
+          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+          
+          if (!userError && userData?.user?.user_metadata?.is_provider) {
+            // This is a provider based on metadata
+            const { error: insertError } = await supabase
+              .from('user_roles')
+              .insert({ 
+                user_id: userId,
+                role: 'provider'
+              });
+              
+            if (insertError) {
+              console.error("Error assigning provider role:", insertError);
+            } else {
+              console.log("'provider' role assigned based on user metadata");
+              return 'provider';
+            }
           } else {
-            console.log("'user' role assigned successfully");
-            return 'user';
+            // Assign default role (user) for others
+            const { error: insertError } = await supabase
+              .from('user_roles')
+              .insert({ 
+                user_id: userId,
+                role: 'user'
+              });
+              
+            if (insertError) {
+              console.error("Error assigning default role:", insertError);
+            } else {
+              console.log("'user' role assigned successfully");
+              return 'user';
+            }
           }
         }
       }
@@ -96,6 +116,8 @@ export const resolveRedirectPathByRole = (role: UserRole, email: string | null |
         console.warn("User with admin role but without @pazproperty.pt email");
         return "/";
       }
+    case 'provider':
+      return "/extranet-technique";
     case 'prestadores_tecnicos':
       return "/extranet-technique";
     case 'user':

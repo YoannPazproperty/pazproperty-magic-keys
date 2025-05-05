@@ -9,23 +9,77 @@ import { useAuth } from "@/hooks/useAuth";
 import TechnicienManager from "@/components/TechnicienManager";
 import { ServiceOrdersList } from "@/components/extranet/ServiceOrdersList";
 import { UserPasswordSettingsDialog } from "@/components/extranet/UserPasswordSettingsDialog";
+import { toast } from "sonner";
 
 const ExtranetTechnique = () => {
   const [activeTab, setActiveTab] = useState("new");
   const { signOut, user } = useAuth();
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
 
   // Check if user hasn't set a password yet
   useEffect(() => {
     // If user just registered and hasn't set a password yet
     // Or if user is coming from a password reset
     if (user && user.user_metadata) {
-      if (user.user_metadata.first_login || user.user_metadata.password_reset_required) {
-        console.log("Opening password change dialog (first login or reset)");
+      const metadata = user.user_metadata;
+      if (metadata.first_login || metadata.password_reset_required) {
+        console.log("Password change required based on metadata:", metadata);
+        setIsPasswordChangeRequired(true);
         setIsSettingsDialogOpen(true);
+        
+        // Display a toast message to inform the user
+        if (metadata.first_login) {
+          toast.info("Bem-vindo ao Extranet Técnica!", {
+            description: "Por favor, defina uma nova senha para continuar."
+          });
+        } else {
+          toast.info("Redefinição de senha necessária", {
+            description: "Por favor, atualize sua senha para continuar."
+          });
+        }
       }
     }
   }, [user]);
+  
+  // Handle dialog close attempt
+  const handleDialogOpenChange = (open: boolean) => {
+    // If password change is required, don't allow closing the dialog
+    if (isPasswordChangeRequired && !open) {
+      toast.warning("Alteração de senha necessária", {
+        description: "Você deve alterar sua senha antes de continuar."
+      });
+      return;
+    }
+    
+    setIsSettingsDialogOpen(open);
+  };
+  
+  // Handle successful password change
+  const handlePasswordChangeSuccess = async () => {
+    try {
+      // Update user metadata to remove password reset flags
+      await supabase.auth.updateUser({
+        data: {
+          first_login: false,
+          password_reset_required: false,
+          password_reset_at: new Date().toISOString()
+        }
+      });
+      
+      setIsPasswordChangeRequired(false);
+      setIsSettingsDialogOpen(false);
+      
+      toast.success("Senha alterada com sucesso", {
+        description: "Você agora pode acessar todas as funcionalidades."
+      });
+    } catch (error) {
+      console.error("Error updating user metadata after password change:", error);
+      // Allow the user to continue even if metadata update fails
+      setIsPasswordChangeRequired(false);
+      setIsSettingsDialogOpen(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -103,8 +157,9 @@ const ExtranetTechnique = () => {
       
       <UserPasswordSettingsDialog
         open={isSettingsDialogOpen}
-        onOpenChange={setIsSettingsDialogOpen}
-        isRequired={user?.user_metadata?.first_login || user?.user_metadata?.password_reset_required}
+        onOpenChange={handleDialogOpenChange}
+        isRequired={isPasswordChangeRequired}
+        onPasswordChangeSuccess={handlePasswordChangeSuccess}
       />
       
       <Footer />

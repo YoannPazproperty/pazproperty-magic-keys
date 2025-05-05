@@ -1,167 +1,164 @@
 
-import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 
 interface UserPasswordSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isRequired?: boolean;
+  onPasswordChangeSuccess?: () => void;
 }
 
-export function UserPasswordSettingsDialog({ open, onOpenChange, isRequired = false }: UserPasswordSettingsDialogProps) {
-  const { user } = useAuth();
-  const [password, setPassword] = useState("");
+export function UserPasswordSettingsDialog({
+  open,
+  onOpenChange,
+  isRequired = false,
+  onPasswordChangeSuccess
+}: UserPasswordSettingsDialogProps) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Ajouter un effet pour réinitialiser les champs quand la boîte de dialogue s'ouvre
-  useEffect(() => {
-    if (open) {
-      setPassword("");
-      setConfirmPassword("");
-      setError(null);
-    }
-  }, [open]);
 
-  const handleUpdatePassword = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Vérifications basiques
-    if (!password) {
-      setError("Veuillez entrer un nouveau mot de passe");
-      return;
-    }
-    
-    if (password.length < 8) {
-      setError("Le mot de passe doit contenir au moins 8 caractères");
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
-      return;
-    }
-    
-    setLoading(true);
     setError(null);
-    
+
+    // Validate passwords
+    if (newPassword.length < 8) {
+      setError("A nova senha deve ter pelo menos 8 caracteres");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError("As senhas não coincidem");
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      // Mettre à jour le mot de passe
+      // Update password in Supabase
       const { error } = await supabase.auth.updateUser({
-        password: password
+        password: newPassword
       });
-      
-      if (error) throw error;
-      
-      // Mettre à jour les métadonnées utilisateur pour indiquer que le mot de passe a été défini
-      // et que l'utilisateur n'est plus en première connexion ou après réinitialisation
-      await supabase.auth.updateUser({
-        data: {
-          first_login: false,
-          password_reset_required: false,
-          password_reset_at: new Date().toISOString()
-        }
-      });
-      
-      toast.success("Mot de passe mis à jour avec succès");
-      setPassword("");
+
+      if (error) {
+        console.error("Error updating password:", error);
+        setError(error.message || "Erro ao atualizar a senha");
+        return;
+      }
+
+      // Clear form
+      setCurrentPassword("");
+      setNewPassword("");
       setConfirmPassword("");
       
-      // Fermer la boîte de dialogue si c'est facultatif,
-      // mais maintenir ouverte si l'action est requise et qu'il y a eu une erreur
+      // Call success callback if provided
+      if (onPasswordChangeSuccess) {
+        await onPasswordChangeSuccess();
+      }
+
+      toast.success("Senha alterada com sucesso");
+      
+      // Close dialog only if not required
       if (!isRequired) {
         onOpenChange(false);
-      } else {
-        onOpenChange(false); // On ferme même si obligatoire car le mot de passe a été mis à jour
       }
     } catch (err: any) {
-      console.error("Erreur lors de la mise à jour du mot de passe:", err);
-      setError(err.message || "Une erreur est survenue lors de la mise à jour du mot de passe");
+      console.error("Unexpected error updating password:", err);
+      setError(err.message || "Ocorreu um erro ao atualizar a senha");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
-
-  const onCloseAttempt = (open: boolean) => {
-    // Si l'action est obligatoire, empêcher la fermeture
-    if (isRequired && open === false) {
-      toast.warning("Vous devez définir un mot de passe pour continuer", {
-        description: "Cette action est nécessaire pour sécuriser votre compte."
-      });
-      return;
-    }
-    
-    onOpenChange(open);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onCloseAttempt}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Définir un mot de passe</DialogTitle>
-          <DialogDescription>
-            {isRequired 
-              ? "Pour des raisons de sécurité, vous devez définir un nouveau mot de passe pour continuer." 
-              : "Vous pouvez modifier votre mot de passe ici."}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleUpdatePassword} className="space-y-4">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>
+              {isRequired ? "Alteração de senha obrigatória" : "Alterar senha"}
+            </DialogTitle>
+            <DialogDescription>
+              {isRequired 
+                ? "Por motivos de segurança, você deve alterar sua senha para continuar."
+                : "Atualize sua senha para garantir a segurança da sua conta."}
+            </DialogDescription>
+          </DialogHeader>
+          
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
+            <Alert variant="destructive" className="mt-4">
+              <AlertTriangle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
-          <div className="space-y-1">
-            <Label htmlFor="new-password">Nouveau mot de passe</Label>
-            <Input
-              id="new-password"
-              type="password"
-              placeholder="Minimum 8 caractères"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
-            <Input
-              id="confirm-password"
-              type="password"
-              placeholder="Répétez le mot de passe"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={loading}
-            />
+
+          <div className="grid gap-4 py-4">
+            {!isRequired && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="current-password" className="text-right">
+                  Senha atual
+                </Label>
+                <Input
+                  id="current-password"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="col-span-3"
+                  autoComplete="current-password"
+                />
+              </div>
+            )}
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="new-password" className="text-right">
+                Nova senha
+              </Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="col-span-3"
+                autoComplete="new-password"
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="confirm-password" className="text-right">
+                Confirmar senha
+              </Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="col-span-3"
+                autoComplete="new-password"
+                required
+              />
+            </div>
           </div>
           
           <DialogFooter>
             {!isRequired && (
-              <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>
-                Annuler
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancelar
               </Button>
             )}
-            <Button type="submit" disabled={loading}>
-              {loading ? "Mise à jour..." : "Sauvegarder"}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Salvando..." : "Salvar"}
             </Button>
           </DialogFooter>
         </form>
