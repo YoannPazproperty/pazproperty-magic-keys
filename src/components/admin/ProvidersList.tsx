@@ -37,6 +37,7 @@ export function ProvidersList({ providers, isLoading, onRefresh }: ProvidersList
   const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | null>(null);
   const [providerToDelete, setProviderToDelete] = useState<ServiceProvider | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleEdit = (provider: ServiceProvider) => {
     setSelectedProvider(provider);
@@ -45,6 +46,7 @@ export function ProvidersList({ providers, isLoading, onRefresh }: ProvidersList
 
   const handleDelete = async (provider: ServiceProvider) => {
     setProviderToDelete(provider);
+    setErrorMessage(null);
     setDeleteDialogOpen(true);
   };
 
@@ -52,18 +54,32 @@ export function ProvidersList({ providers, isLoading, onRefresh }: ProvidersList
     if (!providerToDelete) return;
     
     setIsDeleting(true);
+    setErrorMessage(null);
+    
     try {
       console.log(`Confirming deletion of provider: ${providerToDelete.empresa}`);
       const success = await deleteProvider(providerToDelete.id);
       
       if (success) {
         toast.success("Prestador excluído com sucesso");
+        setDeleteDialogOpen(false);
+        setProviderToDelete(null);
         onRefresh();
       } else {
+        const consoleError = console.error;
+        console.error = (...args) => {
+          // Capture error messages about declarations
+          const errorString = args.join(' ');
+          if (errorString.includes('declarations') && !errorMessage) {
+            setErrorMessage("Este prestador está associado a declarações. As associações foram removidas e você pode tentar excluir novamente.");
+          }
+          return consoleError.apply(console, args);
+        };
+        
         toast.error("Erro ao excluir prestador", {
           description: "Verifique os logs do console para mais detalhes."
         });
-        console.error("Failed to delete provider:", providerToDelete);
+        console.error = consoleError;
       }
     } catch (error) {
       console.error("Exception during provider deletion:", error);
@@ -72,8 +88,6 @@ export function ProvidersList({ providers, isLoading, onRefresh }: ProvidersList
       });
     } finally {
       setIsDeleting(false);
-      setDeleteDialogOpen(false);
-      setProviderToDelete(null);
     }
   };
 
@@ -172,10 +186,18 @@ export function ProvidersList({ providers, isLoading, onRefresh }: ProvidersList
             <AlertDialogDescription>
               Tem certeza que deseja excluir o prestador "{providerToDelete?.empresa}"?
               Esta ação não pode ser desfeita.
+              {errorMessage && (
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md">
+                  {errorMessage}
+                </div>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setProviderToDelete(null)} disabled={isDeleting}>
+            <AlertDialogCancel onClick={() => {
+              setProviderToDelete(null);
+              setErrorMessage(null);
+            }} disabled={isDeleting}>
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} disabled={isDeleting}>

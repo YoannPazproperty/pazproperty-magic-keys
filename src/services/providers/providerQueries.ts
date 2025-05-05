@@ -94,6 +94,34 @@ export const deleteProvider = async (id: string): Promise<boolean> => {
     
     console.log(`Found provider to delete: ${existingProvider.empresa}`);
     
+    // Vérifier les références dans la table declarations
+    const { data: declarationsRefs, error: declarationsError } = await supabase
+      .from('declarations')
+      .select('id')
+      .eq('prestador_id', id);
+      
+    if (declarationsError) {
+      console.error('Error checking declarations references:', declarationsError);
+      return false;
+    }
+    
+    if (declarationsRefs && declarationsRefs.length > 0) {
+      console.error(`Cannot delete provider: ${declarationsRefs.length} declarations are referencing this provider`);
+      // Mettre à jour les déclarations pour supprimer la référence au prestataire
+      const { error: updateError } = await supabase
+        .from('declarations')
+        .update({ prestador_id: null, prestador_assigned_at: null })
+        .eq('prestador_id', id);
+        
+      if (updateError) {
+        console.error('Error removing provider references from declarations:', updateError);
+        console.error('Error details:', updateError.message, updateError.details, updateError.hint);
+        return false;
+      }
+      
+      console.log(`Successfully removed provider references from ${declarationsRefs.length} declarations`);
+    }
+    
     // Supprimer d'abord les références dans prestadores_roles
     console.log(`Deleting provider roles for provider ID: ${id}`);
     const { error: rolesError } = await supabase
@@ -126,4 +154,3 @@ export const deleteProvider = async (id: string): Promise<boolean> => {
     return false;
   }
 };
-
