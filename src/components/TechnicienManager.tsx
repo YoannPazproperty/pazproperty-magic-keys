@@ -1,156 +1,83 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Edit, Trash2, UserPlus, Eye, EyeOff } from 'lucide-react';
-import { toast } from "sonner";
-import technicienService, { Technician } from '@/services/technicienService';
+import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { Technician } from '@/services/technicienService';
+import { useTechnicians } from './technicians/useTechnicians';
+import { TechnicianList } from './technicians/TechnicianList';
+import { TechnicianFormDialog } from './technicians/TechnicianFormDialog';
+import { DeleteTechnicianDialog } from './technicians/DeleteTechnicianDialog';
 
 const TechnicienManager: React.FC = () => {
-  const [technicians, setTechnicians] = useState<Technician[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [showPasswords, setShowPasswords] = useState(false);
-  const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
-  const [selectedTechnician, setSelectedTechnician] = useState<string | null>(null);
+  const {
+    technicians,
+    isLoading,
+    showPasswords,
+    setShowPasswords,
+    loadTechnicians,
+    toggleTechnicianStatus,
+    deleteTechnician
+  } = useTechnicians();
   
-  // Form state
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [specialty, setSpecialty] = useState('');
-  const [isActive, setIsActive] = useState(true);
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTechnician, setSelectedTechnician] = useState<Technician | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
-  useEffect(() => {
-    loadTechnicians();
-  }, []);
-  
-  const loadTechnicians = () => {
-    const techs = technicienService.getAll();
-    setTechnicians(techs);
-  };
-  
-  const resetForm = () => {
-    setName('');
-    setEmail('');
-    setPassword('');
-    setPhone('');
-    setSpecialty('');
-    setIsActive(true);
+  const handleOpenAddDialog = () => {
     setSelectedTechnician(null);
+    setFormDialogOpen(true);
   };
   
-  const openAddDialog = () => {
-    resetForm();
-    setFormMode('add');
-    setIsDialogOpen(true);
+  const handleEdit = (technician: Technician) => {
+    setSelectedTechnician(technician);
+    setFormDialogOpen(true);
   };
   
-  const openEditDialog = (technician: Technician) => {
-    setName(technician.name);
-    setEmail(technician.email);
-    setPassword(technician.password);
-    setPhone(technician.phone || '');
-    setSpecialty(technician.specialty || '');
-    setIsActive(technician.isActive);
-    setSelectedTechnician(technician.id);
-    setFormMode('edit');
-    setIsDialogOpen(true);
+  const handleDelete = (technician: Technician) => {
+    setSelectedTechnician(technician);
+    setErrorMessage(null);
+    setDeleteDialogOpen(true);
   };
   
-  const openDeleteDialog = (id: string) => {
-    setSelectedTechnician(id);
-    setIsDeleteDialogOpen(true);
-  };
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const confirmDelete = async () => {
+    if (!selectedTechnician) return;
+    
+    setIsDeleting(true);
+    setErrorMessage(null);
     
     try {
-      if (formMode === 'add') {
-        technicienService.add({
-          name,
-          email,
-          password,
-          phone,
-          specialty,
-          isActive
-        });
-        toast.success("Technicien ajouté avec succès");
-      } else if (formMode === 'edit' && selectedTechnician) {
-        technicienService.update(selectedTechnician, {
-          name,
-          email,
-          password,
-          phone,
-          specialty,
-          isActive
-        });
-        toast.success("Technicien mis à jour avec succès");
-      }
-      
-      loadTechnicians();
-      setIsDialogOpen(false);
-      resetForm();
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error("Erreur", { description: error.message });
-      } else {
-        toast.error("Une erreur s'est produite");
-      }
-    }
-  };
-  
-  const handleDelete = () => {
-    if (selectedTechnician) {
-      const success = technicienService.delete(selectedTechnician);
+      const success = await deleteTechnician(selectedTechnician.id);
       
       if (success) {
-        toast.success("Technicien supprimé avec succès");
-        loadTechnicians();
+        setDeleteDialogOpen(false);
+        setSelectedTechnician(null);
       } else {
-        toast.error("Erreur lors de la suppression");
+        setErrorMessage("Erro ao excluir o prestador. Tente novamente.");
       }
-      
-      setIsDeleteDialogOpen(false);
-      setSelectedTechnician(null);
+    } catch (error) {
+      console.error("Exception during technician deletion:", error);
+      setErrorMessage("Uma exceção ocorreu durante a exclusão.");
+    } finally {
+      setIsDeleting(false);
     }
   };
   
-  const toggleTechnicianStatus = (id: string) => {
-    const updated = technicienService.toggleActive(id);
-    
-    if (updated) {
-      toast.success(
-        updated.isActive 
-          ? "Technicien activé avec succès" 
-          : "Technicien désactivé avec succès"
-      );
-      loadTechnicians();
-    }
+  const handleToggleShowPasswords = () => {
+    setShowPasswords(!showPasswords);
   };
   
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border bg-card p-8">
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <>
@@ -162,86 +89,19 @@ const TechnicienManager: React.FC = () => {
               Ajoutez, modifiez ou supprimez des prestataires techniques
             </CardDescription>
           </div>
-          <Button onClick={openAddDialog}>
+          <Button onClick={handleOpenAddDialog}>
             <UserPlus className="h-4 w-4 mr-2" />
             Ajouter un prestataire
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border mb-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>
-                    <div className="flex items-center space-x-1">
-                      <span>Mot de passe</span>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-5 w-5"
-                        onClick={() => setShowPasswords(!showPasswords)}
-                      >
-                        {showPasswords ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                      </Button>
-                    </div>
-                  </TableHead>
-                  <TableHead>Spécialité</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Créé le</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {technicians.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
-                      Aucun prestataire technique trouvé
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  technicians.map((tech) => (
-                    <TableRow key={tech.id}>
-                      <TableCell className="font-medium">{tech.name}</TableCell>
-                      <TableCell>{tech.email}</TableCell>
-                      <TableCell>
-                        {showPasswords ? tech.password : '••••••••'}
-                      </TableCell>
-                      <TableCell>{tech.specialty || '-'}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          tech.isActive 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {tech.isActive ? 'Actif' : 'Inactif'}
-                        </span>
-                      </TableCell>
-                      <TableCell>{formatDate(tech.createdAt)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => toggleTechnicianStatus(tech.id)}>
-                            {tech.isActive ? (
-                              <span className="text-red-500 text-xs">Désactiver</span>
-                            ) : (
-                              <span className="text-green-500 text-xs">Activer</span>
-                            )}
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(tech)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(tech.id)}>
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <TechnicianList
+            technicians={technicians}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggleStatus={toggleTechnicianStatus}
+            showPasswords={showPasswords}
+          />
         </CardContent>
         <CardFooter className="flex justify-between">
           <div className="text-sm text-muted-foreground">
@@ -251,7 +111,7 @@ const TechnicienManager: React.FC = () => {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => setShowPasswords(!showPasswords)}
+              onClick={handleToggleShowPasswords}
             >
               {showPasswords ? (
                 <>
@@ -269,117 +129,32 @@ const TechnicienManager: React.FC = () => {
         </CardFooter>
       </Card>
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {formMode === 'add' ? 'Ajouter un prestataire' : 'Modifier le prestataire'}
-            </DialogTitle>
-            <DialogDescription>
-              {formMode === 'add' 
-                ? 'Créez un nouveau compte prestataire technique.'
-                : 'Modifiez les informations du prestataire technique.'}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Nom complet</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input
-                  id="password"
-                  type="text"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="phone">Téléphone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="specialty">Spécialité</Label>
-                <Select value={specialty} onValueChange={setSpecialty}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez une spécialité" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="plomberie">Plomberie</SelectItem>
-                    <SelectItem value="électricité">Électricité</SelectItem>
-                    <SelectItem value="chauffage">Chauffage</SelectItem>
-                    <SelectItem value="serrurerie">Serrurerie</SelectItem>
-                    <SelectItem value="menuiserie">Menuiserie</SelectItem>
-                    <SelectItem value="peinture">Peinture</SelectItem>
-                    <SelectItem value="maçonnerie">Maçonnerie</SelectItem>
-                    <SelectItem value="autre">Autre</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={isActive}
-                  onCheckedChange={setIsActive}
-                  id="active-status"
-                />
-                <Label htmlFor="active-status">Compte actif</Label>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Annuler
-              </Button>
-              <Button type="submit">
-                {formMode === 'add' ? 'Ajouter' : 'Enregistrer'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <TechnicianFormDialog
+        isOpen={formDialogOpen}
+        onClose={() => {
+          setFormDialogOpen(false);
+          setSelectedTechnician(null);
+        }}
+        onSuccess={() => {
+          setFormDialogOpen(false);
+          setSelectedTechnician(null);
+          loadTechnicians();
+        }}
+        technicianToEdit={selectedTechnician}
+      />
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirmer la suppression</DialogTitle>
-            <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce prestataire technique ? Cette action est irréversible.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Annuler
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Supprimer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteTechnicianDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setSelectedTechnician(null);
+          setErrorMessage(null);
+        }}
+        onConfirm={confirmDelete}
+        technicianName={selectedTechnician?.name}
+        isDeleting={isDeleting}
+        errorMessage={errorMessage}
+      />
     </>
   );
 };
