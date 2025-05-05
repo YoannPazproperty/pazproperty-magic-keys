@@ -1,13 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 import TechnicienManager from "@/components/TechnicienManager";
 import { ServiceOrdersList } from "@/components/extranet/ServiceOrdersList";
 import { UserPasswordSettingsDialog } from "@/components/extranet/UserPasswordSettingsDialog";
+import { ProviderInfoCard } from "@/components/extranet/ProviderInfoCard";
+import { useProviderDetails } from "@/hooks/useProviderDetails";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,6 +19,7 @@ const ExtranetTechnique = () => {
   const { signOut, user } = useAuth();
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
+  const { providerDetails, loading: loadingProvider, error: providerError } = useProviderDetails();
 
   // Check if user hasn't set a password yet
   useEffect(() => {
@@ -120,6 +124,13 @@ const ExtranetTechnique = () => {
               </Button>
             </div>
           </div>
+          
+          {/* Provider information card */}
+          <ProviderInfoCard 
+            provider={providerDetails}
+            loading={loadingProvider}
+            error={providerError}
+          />
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-8">
