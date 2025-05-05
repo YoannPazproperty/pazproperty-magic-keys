@@ -94,7 +94,20 @@ export const deleteProvider = async (id: string): Promise<boolean> => {
     
     console.log(`Found provider to delete: ${existingProvider.empresa}`);
     
-    // Procéder à la suppression
+    // Supprimer d'abord les références dans prestadores_roles
+    console.log(`Deleting provider roles for provider ID: ${id}`);
+    const { error: rolesError } = await supabase
+      .from('prestadores_roles')
+      .delete()
+      .eq('prestador_id', id);
+      
+    if (rolesError) {
+      console.error('Error deleting provider roles:', rolesError);
+      console.error('Error details:', rolesError.message, rolesError.details, rolesError.hint);
+      return false;
+    }
+    
+    // Procéder ensuite à la suppression du prestataire
     const { error } = await supabase
       .from('prestadores_de_servicos')
       .delete()
@@ -113,3 +126,4 @@ export const deleteProvider = async (id: string): Promise<boolean> => {
     return false;
   }
 };
+
