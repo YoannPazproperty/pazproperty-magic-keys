@@ -22,6 +22,7 @@ const ExtranetTechnique = () => {
   const { providerDetails, loading: loadingProvider, error: providerError } = useProviderDetails();
   
   console.log("Provider details in ExtranetTechnique:", providerDetails);
+  console.log("Current user in ExtranetTechnique:", user);
 
   // Check if user hasn't set a password yet
   useEffect(() => {
@@ -29,6 +30,8 @@ const ExtranetTechnique = () => {
     // Or if user is coming from a password reset
     if (user && user.user_metadata) {
       const metadata = user.user_metadata;
+      console.log("User metadata in ExtranetTechnique:", metadata);
+      
       if (metadata.first_login || metadata.password_reset_required) {
         console.log("Password change required based on metadata:", metadata);
         setIsPasswordChangeRequired(true);
@@ -64,14 +67,30 @@ const ExtranetTechnique = () => {
   // Handle successful password change
   const handlePasswordChangeSuccess = async () => {
     try {
+      console.log("Processando sucesso de alteração de senha...");
+      
       // Update user metadata to remove password reset flags
-      await supabase.auth.updateUser({
+      const updateResult = await supabase.auth.updateUser({
         data: {
           first_login: false,
           password_reset_required: false,
           password_reset_at: new Date().toISOString()
         }
       });
+      
+      console.log("Resultado da atualização de metadados após alteração de senha:", updateResult);
+      
+      if (updateResult.error) {
+        console.error("Erro ao atualizar metadados após alteração de senha:", updateResult.error);
+        // Warn but continue
+        toast.warning("Aviso", {
+          description: "A senha foi alterada, mas houve um erro ao atualizar os metadados do usuário."
+        });
+      }
+      
+      // Verify the user session and metadata after update
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log("Sessão após atualização de senha:", sessionData);
       
       setIsPasswordChangeRequired(false);
       setIsSettingsDialogOpen(false);
@@ -80,18 +99,24 @@ const ExtranetTechnique = () => {
         description: "Você agora pode acessar todas as funcionalidades."
       });
     } catch (error) {
-      console.error("Error updating user metadata after password change:", error);
+      console.error("Erro ao atualizar metadados após alteração de senha:", error);
       // Allow the user to continue even if metadata update fails
       setIsPasswordChangeRequired(false);
       setIsSettingsDialogOpen(false);
+      
+      toast.warning("Aviso", {
+        description: "A senha foi alterada, mas houve um erro ao finalizar o processo."
+      });
     }
   };
 
   const handleLogout = async () => {
     try {
+      console.log("Iniciando processo de logout...");
       await signOut();
+      console.log("Logout realizado com sucesso");
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error("Erro durante o logout:", error);
     }
   };
 

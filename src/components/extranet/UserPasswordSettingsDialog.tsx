@@ -46,15 +46,38 @@ export function UserPasswordSettingsDialog({
     setIsLoading(true);
 
     try {
+      // Log the current session user email for debugging
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userEmail = sessionData.session?.user?.email;
+      console.log("Atualizando senha para o usuário:", userEmail);
+
       // Update password in Supabase
-      const { error } = await supabase.auth.updateUser({
+      const { data, error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
       if (error) {
-        console.error("Error updating password:", error);
+        console.error("Erro ao atualizar senha:", error);
         setError(error.message || "Erro ao atualizar a senha");
         return;
+      }
+
+      console.log("Resposta da atualização de senha:", data);
+      
+      // Explicitly update user metadata to ensure password_reset_required is false
+      const metadataUpdateResult = await supabase.auth.updateUser({
+        data: {
+          first_login: false,
+          password_reset_required: false,
+          password_reset_at: new Date().toISOString()
+        }
+      });
+
+      console.log("Resultado da atualização de metadados:", metadataUpdateResult);
+
+      if (metadataUpdateResult.error) {
+        console.error("Erro ao atualizar metadados:", metadataUpdateResult.error);
+        // Continue anyway since password was changed successfully
       }
 
       // Clear form
@@ -74,7 +97,7 @@ export function UserPasswordSettingsDialog({
         onOpenChange(false);
       }
     } catch (err: any) {
-      console.error("Unexpected error updating password:", err);
+      console.error("Erro inesperado ao atualizar senha:", err);
       setError(err.message || "Ocorreu um erro ao atualizar a senha");
     } finally {
       setIsLoading(false);

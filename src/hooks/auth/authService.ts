@@ -18,13 +18,33 @@ export const signInWithPassword = async (email: string, password: string) => {
       // Continuer même si erreur - peut-être que l'utilisateur existe dans auth mais pas dans la table users
     }
     
+    if (userExists) {
+      console.log("Utilisateur trouvé dans la base de données:", userExists.id);
+    } else {
+      console.log("Utilisateur non trouvé dans la table users, vérification dans auth.users...");
+      
+      // Vérification supplémentaire directe dans auth.users (uniquement en mode service_role)
+      try {
+        const { data: authUsers } = await supabase.rpc('check_user_exists', { 
+          email_param: email 
+        });
+        console.log("Résultat de vérification dans auth.users:", authUsers);
+      } catch (rpcErr) {
+        console.log("Impossible de vérifier dans auth.users (normal sans droits service_role)");
+      }
+    }
+    
+    console.log("Tentative de connexion avec email:", email, "et mot de passe de longueur:", password ? password.length : 0);
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      console.error("Erreur de connexion:", error);
+      console.error("Erreur de connexion détaillée:", error);
+      console.error("Code d'erreur:", error.status);
+      console.error("Message d'erreur:", error.message);
       
       if (error.message.includes("Invalid login credentials")) {
         toast.error("Identifiants invalides", {
@@ -43,6 +63,13 @@ export const signInWithPassword = async (email: string, password: string) => {
       return { error, success: false, data: null };
     }
 
+    console.log("Connexion réussie, données de session:", {
+      userId: data.user?.id,
+      userEmail: data.user?.email,
+      hasSession: !!data.session,
+      metadata: data.user?.user_metadata
+    });
+    
     toast.success("Connexion réussie");
     return { error: null, success: true, data };
   } catch (err) {
@@ -180,5 +207,43 @@ export const signOutUser = async () => {
     console.error("Erreur inattendue lors de la déconnexion:", err);
     toast.error("Erreur de déconnexion");
     return { error: err, success: false };
+  }
+};
+
+// Ajout d'une fonction utilitaire pour tester directement les identifiants
+export const testLoginCredentials = async (email: string, password: string) => {
+  try {
+    console.log("Test d'identifiants pour:", email);
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error("Échec du test de connexion:", error);
+      return { 
+        success: false, 
+        error: error.message,
+        details: {
+          status: error.status,
+          name: error.name
+        }
+      };
+    }
+
+    console.log("Test de connexion réussi, utilisateur:", data.user?.email);
+    return { 
+      success: true, 
+      userId: data.user?.id,
+      userEmail: data.user?.email,
+      sessionActive: !!data.session
+    };
+  } catch (err: any) {
+    console.error("Erreur inattendue lors du test de connexion:", err);
+    return { 
+      success: false, 
+      error: err.message || "Erreur technique inattendue"
+    };
   }
 };

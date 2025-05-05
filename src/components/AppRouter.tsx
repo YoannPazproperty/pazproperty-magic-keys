@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -15,6 +14,7 @@ import NotFound from "../pages/NotFound";
 import Auth from "../pages/Auth";
 import AuthCallback from "../pages/AuthCallback";
 import AccessDenied from "../pages/AccessDenied";
+import AuthDiagnostic from "@/pages/AuthDiagnostic";
 import { ConnectionStatus } from "../hooks/useSupabaseInit";
 
 interface AppRouterProps {
@@ -54,6 +54,10 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
                 <ExtranetTechnique />
               </ProtectedRoute>
             } 
+          />
+          <Route 
+            path="/auth-diagnostic" 
+            element={<AuthDiagnostic />}
           />
           {/* Redirection to appropriate authentication pages */}
           <Route 
