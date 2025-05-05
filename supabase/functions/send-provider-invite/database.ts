@@ -42,6 +42,7 @@ export const getProviderData = async (supabase: SupabaseClient, providerId: stri
  */
 export const getUserByEmail = async (supabase: SupabaseClient, email: string) => {
   try {
+    console.log(`Checking if user with email ${email} exists in auth.users`);
     const { data, error } = await supabase.auth.admin.listUsers({
       filter: {
         email: email
@@ -53,7 +54,13 @@ export const getUserByEmail = async (supabase: SupabaseClient, email: string) =>
       throw new Error(`Failed to check user: ${error.message}`);
     }
 
-    return data.users.length > 0 ? data.users[0] : null;
+    if (data.users.length > 0) {
+      console.log(`User found in auth.users with ID: ${data.users[0].id}`);
+      return data.users[0];
+    } else {
+      console.log(`No user found in auth.users with email: ${email}`);
+      return null;
+    }
   } catch (error) {
     console.error('Exception checking user:', error);
     throw error;
@@ -92,6 +99,8 @@ export const updateUserMetadata = async (supabase: SupabaseClient, userId: strin
  */
 export const createUser = async (supabase: SupabaseClient, email: string, password: string, metadata: Record<string, any>) => {
   try {
+    console.log(`Creating new user with email: ${email} and metadata:`, metadata);
+    
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -109,6 +118,8 @@ export const createUser = async (supabase: SupabaseClient, email: string, passwo
       console.error('Error creating user:', error);
       throw new Error(`Failed to create user: ${error.message}`);
     }
+
+    console.log(`User created successfully with ID: ${data.user.id}`);
 
     // Create provider role for the user
     const { error: roleError } = await supabase

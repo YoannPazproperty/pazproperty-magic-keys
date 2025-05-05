@@ -20,13 +20,22 @@ export const sendInvitationEmail = async (
     const loginUrl = `${siteUrl}/auth?provider=true`;
     const resetPasswordUrl = `${siteUrl}/auth/reset-password?provider=true`;
 
+    console.log("Email preparation:", {
+      isNewUser,
+      hasTempPassword: !!tempPassword,
+      siteUrl,
+      loginUrl,
+      resetPasswordUrl
+    });
+
     if (isNewUser && tempPassword) {
       // Email for a new user with temporary password
+      console.log("Using NEW USER template with temporary password");
       const { data, error } = await resend.emails.send({
         from: "PAZ Property <noreply@pazproperty.pt>",
         to: email,
         subject: "Suas credenciais de acesso - PAZ Property",
-        html: `
+        html: formatEmailWithSignature(`
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Bem-vindo ao Extranet Técnica da PAZ Property!</h2>
             <p>Olá ${name},</p>
@@ -44,7 +53,7 @@ export const sendInvitationEmail = async (
             <p>Se você tiver alguma dúvida, por favor entre em contato com a PAZ Property.</p>
             <p>Atenciosamente,<br>Equipe PAZ Property</p>
           </div>
-        `
+        `)
       });
 
       if (error) {
@@ -55,11 +64,12 @@ export const sendInvitationEmail = async (
       return data;
     } else {
       // Email for an existing user
+      console.log("Using EXISTING USER template without password");
       const { data, error } = await resend.emails.send({
         from: "PAZ Property <noreply@pazproperty.pt>",
         to: email,
         subject: "Acesso ao Extranet Técnica - PAZ Property",
-        html: `
+        html: formatEmailWithSignature(`
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Acesso ao Extranet Técnica da PAZ Property</h2>
             <p>Olá ${name},</p>
@@ -73,7 +83,7 @@ export const sendInvitationEmail = async (
             <p>Se você tiver alguma dúvida, por favor entre em contato com a PAZ Property.</p>
             <p>Atenciosamente,<br>Equipe PAZ Property</p>
           </div>
-        `
+        `)
       });
 
       if (error) {

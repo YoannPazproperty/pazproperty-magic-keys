@@ -85,9 +85,9 @@ Deno.serve(async (req) => {
       
       let userId: string;
       let tempPassword: string | undefined;
-      let isNewUser = !existingUser;
+      const isNewUser = !existingUser;
       
-      // Create temporary password only for new users - Generate an easier-to-remember password
+      // Generate temporary password only for new users - Generate an easier-to-remember password
       if (isNewUser) {
         // Generate a simpler and more memorable temporary password
         const adjectives = ["Happy", "Sunny", "Shiny", "Lucky", "Magic", "Super", "Mega"];
@@ -140,8 +140,10 @@ Deno.serve(async (req) => {
             to: provider.email,
             name: provider.nome_gerente,
             isNewUser: isNewUser,
+            hasPassword: !!tempPassword,
             publicSiteUrl
           });
+          
           emailResult = await sendInvitationEmail(
             resend,
             provider.email,
@@ -167,6 +169,8 @@ Deno.serve(async (req) => {
           message: wasEmailSent ? 'Invitation sent successfully' : 'User account created/updated but email could not be sent',
           isNewUser: isNewUser,
           emailSent: wasEmailSent,
+          emailTemplate: isNewUser ? 'new_user' : 'existing_user',
+          passwordGenerated: isNewUser && !!tempPassword,
           emailError: emailError ? {
             message: emailError.message,
             code: emailError.statusCode || 'UNKNOWN'
