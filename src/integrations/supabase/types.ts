@@ -513,10 +513,11 @@ export type Database = {
               _role: Database["public"]["Enums"]["user_role"]
             }
           | { _user_id: string; _role: string }
+          | { role_name: string }
         Returns: boolean
       }
       is_prestador: {
-        Args: { _user_id: string }
+        Args: Record<PropertyKey, never> | { _user_id: string }
         Returns: boolean
       }
       lv_prestador: {
@@ -532,7 +533,7 @@ export type Database = {
         Returns: string
       }
       restore_provider: {
-        Args: { provider_id: string }
+        Args: Record<PropertyKey, never> | { provider_id: string }
         Returns: boolean
       }
       set_auth_security_settings: {

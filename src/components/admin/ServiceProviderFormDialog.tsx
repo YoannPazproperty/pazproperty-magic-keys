@@ -66,57 +66,21 @@ export function ServiceProviderFormDialog({
     defaultValues: defaultValues,
   });
 
-  async function onSubmit(data: ProviderFormValues) {
-    setIsSubmitting(true);
-    
-    try {
-      if (isEditing && providerToEdit) {
-        const updatedProvider = await updateProvider(providerToEdit.id, data);
-        
-        if (updatedProvider) {
-          toast.success("Prestador atualizado com sucesso");
-          onSuccess();
-        } else {
-          toast.error("Erro ao atualizar prestador");
-        }
-      } else {
-        const newProvider = await createProvider({
-          empresa: data.empresa,
-          tipo_de_obras: data.tipo_de_obras,
-          nome_gerente: data.nome_gerente,
-          telefone: data.telefone || null,
-          email: data.email,
-          endereco: data.endereco || null,
-          codigo_postal: data.codigo_postal || null,
-          cidade: data.cidade || null,
-          nif: data.nif || null,
-        });
-        
-        if (newProvider) {
-          toast.success("Prestador criado com sucesso");
-          onSuccess();
-        } else {
-          toast.error("Erro ao criar prestador");
-        }
-      }
-    } catch (error) {
-      console.error("Error submitting provider form:", error);
-      toast.error("Erro ao processar o formulário");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  const handleInvite = async (providerId: string) => {
+  // Cette fonction envoie une invitation à un prestataire
+  const sendProviderInvite = async (providerId: string): Promise<{
+    success: boolean;
+    emailSent: boolean;
+    emailError: { message: string, code: string } | null;
+    isNewUser?: boolean;
+    message?: string;
+  }> => {
     if (!providerId) {
-      toast.error("ID do prestador não encontrado");
-      return;
+      return { 
+        success: false, 
+        emailSent: false,
+        emailError: { message: "ID du prestador não encontrado", code: "MISSING_ID" }
+      };
     }
-    
-    setIsSendingInvite(true);
-    setEmailError(null);
-    setTechnicalError(null);
-    setInviteStatus("Enviando convite...");
     
     try {
       console.log("Sending invite to provider:", providerId);
@@ -136,103 +100,183 @@ export function ServiceProviderFormDialog({
       // Get the anon key for authentication
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVienRqanhtbGRvZ3B3YXdjbnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyODU4MjMsImV4cCI6MjA1OTg2MTgyM30.779CoUY0U1WO7RXXx9OWV1axrXS-UYXuleh_NvH0V8U";
       
-      // Utiliser fetch directement avec structure try/catch complète pour un meilleur diagnostic
-      try {
-        console.log("Sending fetch request with headers:", {
+      const response = await fetch(edgeFunctionUrl, {
+        method: 'POST',
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken ? accessToken.substring(0, 10) + '...' : 'none'}`,
-          'apikey': SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 10) + '...' : 'none'
-        });
-        
-        const response = await fetch(edgeFunctionUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-            'apikey': SUPABASE_ANON_KEY
-          },
-          body: JSON.stringify(requestBody)
-        });
-        
-        console.log("Response status:", response.status);
-        console.log("Response status text:", response.statusText);
-        
-        // Vérifier les entêtes de la réponse pour le débogage
-        const responseHeaders: Record<string, string> = {};
-        response.headers.forEach((value, key) => {
-          responseHeaders[key] = value;
-        });
-        console.log("Response headers:", responseHeaders);
+          'Authorization': `Bearer ${accessToken}`,
+          'apikey': SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      console.log("Response status:", response.status);
+      console.log("Response status text:", response.statusText);
 
-        if (!response.ok) {
-          console.error("Error status from Edge function:", response.status, response.statusText);
-          let errorText = "";
-          try {
-            errorText = await response.text();
-          } catch (textError) {
-            console.error("Could not read response text:", textError);
-          }
-          throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
-        }
-        
-        let data;
+      if (!response.ok) {
+        console.error("Error status from Edge function:", response.status, response.statusText);
+        let errorText = "";
         try {
-          data = await response.json();
-          console.log("Invite response:", data);
-        } catch (jsonError) {
-          console.error("Error parsing JSON response:", jsonError);
-          throw new Error("Failed to parse server response");
+          errorText = await response.text();
+        } catch (textError) {
+          console.error("Could not read response text:", textError);
         }
-
-        if (!data.success) {
-          console.error("Error in response data:", data.error);
-          throw new Error(data.error || "Erro ao processar convite");
-        }
-
-        if (data.emailError) {
-          setEmailError(data.emailError);
-          setInviteStatus("Conta configurada, mas erro no envio de email");
-        }
-
-        if (data && data.isNewUser) {
-          if (data.emailSent) {
-            setInviteStatus("Conta criada e convite enviado com sucesso");
-            toast.success("Convite enviado com sucesso", {
-              description: "Um email com as credenciais foi enviado ao prestador"
-            });
-          } else {
-            setInviteStatus("Conta criada, mas erro no envio de email");
-            toast.warning("Conta criada com sucesso", {
-              description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
-            });
-          }
-        } else {
-          if (data.emailSent) {
-            setInviteStatus("Convite enviado com sucesso");
-            toast.success("Convite enviado com sucesso", {
-              description: "O prestador já possui uma conta e foi notificado"
-            });
-          } else {
-            setInviteStatus("Permissões atualizadas, mas erro no envio de email");
-            toast.warning("Permissões atualizadas", {
-              description: "O prestador já possui uma conta e suas permissões foram atualizadas, mas ocorreu um erro ao enviar o email"
-            });
-          }
-        }
-      } catch (fetchError: any) {
-        console.error("Fetch error:", fetchError);
-        throw new Error(`Erro na comunicação com o servidor: ${fetchError.message}`);
+        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
       }
+      
+      const data = await response.json();
+      console.log("Invite response:", data);
+
+      if (!data.success) {
+        console.error("Error in response data:", data.error);
+        throw new Error(data.error || "Erro ao processar convite");
+      }
+
+      return {
+        success: true,
+        emailSent: data.emailSent || false,
+        emailError: data.emailError,
+        isNewUser: data.isNewUser,
+        message: data.message
+      };
+      
     } catch (error: any) {
       console.error('Error sending invite:', error);
-      setInviteStatus(`Erro: ${error.message}`);
-      setTechnicalError(error.message || "Erro desconhecido");
-      toast.error("Erro ao enviar convite", { 
-        description: error.message || "Verifique os logs para mais detalhes" 
-      });
-    } finally {
-      setIsSendingInvite(false);
+      return { 
+        success: false, 
+        emailSent: false,
+        emailError: {
+          message: error.message || "Erro desconhecido",
+          code: "UNKNOWN"
+        }
+      };
     }
+  };
+
+  async function onSubmit(data: ProviderFormValues) {
+    setIsSubmitting(true);
+    setEmailError(null);
+    setTechnicalError(null);
+    setInviteStatus(null);
+    
+    try {
+      let providerId: string | undefined;
+      
+      if (isEditing && providerToEdit) {
+        const updatedProvider = await updateProvider(providerToEdit.id, data);
+        
+        if (updatedProvider) {
+          toast.success("Prestador atualizado com sucesso");
+          providerId = providerToEdit.id;
+        } else {
+          toast.error("Erro ao atualizar prestador");
+        }
+      } else {
+        // Création d'un nouveau prestataire
+        const newProvider = await createProvider({
+          empresa: data.empresa,
+          tipo_de_obras: data.tipo_de_obras,
+          nome_gerente: data.nome_gerente,
+          telefone: data.telefone || null,
+          email: data.email,
+          endereco: data.endereco || null,
+          codigo_postal: data.codigo_postal || null,
+          cidade: data.cidade || null,
+          nif: data.nif || null,
+        });
+        
+        if (newProvider) {
+          toast.success("Prestador criado com sucesso");
+          providerId = newProvider.id;
+          
+          // Envoi automatique de l'invitation pour les nouveaux prestataires
+          setIsSendingInvite(true);
+          setInviteStatus("Enviando convite...");
+          
+          const inviteResult = await sendProviderInvite(newProvider.id);
+          
+          if (inviteResult.success) {
+            if (inviteResult.emailSent) {
+              setInviteStatus("Convite enviado com sucesso");
+              toast.success("Convite enviado com sucesso", {
+                description: inviteResult.isNewUser 
+                  ? "Um email com as credenciais foi enviado ao prestador"
+                  : "O prestador foi notificado"
+              });
+            } else {
+              setInviteStatus("Conta configurada, mas erro no envio de email");
+              toast.warning("Erro no envio do email", {
+                description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
+              });
+            }
+            
+            if (inviteResult.emailError) {
+              setEmailError(inviteResult.emailError);
+            }
+          } else {
+            setInviteStatus("Erro no envio do convite");
+            setTechnicalError(inviteResult.emailError?.message || "Erro desconhecido");
+            toast.error("Erro ao enviar convite", { 
+              description: inviteResult.emailError?.message || "Verifique os logs para mais detalhes" 
+            });
+          }
+          
+          setIsSendingInvite(false);
+        } else {
+          toast.error("Erro ao criar prestador");
+        }
+      }
+      
+      // En cas de succès, appeler la fonction onSuccess pour rafraîchir la liste
+      onSuccess();
+    } catch (error) {
+      console.error("Error submitting provider form:", error);
+      toast.error("Erro ao processar o formulário");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const handleInvite = async (providerId: string) => {
+    if (!providerId) {
+      toast.error("ID do prestador não encontrado");
+      return;
+    }
+    
+    setIsSendingInvite(true);
+    setEmailError(null);
+    setTechnicalError(null);
+    setInviteStatus("Enviando convite...");
+    
+    const inviteResult = await sendProviderInvite(providerId);
+    
+    if (inviteResult.success) {
+      if (inviteResult.emailSent) {
+        setInviteStatus("Convite enviado com sucesso");
+        toast.success("Convite enviado com sucesso", {
+          description: inviteResult.isNewUser 
+            ? "Um email com as credenciais foi enviado ao prestador" 
+            : "O prestador foi notificado"
+        });
+      } else {
+        setInviteStatus("Permissões atualizadas, mas erro no envio de email");
+        toast.warning("Permissões atualizadas", {
+          description: "O prestador já possui uma conta e suas permissões foram atualizadas, mas ocorreu um erro ao enviar o email"
+        });
+      }
+      
+      if (inviteResult.emailError) {
+        setEmailError(inviteResult.emailError);
+      }
+    } else {
+      setInviteStatus("Erro no envio do convite");
+      setTechnicalError(inviteResult.emailError?.message || "Erro desconhecido");
+      toast.error("Erro ao enviar convite", { 
+        description: inviteResult.emailError?.message || "Verifique os logs para mais detalhes" 
+      });
+    }
+    
+    setIsSendingInvite(false);
   };
 
   useEffect(() => {
@@ -489,7 +533,7 @@ export function ServiceProviderFormDialog({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                      Salvando...
+                      {isSendingInvite ? "Processando..." : "Salvando..."}
                     </>
                   ) : isEditing ? "Atualizar" : "Criar"}
                 </Button>
