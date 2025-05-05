@@ -1,5 +1,5 @@
 
-// Export the new auth module structure
+// Export all components and hooks from the auth module
 export * from './AuthProviderNew';
 export * from './types';
 export * from './roleService';

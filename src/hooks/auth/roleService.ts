@@ -41,7 +41,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
             .from('user_roles')
             .insert({ 
               user_id: userId,
-              role: 'admin' as UserRole
+              role: 'admin'
             });
             
           if (insertError) {
@@ -60,7 +60,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
               .from('user_roles')
               .insert({ 
                 user_id: userId,
-                role: 'provider' as UserRole
+                role: 'provider'
               });
               
             if (insertError) {
@@ -75,7 +75,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
               .from('user_roles')
               .insert({ 
                 user_id: userId,
-                role: 'user' as UserRole
+                role: 'user'
               });
               
             if (insertError) {
