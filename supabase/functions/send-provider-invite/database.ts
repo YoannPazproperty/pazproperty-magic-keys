@@ -1,4 +1,3 @@
-
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
 
 interface ProviderData {
@@ -92,13 +91,32 @@ export const createUser = async (supabase: SupabaseClient, email: string, passwo
       email_confirm: true,
       user_metadata: {
         ...metadata,
-        first_login: true // Mark that this is the user's first login
+        is_provider: true,
+        first_login: true,
+        password_reset_required: true,
+        password_reset_at: new Date().toISOString()
       }
     });
 
     if (error) {
       console.error('Error creating user:', error);
       throw new Error(`Failed to create user: ${error.message}`);
+    }
+
+    // Créer le rôle provider pour l'utilisateur
+    const { error: roleError } = await supabase
+      .from('user_roles')
+      .insert({ 
+        user_id: data.user.id, 
+        role: 'provider'
+      });
+
+    if (roleError) {
+      console.error('Error creating provider role:', roleError);
+      // Ne pas échouer si le rôle existe déjà
+      if (roleError.code !== '23505') { // Code d'erreur pour violation de contrainte unique
+        throw new Error(`Failed to create provider role: ${roleError.message}`);
+      }
     }
 
     return data.user;

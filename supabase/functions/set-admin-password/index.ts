@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
 
@@ -30,13 +29,14 @@ serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     const body = await req.json();
-    const { email, password, adminKey, recoveryToken } = body;
+    const { email, password, adminKey, recoveryToken, isProvider } = body;
 
     console.log("Demande de définition/réinitialisation de mot de passe reçue");
     console.log("Méthode:", recoveryToken ? "Token de récupération" : email ? "Email direct" : "Clé admin");
     console.log("Email:", email || "Non fourni");
     console.log("Recovery token présent:", recoveryToken ? `${recoveryToken.substring(0, 8)}...` : "Non");
     console.log("Password fourni de longueur:", password ? password.length : 0);
+    console.log("Est prestataire:", isProvider ? "Oui" : "Non");
 
     // Cas 1: Utilisation d'un token de récupération personnalisé
     if (recoveryToken) {
@@ -150,7 +150,16 @@ serve(async (req) => {
       console.log("Mise à jour du mot de passe pour l'utilisateur:", userId, "avec email:", userEmail);
       const { error: updateError } = await adminClient.auth.admin.updateUserById(
         userId,
-        { password: password }
+        { 
+          password: password,
+          user_metadata: {
+            ...userData2.user.user_metadata,
+            is_provider: isProvider || false,
+            first_login: true,
+            password_reset_required: true,
+            password_reset_at: new Date().toISOString()
+          }
+        }
       );
 
       if (updateError) {
@@ -182,7 +191,7 @@ serve(async (req) => {
         if (!userRoleEnumExists) {
           console.log("Création du type enum user_role");
           await adminClient.rpc('run_sql', { 
-            query: "CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'user');" 
+            query: "CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'user', 'provider');" 
           });
         }
         
@@ -219,26 +228,28 @@ serve(async (req) => {
         if (roleError) {
           console.error("Erreur lors de la vérification du rôle:", roleError);
         } else if (!roleData) {
-          // Créer un rôle admin pour l'utilisateur s'il n'en a pas
-          console.log("Création d'un rôle admin pour l'utilisateur:", userId);
+          // Créer un rôle pour l'utilisateur s'il n'en a pas
+          const role = isProvider ? 'provider' : 'admin';
+          console.log(`Création d'un rôle ${role} pour l'utilisateur:`, userId);
           const { error: insertRoleError } = await adminClient
             .from('user_roles')
-            .insert({ user_id: userId, role: 'admin' });
+            .insert({ user_id: userId, role });
           
           if (insertRoleError) {
-            console.error("Erreur lors de la création du rôle admin:", insertRoleError);
+            console.error(`Erreur lors de la création du rôle ${role}:`, insertRoleError);
           } else {
-            console.log("Rôle admin créé avec succès pour l'utilisateur:", userId);
+            console.log(`Rôle ${role} créé avec succès pour l'utilisateur:`, userId);
           }
         } else {
           console.log("L'utilisateur a déjà un rôle:", roleData.role);
           
-          // Si l'utilisateur n'est pas admin, le promouvoir en admin
-          if (roleData.role !== 'admin') {
-            console.log("Promotion de l'utilisateur au rôle admin");
+          // Si l'utilisateur n'a pas le bon rôle, le mettre à jour
+          const expectedRole = isProvider ? 'provider' : 'admin';
+          if (roleData.role !== expectedRole) {
+            console.log(`Mise à jour du rôle de l'utilisateur vers ${expectedRole}`);
             const { error: updateRoleError } = await adminClient
               .from('user_roles')
-              .update({ role: 'admin' })
+              .update({ role: expectedRole })
               .eq('user_id', userId);
               
             if (updateRoleError) {
@@ -289,7 +300,8 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           message: "Mot de passe mis à jour avec succès",
-          userEmail: userEmail  // Inclure l'email pour faciliter la connexion automatique
+          userEmail: userEmail,  // Inclure l'email pour faciliter la connexion automatique
+          isProvider: isProvider || false // Inclure l'information sur le type d'utilisateur
         }),
         {
           status: 200,

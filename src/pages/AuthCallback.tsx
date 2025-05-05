@@ -212,7 +212,7 @@ const AuthCallback = () => {
               description: sessionError.message
             });
             setTimeout(() => navigate("/auth"), 3000);
-          } else if (data?.session) {
+          } else if (data.session) {
             console.log("Session retrieved successfully");
             toast.success("Login successful");
             
@@ -319,7 +319,8 @@ const AuthCallback = () => {
           body: JSON.stringify({
             password: newPassword,
             recoveryToken: token,
-            email: userEmail || undefined
+            email: userEmail || undefined,
+            isProvider: isProviderReset
           })
         }
       );
