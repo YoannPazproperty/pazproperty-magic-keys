@@ -36,6 +36,7 @@ export function ProvidersList({ providers, isLoading, onRefresh }: ProvidersList
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | null>(null);
   const [providerToDelete, setProviderToDelete] = useState<ServiceProvider | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleEdit = (provider: ServiceProvider) => {
     setSelectedProvider(provider);
@@ -49,16 +50,31 @@ export function ProvidersList({ providers, isLoading, onRefresh }: ProvidersList
 
   const confirmDelete = async () => {
     if (!providerToDelete) return;
-
-    const success = await deleteProvider(providerToDelete.id);
-    if (success) {
-      toast.success("Prestador excluído com sucesso");
-      onRefresh();
-    } else {
-      toast.error("Erro ao excluir prestador");
+    
+    setIsDeleting(true);
+    try {
+      console.log(`Confirming deletion of provider: ${providerToDelete.empresa}`);
+      const success = await deleteProvider(providerToDelete.id);
+      
+      if (success) {
+        toast.success("Prestador excluído com sucesso");
+        onRefresh();
+      } else {
+        toast.error("Erro ao excluir prestador", {
+          description: "Verifique os logs do console para mais detalhes."
+        });
+        console.error("Failed to delete provider:", providerToDelete);
+      }
+    } catch (error) {
+      console.error("Exception during provider deletion:", error);
+      toast.error("Erro ao excluir prestador", {
+        description: "Ocorreu uma exceção durante a exclusão."
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setProviderToDelete(null);
     }
-    setDeleteDialogOpen(false);
-    setProviderToDelete(null);
   };
 
   if (isLoading) {
@@ -159,11 +175,18 @@ export function ProvidersList({ providers, isLoading, onRefresh }: ProvidersList
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setProviderToDelete(null)}>
+            <AlertDialogCancel onClick={() => setProviderToDelete(null)} disabled={isDeleting}>
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>
-              Excluir
+            <AlertDialogAction onClick={confirmDelete} disabled={isDeleting}>
+              {isDeleting ? (
+                <>
+                  <span className="animate-spin mr-2">⟳</span>
+                  Excluindo...
+                </>
+              ) : (
+                "Excluir"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

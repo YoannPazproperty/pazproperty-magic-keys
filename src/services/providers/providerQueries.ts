@@ -73,7 +73,28 @@ export const updateProvider = async (id: string, provider: Partial<ServiceProvid
 
 export const deleteProvider = async (id: string): Promise<boolean> => {
   try {
-    // La fonction archive_provider sera déclenchée automatiquement via le trigger
+    console.log(`Attempting to delete provider with ID: ${id}`);
+    
+    // Vérifier si le prestataire existe avant la suppression
+    const { data: existingProvider, error: fetchError } = await supabase
+      .from('prestadores_de_servicos')
+      .select('id, empresa')
+      .eq('id', id)
+      .single();
+      
+    if (fetchError) {
+      console.error('Error fetching provider before deletion:', fetchError);
+      return false;
+    }
+    
+    if (!existingProvider) {
+      console.error('Provider not found:', id);
+      return false;
+    }
+    
+    console.log(`Found provider to delete: ${existingProvider.empresa}`);
+    
+    // Procéder à la suppression
     const { error } = await supabase
       .from('prestadores_de_servicos')
       .delete()
@@ -81,12 +102,14 @@ export const deleteProvider = async (id: string): Promise<boolean> => {
       
     if (error) {
       console.error('Error deleting provider:', error);
+      console.error('Error details:', error.message, error.details, error.hint);
       return false;
     }
     
+    console.log(`Successfully deleted provider: ${existingProvider.empresa}`);
     return true;
   } catch (err) {
-    console.error('Error in deleteProvider:', err);
+    console.error('Exception in deleteProvider:', err);
     return false;
   }
 };
