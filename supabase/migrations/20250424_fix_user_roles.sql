@@ -3,15 +3,25 @@
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-    CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'prestadores_tecnicos', 'user');
+    CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'provider', 'prestadores_tecnicos', 'user');
   END IF;
 EXCEPTION
   WHEN duplicate_object THEN NULL;
 END$$;
 
--- Make sure we can add the new enum value if it's missing
+-- Make sure we can add the new enum values if they're missing
 DO $$
 BEGIN
+  -- Check if provider is already part of the enum
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_enum e 
+    JOIN pg_type t ON e.enumtypid = t.oid 
+    WHERE t.typname = 'user_role' AND e.enumlabel = 'provider'
+  ) THEN
+    -- Add the new enum value
+    ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'provider';
+  END IF;
+  
   -- Check if prestadores_tecnicos is already part of the enum
   IF NOT EXISTS (
     SELECT 1 FROM pg_enum e 
@@ -70,32 +80,6 @@ BEGIN
   END IF;
 END$$;
 
--- Ensure that the logs table exists for debugging
-CREATE TABLE IF NOT EXISTS public.logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  message TEXT NOT NULL,
-  data JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- Enable RLS on the logs table if not already enabled
-ALTER TABLE IF EXISTS public.logs ENABLE ROW LEVEL SECURITY;
-
--- Policy for logs
-DROP POLICY IF EXISTS "Service role can manage logs" ON public.logs;
-CREATE POLICY "Service role can manage logs" ON public.logs
-  FOR ALL TO service_role USING (true);
-
--- Create a helper function to execute dynamic SQL
-CREATE OR REPLACE FUNCTION public.run_sql(query text)
-RETURNS SETOF RECORD LANGUAGE plpgsql AS $$
-BEGIN
-  RETURN QUERY EXECUTE query;
-EXCEPTION WHEN OTHERS THEN
-  RAISE;
-END;
-$$;
-
 -- Make sure all existing users have a role
 DO $$
 DECLARE
@@ -111,12 +95,4 @@ BEGIN
     INSERT INTO public.user_roles (user_id, role)
     VALUES (u.id, 'user');
   END LOOP;
-
-  -- Promote alexa@pazproperty.pt and yoann@pazproperty.pt to admin if they exist
-  UPDATE public.user_roles
-  SET role = 'admin'
-  WHERE user_id IN (
-    SELECT id FROM auth.users 
-    WHERE email IN ('alexa@pazproperty.pt', 'yoann@pazproperty.pt')
-  );
 END$$;
