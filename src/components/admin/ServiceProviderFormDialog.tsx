@@ -9,6 +9,7 @@ import { ProviderFormValues, providerFormSchema, ServiceProviderFormDialogProps 
 import { useProviderInvite } from "./providers/useProviderInvite";
 import { ProviderFormAlerts } from "./providers/ProviderFormAlerts";
 import { ProviderForm } from "./providers/ProviderForm";
+import { createProviderAccount } from "@/services/providers/providerAccountService";
 
 export function ServiceProviderFormDialog({
   isOpen,
@@ -68,50 +69,61 @@ export function ServiceProviderFormDialog({
         }
       } else {
         // Création d'un nouveau prestataire
-        const newProvider = await createProvider({
-          empresa: data.empresa,
-          tipo_de_obras: data.tipo_de_obras,
-          nome_gerente: data.nome_gerente,
-          telefone: data.telefone || null,
-          email: data.email,
-          endereco: data.endereco || null,
-          codigo_postal: data.codigo_postal || null,
-          cidade: data.cidade || null,
-          nif: data.nif || null,
-        });
+        console.log("Création d'un nouveau prestataire:", data);
         
-        if (newProvider) {
-          toast.success("Prestador criado com sucesso");
-          providerId = newProvider.id;
+        try {
+          // Créer d'abord l'utilisateur dans Auth
+          const accountResult = await createProviderAccount({
+            email: data.email,
+            nome: data.nome_gerente,
+            empresa: data.empresa
+          });
           
-          // Envoi automatique de l'invitation pour les nouveaux prestataires
-          if (providerId) {
-            const inviteResult = await handleInvite(providerId);
+          if (!accountResult.success) {
+            // Afficher message d'erreur si la création du compte a échoué
+            toast.error("Erreur lors de la création du compte", {
+              description: accountResult.message || "L'email existe peut-être déjà dans le système"
+            });
+            setTechnicalError(accountResult.message || "Erreur de création du compte utilisateur");
+            return;
+          }
+          
+          // Si la création du compte a réussi, créer le prestataire dans la base
+          const newProvider = await createProvider({
+            empresa: data.empresa,
+            tipo_de_obras: data.tipo_de_obras,
+            nome_gerente: data.nome_gerente,
+            telefone: data.telefone || null,
+            email: data.email,
+            endereco: data.endereco || null,
+            codigo_postal: data.codigo_postal || null,
+            cidade: data.cidade || null,
+            nif: data.nif || null,
+          });
+          
+          if (newProvider) {
+            toast.success("Prestador criado com sucesso", {
+              description: "Un compte d'accès a été créé et un email envoyé avec les instructions"
+            });
+            providerId = newProvider.id;
             
-            if (inviteResult && 'success' in inviteResult && inviteResult.success) {
-              if ('emailSent' in inviteResult && inviteResult.emailSent) {
-                toast.success("Convite enviado com sucesso", {
-                  description: 'isNewUser' in inviteResult && inviteResult.isNewUser 
-                    ? "Um email com as credenciais foi enviado ao prestador"
-                    : "O prestador foi notificado"
-                });
-              } else {
-                toast.warning("Erro no envio do email", {
-                  description: "O provedor foi adicionado ao sistema, mas ocorreu um erro ao enviar o email"
-                });
-              }
-            } else {
-              const errorMessage = inviteResult && 'emailError' in inviteResult 
-                ? inviteResult.emailError?.message 
-                : "Verifique os logs para mais detalhes";
-              
-              toast.error("Erro ao enviar convite", { 
-                description: errorMessage
+            if (accountResult.emailSent) {
+              toast.success("Email d'invitation envoyé avec succès", {
+                description: "Le prestataire a reçu ses identifiants de connexion"
+              });
+            } else if (accountResult.emailError) {
+              toast.warning("Compte créé mais erreur d'envoi d'email", {
+                description: accountResult.emailError.message
               });
             }
+          } else {
+            toast.error("Erro ao criar prestador");
           }
-        } else {
-          toast.error("Erro ao criar prestador");
+        } catch (error) {
+          console.error("Error creating provider account:", error);
+          toast.error("Erreur lors de la création du prestataire", {
+            description: error instanceof Error ? error.message : "Erreur inconnue"
+          });
         }
       }
       
