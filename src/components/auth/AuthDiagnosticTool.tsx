@@ -58,13 +58,15 @@ export default function AuthDiagnosticTool() {
     try {
       // Call the check-user-auth edge function
       const SUPABASE_URL = "https://ubztjjxmldogpwawcnrj.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVienRqanhtbGRvZ3B3YXdjbnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyODU4MjMsImV4cCI6MjA1OTg2MTgyM30.779CoUY0U1WO7RXXx9OWV1axrXS-UYXuleh_NvH0V8U";
+      
       const response = await fetch(
         `${SUPABASE_URL}/functions/v1/check-user-auth`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': supabase.supabaseKey
+            'apikey': SUPABASE_PUBLISHABLE_KEY
           },
           body: JSON.stringify({ email })
         }
