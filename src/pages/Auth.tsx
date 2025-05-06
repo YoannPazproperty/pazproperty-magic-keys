@@ -8,12 +8,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Info, Shield, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { fixConfirmationTokens, generatePasswordResetLink } from "@/services/supabase/auth";
+import { supabase } from "@/integrations/supabase/client"; // Import supabase directly for auth page
 
 const loginSchema = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -42,7 +42,7 @@ type RegisterValues = z.infer<typeof registerSchema>;
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 
 const Auth = () => {
-  const { signIn, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") as "login" | "register" | "forgot-password" || "login";
   
@@ -50,7 +50,6 @@ const Auth = () => {
     initialTab === "forgot-password" ? "forgot-password" : initialTab === "register" ? "register" : "login"
   );
   
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
@@ -96,17 +95,21 @@ const Auth = () => {
     }
   }, [prefilledEmail, loginForm, forgotPasswordForm, registerForm]);
 
-  const onLoginSubmit = async (values: any) => {
+  const onLoginSubmit = async (values: LoginValues) => {
     setLoading(true);
     try {
       console.log("Tentative de connexion avec:", values.email);
-      const { success, error } = await signIn(values.email, values.password);
-      if (success) {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password
+      });
+      
+      if (!error) {
         toast.success("Connexion réussie", {
           description: "Vous êtes maintenant connecté."
         });
         // La redirection sera gérée par le hook useAuth en fonction du rôle
-      } else if (error) {
+      } else {
         console.error("Erreur de connexion:", error);
         
         if (error.message && error.message.includes("Database error querying schema")) {
@@ -201,6 +204,24 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  // Check authentication status and redirect if already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        // User is already logged in, redirect based on email domain
+        const userEmail = data.session.user.email;
+        if (userEmail?.endsWith('@pazproperty.pt')) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
