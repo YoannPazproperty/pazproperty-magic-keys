@@ -47,9 +47,7 @@ export const createUserRole = async (userId: string): Promise<boolean> => {
       .from('user_roles')
       .insert({ 
         user_id: userId, 
-        // Use type assertion to tell TypeScript we know what we're doing
-        // This is necessary because the Supabase types don't know about the 'provider' role yet
-        role: 'provider' as any // Using 'any' to bypass the type checking temporarily
+        role: 'provider' as UserRole // Now using proper type since the enum has been updated
       });
 
     if (roleError) {
