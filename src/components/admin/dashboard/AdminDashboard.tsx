@@ -6,14 +6,32 @@ import { DeclarationsTab } from "./tabs/DeclarationsTab";
 import { ConstructionTab } from "./tabs/ConstructionTab";
 import { CrmTab } from "./tabs/CrmTab";
 import { ProvidersTab } from "./tabs/ProvidersTab";
+import { AdminUsersTab } from "./tabs/AdminUsersTab";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, getUserRole } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("declarations");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Vérifier si l'utilisateur est un administrateur complet
+    const checkAdminPermission = async () => {
+      try {
+        const role = await getUserRole();
+        setIsAdmin(role === 'admin');
+      } catch (error) {
+        console.error("Erreur lors de la vérification du rôle:", error);
+      }
+    };
+
+    if (user) {
+      checkAdminPermission();
+    }
+  }, [user, getUserRole]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -39,11 +57,12 @@ const AdminDashboard = () => {
       user={user}
     >
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-8">
+        <TabsList className="grid w-full grid-cols-5 mb-8">
           <TabsTrigger value="declarations">Acompanhamento das declarações</TabsTrigger>
           <TabsTrigger value="obras">Acompanhamento das obras</TabsTrigger>
           <TabsTrigger value="crm">CRM</TabsTrigger>
           <TabsTrigger value="prestadores">Prestadores</TabsTrigger>
+          {isAdmin && <TabsTrigger value="users">Utilisateurs Admin</TabsTrigger>}
         </TabsList>
         
         <TabsContent value="declarations" className="space-y-4">
@@ -61,6 +80,12 @@ const AdminDashboard = () => {
         <TabsContent value="prestadores" className="space-y-4">
           <ProvidersTab />
         </TabsContent>
+        
+        {isAdmin && (
+          <TabsContent value="users" className="space-y-4">
+            <AdminUsersTab />
+          </TabsContent>
+        )}
       </Tabs>
     </AdminLayout>
   );

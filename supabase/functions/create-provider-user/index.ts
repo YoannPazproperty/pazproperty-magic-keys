@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   try {
     // Get the request body
     const requestData = await req.json();
-    const { email, password, metadata } = requestData;
+    const { email, password, metadata, isAdmin } = requestData;
     
     if (!email || !password) {
       return new Response(
@@ -45,6 +45,26 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: error.message }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
+    }
+
+    // If this is an admin user (with pazproperty.pt email), create admin role
+    if (isAdmin || email.endsWith('@pazproperty.pt')) {
+      const role = metadata?.adminType || 'admin'; // 'admin' or 'user' based on metadata
+      
+      // Add admin role to user_roles table
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: data.user.id,
+          role: role
+        });
+      
+      if (roleError) {
+        console.error('Error setting admin role:', roleError);
+        // Don't fail the entire operation if role assignment fails
+      } else {
+        console.log(`User created with ${role} role`);
+      }
     }
     
     return new Response(
