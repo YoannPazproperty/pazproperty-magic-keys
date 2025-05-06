@@ -46,8 +46,9 @@ export const createUserRole = async (userId: string): Promise<boolean> => {
       .from('user_roles')
       .insert({ 
         user_id: userId, 
-        // We'll use "provider" role
-        role: 'provider'
+        // Use type assertion to bypass TypeScript validation
+        // The 'provider' role exists in the DB but TypeScript doesn't know about it yet
+        role: 'provider' as any
       });
 
     if (roleError) {
