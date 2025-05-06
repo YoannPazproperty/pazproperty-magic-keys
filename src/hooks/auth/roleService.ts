@@ -1,4 +1,3 @@
-
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "./types";
@@ -16,7 +15,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
       
     if (prestadorRole) {
       console.log("User identified as an external service provider:", prestadorRole);
-      return 'prestadores_tecnicos'; // External service providers are always 'prestadores_tecnicos'
+      return 'provider'; // Map prestadores_tecnicos to provider role
     }
     
     // If not a service provider, check for internal roles
@@ -61,12 +60,11 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
           if (userData?.user?.user_metadata?.is_provider) {
             // This is a provider based on metadata
             console.log("User metadata indicates provider role");
-            // Use type assertion to tell TypeScript that 'provider' is a valid UserRole
             const { error: insertError } = await supabase
               .from('user_roles')
               .insert({ 
                 user_id: userId,
-                role: 'provider' as any // Use 'any' to bypass the type check temporarily
+                role: 'provider'
               });
               
             if (insertError) {

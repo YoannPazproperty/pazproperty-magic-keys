@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -131,7 +130,7 @@ export const useAuthEffects = ({
             if (prestadorData || 
                 (data.session.user.user_metadata && 
                  data.session.user.user_metadata.is_provider)) {
-              setUserRole('prestadores_tecnicos');
+              setUserRole('provider');
             } else {
               const role = await fetchUserRole(data.session.user.id);
               setUserRole(role);

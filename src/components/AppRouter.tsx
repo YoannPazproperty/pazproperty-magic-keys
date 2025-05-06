@@ -41,7 +41,6 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
             path="/admin" 
             element={
               <ProtectedRoute 
-                // Modifier pour accepter soit le rôle admin, soit une adresse @pazproperty.pt
                 requiredRole="admin" 
                 emailDomain="pazproperty.pt"
               >
@@ -52,7 +51,7 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
           <Route 
             path="/extranet-technique" 
             element={
-              <ProtectedRoute requiredRole="prestadores_tecnicos">
+              <ProtectedRoute requiredRole="provider">
                 <ExtranetTechnique />
               </ProtectedRoute>
             } 

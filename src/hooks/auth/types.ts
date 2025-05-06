@@ -1,7 +1,7 @@
 
 import { Session, User } from "@supabase/supabase-js";
 
-export type UserRole = "admin" | "manager" | "provider" | "prestadores_tecnicos" | "user" | null;
+export type UserRole = "admin" | "manager" | "provider" | "user" | null;
 
 export interface AuthContextType {
   user: User | null;

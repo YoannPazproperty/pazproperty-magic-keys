@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredRole?: "admin" | "manager" | "prestadores_tecnicos" | "user";
+  requiredRole?: "admin" | "manager" | "provider" | "user";
   emailDomain?: string;
 }
 
