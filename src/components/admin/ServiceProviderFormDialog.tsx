@@ -80,12 +80,16 @@ export function ServiceProviderFormDialog({
           
           if (!accountResult.success) {
             // Afficher message d'erreur si la création du compte a échoué
-            toast.error("Erreur lors de la création du compte", {
-              description: accountResult.message || "L'email existe peut-être déjà dans le système"
+            toast.error("Erreur lors de la création du compte dans Supabase Auth", {
+              description: accountResult.message || "L'email existe peut-être déjà dans le système ou un problème d'accès à Supabase Auth est survenu."
             });
-            setTechnicalError(accountResult.message || "Erreur de création du compte utilisateur");
+            setTechnicalError(accountResult.message || "Erreur de création du compte utilisateur dans Auth");
+            console.error("Erreur Supabase Auth:", accountResult);
             return;
           }
+          toast.success("Compte utilisateur Supabase Auth créé avec succès", {
+            description: `ID utilisateur: ${accountResult.userId}`
+          });
           
           // Si la création du compte a réussi, créer le prestataire dans la base
           const newProvider = await createProvider({
@@ -116,7 +120,8 @@ export function ServiceProviderFormDialog({
               });
             }
           } else {
-            toast.error("Erro ao criar prestador");
+            toast.error("Erreur lors de la création du prestataire dans la base métier");
+            console.error("Erreur création prestataire métier:", newProvider);
           }
         } catch (error) {
           console.error("Error creating provider account:", error);
