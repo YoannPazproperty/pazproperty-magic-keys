@@ -33,10 +33,16 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
       if (error.code === 'PGRST116') {
         console.log("No role found for the user, assigning default role");
         
+        // Get user email to check domain
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+        const userEmail = userData?.user?.email || '';
+        
+        console.log("User email for role assignment:", userEmail);
+        
         // Check if user has a pazproperty.pt email address
-        const userEmail = userId; // This is just a placeholder, we'll need the actual email
         if (userEmail.endsWith('@pazproperty.pt')) {
           // Assign admin role for @pazproperty.pt emails
+          console.log("Assigning admin role for @pazproperty.pt email");
           const { error: insertError } = await supabase
             .from('user_roles')
             .insert({ 
@@ -52,10 +58,9 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
           }
         } else {
           // Check if user metadata indicates this is a provider
-          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-          
-          if (!userError && userData?.user?.user_metadata?.is_provider) {
+          if (userData?.user?.user_metadata?.is_provider) {
             // This is a provider based on metadata
+            console.log("User metadata indicates provider role");
             // Use type assertion to tell TypeScript that 'provider' is a valid UserRole
             const { error: insertError } = await supabase
               .from('user_roles')
@@ -72,6 +77,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
             }
           } else {
             // Assign default role (user) for others
+            console.log("No specific role indicators, assigning default 'user' role");
             const { error: insertError } = await supabase
               .from('user_roles')
               .insert({ 
@@ -106,25 +112,32 @@ export const getEmailDomain = (email: string | null | undefined): string | null 
 };
 
 export const resolveRedirectPathByRole = (role: UserRole, email: string | null | undefined): string => {
+  console.log("Résolution du chemin de redirection - Rôle:", role, "Email:", email);
+  
+  // PRIORITÉ: Si l'email est @pazproperty.pt, toujours rediriger vers /admin
+  const userEmail = email || '';
+  if (userEmail.endsWith('@pazproperty.pt')) {
+    console.log("Redirection vers /admin basée sur l'email @pazproperty.pt (priorité)");
+    return "/admin";
+  }
+  
+  // Sinon, redirections basées sur le rôle
   switch (role) {
     case 'admin':
-      // Check if email is @pazproperty.pt
-      const userEmail = email || '';
-      if (userEmail.endsWith('@pazproperty.pt')) {
-        return "/admin";
-      } else {
-        // If role is admin but not @pazproperty.pt, there's an error
-        console.warn("User with admin role but without @pazproperty.pt email");
-        return "/";
-      }
+      console.log("Redirection vers /admin basée sur le rôle admin");
+      return "/admin";
     case 'provider':
+      console.log("Redirection vers /extranet-technique basée sur le rôle provider");
       return "/extranet-technique";
     case 'prestadores_tecnicos':
+      console.log("Redirection vers /extranet-technique basée sur le rôle prestadores_tecnicos");
       return "/extranet-technique";
     case 'user':
+      console.log("Redirection vers / basée sur le rôle user");
       return "/";
     default:
       // If no role, redirect to a default page
+      console.log("Redirection vers / par défaut (aucun rôle spécifié)");
       return "/";
   }
 };

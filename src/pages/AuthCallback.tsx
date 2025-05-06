@@ -162,6 +162,16 @@ const AuthCallback = () => {
               
               // Check user role before redirecting
               try {
+                // PRIORITÉ: Vérifier d'abord si l'email se termine par @pazproperty.pt
+                const userEmail = data.session.user.email || '';
+                console.log("[AuthCallback] Vérification de l'email:", userEmail);
+                
+                if (userEmail.endsWith('@pazproperty.pt')) {
+                  console.log("[AuthCallback] Détecté email @pazproperty.pt, redirection vers Admin");
+                  navigate("/admin");
+                  return;
+                }
+                
                 // First check if user is a technical service provider
                 const { data: prestadorData } = await supabase
                   .from('prestadores_roles')
@@ -171,21 +181,24 @@ const AuthCallback = () => {
                   
                 if (prestadorData) {
                   // This is a technical provider
+                  console.log("[AuthCallback] Utilisateur identifié comme prestataire technique");
                   navigate("/extranet-technique");
                   return;
                 }
                 
-                // Check if user is an admin with @pazproperty.pt email
-                const userEmail = data.session.user.email || '';
-                if (userEmail.endsWith('@pazproperty.pt')) {
+                // Check for admin role with @pazproperty.pt email - redundant but kept for safety
+                const userRole = data.session.user.user_metadata?.role || '';
+                if (userRole === 'admin') {
+                  console.log("[AuthCallback] Rôle admin détecté dans les métadonnées");
                   navigate("/admin");
                   return;
                 }
                 
                 // Default redirect to home
+                console.log("[AuthCallback] Aucune condition de redirection spécifique, redirection vers /");
                 navigate("/");
               } catch (roleError) {
-                console.error("Error checking user role:", roleError);
+                console.error("[AuthCallback] Error checking user role:", roleError);
                 // Default to home page
                 navigate("/");
               }
@@ -218,6 +231,16 @@ const AuthCallback = () => {
             
             // Check if user is a service provider or admin
             try {
+              // PRIORITÉ: Vérifier d'abord si l'email se termine par @pazproperty.pt
+              const userEmail = data.session.user.email || '';
+              console.log("[AuthCallback - Session] Vérification de l'email:", userEmail);
+              
+              if (userEmail.endsWith('@pazproperty.pt')) {
+                console.log("[AuthCallback - Session] Détecté email @pazproperty.pt, redirection vers Admin");
+                navigate("/admin");
+                return;
+              }
+              
               // First check if user is a technical service provider
               const { data: prestadorData } = await supabase
                 .from('prestadores_roles')
@@ -227,30 +250,29 @@ const AuthCallback = () => {
                 
               if (prestadorData) {
                 // This is a technical provider
+                console.log("[AuthCallback - Session] Utilisateur identifié comme prestataire technique");
                 navigate("/extranet-technique");
                 return;
               }
               
-              // Check for admin role with @pazproperty.pt email
-              const userEmail = data.session.user.email || '';
-              if (userEmail.endsWith('@pazproperty.pt')) {
-                // Check if user has admin role
-                const { data: roleData } = await supabase
-                  .from('user_roles')
-                  .select('role')
-                  .eq('user_id', data.session.user.id)
-                  .maybeSingle();
-                  
-                if (roleData && roleData.role === 'admin') {
-                  navigate("/admin");
-                  return;
-                }
+              // Check for admin role - redundant but kept for safety
+              const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', data.session.user.id)
+                .maybeSingle();
+                
+              if (roleData && roleData.role === 'admin') {
+                console.log("[AuthCallback - Session] Rôle admin trouvé dans user_roles");
+                navigate("/admin");
+                return;
               }
               
               // Default redirect to home
+              console.log("[AuthCallback - Session] Aucune condition spécifique, redirection vers /");
               navigate("/");
             } catch (roleError) {
-              console.error("Error checking role:", roleError);
+              console.error("[AuthCallback - Session] Error checking role:", roleError);
               // Default to home page
               navigate("/");
             }

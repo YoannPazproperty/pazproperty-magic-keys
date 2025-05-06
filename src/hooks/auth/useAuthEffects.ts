@@ -40,7 +40,20 @@ export const useAuthEffects = ({
             if (newSession?.user?.id) {
               setTimeout(async () => {
                 try {
-                  // Check if this is an external technical service provider first
+                  // PRIORITÉ: Vérifier d'abord si l'email se termine par @pazproperty.pt
+                  const userEmail = newSession.user.email || '';
+                  console.log("Vérification de l'email pour redirection:", userEmail);
+                  
+                  if (userEmail.endsWith('@pazproperty.pt')) {
+                    console.log("Détecté email @pazproperty.pt, redirection vers Admin");
+                    // Si oui, assigner le rôle admin et rediriger vers /admin
+                    setUserRole('admin');
+                    navigate("/admin");
+                    return;
+                  }
+                  
+                  // Si l'email n'est pas @pazproperty.pt, vérifier si c'est un prestataire technique
+                  console.log("Vérification si l'utilisateur est un prestataire technique");
                   const { data: prestadorData } = await supabase
                     .from('prestadores_roles')
                     .select('nivel')
@@ -49,23 +62,27 @@ export const useAuthEffects = ({
                   
                   if (prestadorData) {
                     // This is a technical service provider, redirect to extranet technique
+                    console.log("Utilisateur identifié comme prestataire technique");
                     setUserRole('prestadores_tecnicos');
                     navigate("/extranet-technique");
                     return;
                   }
                   
-                  // If not a service provider, check internal roles
+                  // Si non, vérifier les rôles standard
+                  console.log("Vérification des rôles standard");
                   const role = await fetchUserRole(newSession.user.id);
                   setUserRole(role);
+                  console.log("Rôle récupéré:", role);
                   
-                  // Redirect based on role and user metadata
+                  // Si les métadonnées indiquent que c'est un prestataire, rediriger vers extranet
                   if (role === 'provider' || 
                       (newSession.user.user_metadata && newSession.user.user_metadata.is_provider)) {
-                    // If user is a provider (from either role or metadata), redirect to extranet
+                    console.log("Métadonnées indiquent prestataire, redirection vers Extranet");
                     navigate("/extranet-technique");
                   } else {
-                    // Otherwise use the standard role-based redirection
+                    // Sinon, utiliser la redirection standard basée sur le rôle
                     const redirectPath = resolveRedirectPathByRole(role, newSession.user.email);
+                    console.log("Redirection standard basée sur le rôle vers:", redirectPath);
                     navigate(redirectPath);
                   }
                 } catch (err) {
@@ -94,6 +111,16 @@ export const useAuthEffects = ({
           
           // Retrieve role if user is logged in
           if (data.session?.user) {
+            // PRIORITÉ: Vérifier d'abord si l'email se termine par @pazproperty.pt
+            const userEmail = data.session.user.email || '';
+            console.log("Session initiale - Vérification de l'email:", userEmail);
+            
+            if (userEmail.endsWith('@pazproperty.pt')) {
+              console.log("Session initiale - Détecté email @pazproperty.pt");
+              setUserRole('admin');
+              return;
+            }
+            
             // Check for provider status in both roles and metadata
             const { data: prestadorData } = await supabase
               .from('prestadores_roles')
