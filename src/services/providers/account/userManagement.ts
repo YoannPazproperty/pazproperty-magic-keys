@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { User } from '@supabase/supabase-js';
 import { UserRole } from "@/hooks/auth/types"; // Import UserRole type
@@ -46,7 +47,9 @@ export const createUserRole = async (userId: string): Promise<boolean> => {
       .from('user_roles')
       .insert({ 
         user_id: userId, 
-        role: 'provider' as UserRole // Use the UserRole type
+        // Use type assertion to tell TypeScript we know what we're doing
+        // This is necessary because the Supabase types don't know about the 'provider' role yet
+        role: 'provider' as any // Using 'any' to bypass the type checking temporarily
       });
 
     if (roleError) {
