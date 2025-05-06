@@ -1,12 +1,15 @@
 
 import { useEffect } from "react";
 import AdminDashboard from "@/components/admin/dashboard/AdminDashboard";
-import { ApiSettings } from "@/components/admin/ApiSettings";
-import { NotificationSettings } from "@/components/admin/NotificationSettings";
+import { AuthProvider } from "@/hooks/auth";
 
 const Admin = () => {
-  // This is now just a wrapper component that imports and renders our refactored dashboard
-  return <AdminDashboard />;
+  // We need to wrap the AdminDashboard with AuthProvider
+  return (
+    <AuthProvider>
+      <AdminDashboard />
+    </AuthProvider>
+  );
 };
 
 export default Admin;

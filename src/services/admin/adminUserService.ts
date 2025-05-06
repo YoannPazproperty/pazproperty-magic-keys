@@ -123,7 +123,9 @@ export const getAdminUsers = async () => {
     
     // Combiner les données des rôles et des utilisateurs
     const adminUsers = roles.map(role => {
-      const userData = usersData?.find(user => user.id === role.user_id) || {};
+      // Fix: TypeScript error by adding type checking and default values
+      const userData = usersData?.find(user => user.id === role.user_id) || { email: 'Email inconnu', full_name: 'Nom inconnu' };
+      
       return {
         id: role.user_id,
         email: userData.email || 'Email inconnu',
