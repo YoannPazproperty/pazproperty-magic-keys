@@ -29,8 +29,8 @@ export const createProviderAccount = async (
     const tempPassword = generateTemporaryPassword();
     console.log("Generated temporary password (masked):", "*".repeat(tempPassword.length));
     
-    // 3. Create the user in Auth
-    const { data: newUser, error: createError } = await createAuthUser(
+    // 3. Create the user in Auth using the edge function
+    const { data: authResult, error: createError } = await createAuthUser(
       params.email,
       tempPassword,
       {
@@ -46,15 +46,25 @@ export const createProviderAccount = async (
       console.error("Error creating user:", createError);
       return {
         success: false,
-        message: `Échec de la création: ${createError.message}`,
+        message: `Échec de la création: ${createError.message || 'Erreur inconnue'}`,
         emailSent: false,
       };
     }
     
-    console.log("User created successfully:", newUser.user.id);
+    if (!authResult || !authResult.user) {
+      console.error("No user data returned from createAuthUser");
+      return {
+        success: false,
+        message: "Échec de la création: Aucune donnée utilisateur retournée",
+        emailSent: false,
+      };
+    }
+    
+    const userId = authResult.user.id;
+    console.log("User created successfully:", userId);
     
     // 4. Create provider role for the user
-    const roleCreated = await createUserRole(newUser.user.id);
+    const roleCreated = await createUserRole(userId);
     
     if (!roleCreated) {
       console.warn("Failed to create role, but continuing with account creation");
@@ -62,7 +72,7 @@ export const createProviderAccount = async (
     
     // 5. Send invitation email
     const emailResult = await sendProviderInviteEmail(
-      newUser.user.id,
+      userId,
       params.email,
       params.nome,
       tempPassword,
@@ -74,7 +84,7 @@ export const createProviderAccount = async (
     
     return {
       success: true,
-      userId: newUser.user.id,
+      userId: userId,
       emailSent: emailResult.success,
       emailError: emailResult.emailError
     };

@@ -1,4 +1,6 @@
 
+import { supabase } from "@/integrations/supabase/client";
+
 /**
  * Sends an invitation email to a provider with their temporary password
  */
@@ -65,6 +67,3 @@ export const sendProviderInviteEmail = async (
     };
   }
 };
-
-// Import required at the top of the file
-import { supabase } from "@/integrations/supabase/client";
