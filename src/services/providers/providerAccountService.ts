@@ -38,9 +38,7 @@ export const createProviderAccount = async (
     console.log("Creating provider account for:", params.email);
     
     // 1. Check if the email already exists in Auth
-    const { data: existingUser, error: checkError } = await supabase.auth.admin.listUsers({
-      filter: `email eq '${params.email}'`,
-    });
+    const { data: usersList, error: checkError } = await supabase.auth.admin.listUsers();
     
     if (checkError) {
       console.error("Error checking if user exists:", checkError);
@@ -51,8 +49,11 @@ export const createProviderAccount = async (
       };
     }
     
-    if (existingUser && existingUser.users && existingUser.users.length > 0) {
-      console.log("User already exists:", existingUser.users[0].email);
+    // Find if user exists by checking the email directly
+    const existingUser = usersList?.users?.find(user => user.email === params.email);
+    
+    if (existingUser) {
+      console.log("User already exists:", existingUser.email);
       return {
         success: false,
         message: "Un utilisateur avec cet email existe déjà dans le système",
@@ -90,15 +91,32 @@ export const createProviderAccount = async (
     console.log("User created successfully:", newUser.user.id);
     
     // 4. Create provider role for the user
+    // First add to prestadores_roles table (this is for backward compatibility)
+    const { error: prestadorRoleError } = await supabase
+      .from('prestadores_roles')
+      .insert({ 
+        user_id: newUser.user.id, 
+        nivel: 'standard' 
+      });
+
+    if (prestadorRoleError) {
+      console.error('Error creating prestadores_roles entry:', prestadorRoleError);
+      // Don't fail if the role already exists or there's an error
+      console.warn('Continuing despite prestadores_roles creation error');
+    }
+    
+    // Then add to user_roles table
     const { error: roleError } = await supabase
       .from('user_roles')
       .insert({ 
         user_id: newUser.user.id, 
-        role: 'provider' 
+        // We'll use "manager" role since "provider" isn't a valid enum value in the current schema
+        // This works for now as a temporary solution, but we should update the schema later
+        role: 'manager'
       });
 
     if (roleError) {
-      console.error('Error creating provider role:', roleError);
+      console.error('Error creating user role:', roleError);
       // Don't fail if the role already exists or there's an error
       console.warn('Continuing despite role creation error');
     }
@@ -181,16 +199,15 @@ export const createProviderAccount = async (
  */
 export const checkUserExists = async (email: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase.auth.admin.listUsers({
-      filter: `email eq '${email}'`,
-    });
+    const { data, error } = await supabase.auth.admin.listUsers();
     
     if (error) {
       console.error("Error checking if user exists:", error);
       return false; // Assume no user exists if there's an error
     }
     
-    return data && data.users && data.users.length > 0;
+    // Find the user by email in the list
+    return data && data.users && data.users.some(user => user.email === email);
   } catch (error) {
     console.error("Exception checking if user exists:", error);
     return false; // Assume no user exists if there's an exception
