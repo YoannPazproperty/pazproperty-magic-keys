@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { 
   createCompanyUser, 
   CompanyUserLevel, 
@@ -33,6 +35,7 @@ export const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(true);
   
   // Générer un mot de passe temporaire si le champ est vide
@@ -42,6 +45,12 @@ export const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
         ...prev,
         password: generateTemporaryPassword()
       }));
+    }
+    
+    // Réinitialiser les erreurs à l'ouverture du dialogue
+    if (isOpen) {
+      setErrors({});
+      setApiError(null);
     }
   }, [isOpen]);
   
@@ -81,6 +90,11 @@ export const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
         [field]: ''
       });
     }
+    
+    // Effacer l'erreur API si on modifie l'email (car c'est souvent lié à un email existant)
+    if (field === 'email' && apiError) {
+      setApiError(null);
+    }
   };
   
   const resetForm = () => {
@@ -91,6 +105,7 @@ export const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
       level: 'user'
     });
     setErrors({});
+    setApiError(null);
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,6 +116,7 @@ export const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
     }
     
     setIsSubmitting(true);
+    setApiError(null);
     
     try {
       toast.info("Création du compte utilisateur en cours...");
@@ -130,12 +146,25 @@ export const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
         resetForm();
         onSuccess();
       } else {
-        toast.error("Erreur lors de la création", {
-          description: result.message || "Une erreur est survenue"
-        });
+        // Si l'erreur concerne un utilisateur déjà existant, l'afficher de manière spécifique
+        if (result.error && (
+            result.error.includes("already registered") || 
+            result.error.includes("already exists")
+        )) {
+          setApiError("Cet email est déjà utilisé par un compte existant");
+          toast.error("Email déjà utilisé", {
+            description: "Un utilisateur avec cette adresse email existe déjà"
+          });
+        } else {
+          setApiError(result.message || "Une erreur est survenue lors de la création du compte");
+          toast.error("Erreur lors de la création", {
+            description: result.message || "Une erreur est survenue"
+          });
+        }
       }
     } catch (error: any) {
       console.error("Exception lors de la création de l'utilisateur:", error);
+      setApiError(error.message || "Une erreur inattendue est survenue");
       toast.error("Une erreur inattendue est survenue", {
         description: error.message || "Veuillez réessayer"
       });
@@ -160,6 +189,14 @@ export const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({
             </strong>
           </DialogDescription>
         </DialogHeader>
+        
+        {apiError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erreur</AlertTitle>
+            <AlertDescription>{apiError}</AlertDescription>
+          </Alert>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
           <div className="grid gap-2">

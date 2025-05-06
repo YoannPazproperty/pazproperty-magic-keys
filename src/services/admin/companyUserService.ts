@@ -78,10 +78,20 @@ export const createCompanyUser = async (
 
     if (error) {
       console.error("Erreur lors de la création de l'utilisateur:", error);
+      
+      // Traiter spécifiquement l'erreur d'utilisateur existant
+      if (error.message && error.message.includes('non-2xx status code')) {
+        return {
+          success: false,
+          message: "Un utilisateur avec cette adresse email existe déjà",
+          error: "User already exists"
+        };
+      }
+      
       return {
         success: false,
         message: `Erreur: ${error.message || "Erreur inconnue"}`,
-        error
+        error: error.message
       };
     }
 
@@ -97,11 +107,21 @@ export const createCompanyUser = async (
     
     if (companyUserError) {
       console.error("Erreur lors de la création dans company_users:", companyUserError);
+      
+      if (companyUserError.code === '23505') { // Violation de contrainte d'unicité
+        return {
+          success: false,
+          message: "Un utilisateur avec cette adresse email existe déjà dans la base de données",
+          userId: data.user.id,
+          error: "Email already exists in company_users"
+        };
+      }
+      
       return {
         success: false,
         message: `L'utilisateur a été créé dans Auth mais pas dans company_users: ${companyUserError.message}`,
         userId: data.user.id,
-        error: companyUserError
+        error: companyUserError.message
       };
     }
 
@@ -120,14 +140,14 @@ export const createCompanyUser = async (
       userId: data.user.id,
       message: `L'utilisateur ${params.email} a été créé avec succès avec le niveau ${params.level}`,
       emailSent: !emailError,
-      error: emailError
+      error: emailError?.message
     };
   } catch (error: any) {
     console.error("Exception lors de la création de l'utilisateur:", error);
     return {
       success: false,
       message: `Exception: ${error.message || "Erreur inconnue"}`,
-      error
+      error: error.message
     };
   }
 };
@@ -157,5 +177,28 @@ export const getCompanyUsers = async () => {
       success: false, 
       message: `Exception: ${error.message || "Erreur inconnue"}` 
     };
+  }
+};
+
+/**
+ * Vérifie si un utilisateur avec l'email spécifié existe déjà
+ */
+export const checkUserExists = async (email: string): Promise<boolean> => {
+  try {
+    const { data, count, error } = await supabase
+      .from('company_users')
+      .select('id', { count: 'exact' })
+      .eq('email', email)
+      .limit(1);
+      
+    if (error) {
+      console.error("Erreur lors de la vérification de l'existence de l'utilisateur:", error);
+      return false;
+    }
+    
+    return !!count && count > 0;
+  } catch (error: any) {
+    console.error("Exception lors de la vérification de l'utilisateur:", error);
+    return false;
   }
 };
