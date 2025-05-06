@@ -46,9 +46,8 @@ export const createUserRole = async (userId: string): Promise<boolean> => {
       .from('user_roles')
       .insert({ 
         user_id: userId, 
-        // We'll use "manager" role since "provider" isn't a valid enum value in the current schema
-        // This works for now as a temporary solution, but we should update the schema later
-        role: 'manager'
+        // We'll use "provider" role
+        role: 'provider'
       });
 
     if (roleError) {
