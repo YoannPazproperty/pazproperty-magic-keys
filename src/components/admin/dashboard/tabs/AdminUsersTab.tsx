@@ -4,24 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, UserCog, UserX } from "lucide-react";
+import { PlusCircle, UserCog, UserX, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminUserFormDialog } from "../../users/AdminUserFormDialog";
-import { getCompanyUsers } from "@/services/admin/companyUserService";
-
-interface CompanyUser {
-  id: string;
-  user_id: string;
-  email: string;
-  name: string;
-  level: string;
-  created_at: string;
-}
+import { AdminUserEditDialog } from "../../users/AdminUserEditDialog";
+import { AdminUserDeleteDialog } from "../../users/AdminUserDeleteDialog";
+import { getCompanyUsers, CompanyUser } from "@/services/admin/companyUserService";
 
 export const AdminUsersTab = () => {
   const [users, setUsers] = useState<CompanyUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<CompanyUser | null>(null);
   
   const loadUsers = async () => {
     setIsLoading(true);
@@ -47,7 +43,29 @@ export const AdminUsersTab = () => {
   }, []);
   
   const handleCreateSuccess = () => {
-    setDialogOpen(false);
+    setCreateDialogOpen(false);
+    loadUsers();
+  };
+  
+  const handleEditUser = (user: CompanyUser) => {
+    setSelectedUser(user);
+    setEditDialogOpen(true);
+  };
+  
+  const handleEditSuccess = () => {
+    setEditDialogOpen(false);
+    setSelectedUser(null);
+    loadUsers();
+  };
+  
+  const handleDeleteUser = (user: CompanyUser) => {
+    setSelectedUser(user);
+    setDeleteDialogOpen(true);
+  };
+  
+  const handleDeleteSuccess = () => {
+    setDeleteDialogOpen(false);
+    setSelectedUser(null);
     loadUsers();
   };
 
@@ -70,7 +88,7 @@ export const AdminUsersTab = () => {
             Créez et gérez les comptes employés avec des adresses @pazproperty.pt
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={() => setCreateDialogOpen(true)}>
           <PlusCircle className="h-4 w-4 mr-2" />
           Nouvel Employé
         </Button>
@@ -130,9 +148,26 @@ export const AdminUsersTab = () => {
                       </TableCell>
                       <TableCell>{formatDate(user.created_at)}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="sm">
-                          Voir détails
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleEditUser(user)}
+                            className="flex items-center"
+                          >
+                            <Pencil className="h-4 w-4 mr-1" />
+                            Modifier
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteUser(user)} 
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 flex items-center"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Supprimer
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -145,9 +180,33 @@ export const AdminUsersTab = () => {
 
       {/* Dialog pour créer un nouvel utilisateur */}
       <AdminUserFormDialog 
-        isOpen={dialogOpen} 
-        onClose={() => setDialogOpen(false)}
+        isOpen={createDialogOpen} 
+        onClose={() => setCreateDialogOpen(false)}
         onSuccess={handleCreateSuccess}
+      />
+      
+      {/* Dialog pour modifier un utilisateur */}
+      <AdminUserEditDialog
+        isOpen={editDialogOpen}
+        onClose={() => {
+          setEditDialogOpen(false);
+          setSelectedUser(null);
+        }}
+        onSuccess={handleEditSuccess}
+        user={selectedUser}
+      />
+      
+      {/* Dialog pour supprimer un utilisateur */}
+      <AdminUserDeleteDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setSelectedUser(null);
+        }}
+        onSuccess={handleDeleteSuccess}
+        userId={selectedUser?.user_id || null}
+        userName={selectedUser?.name || ''}
+        userEmail={selectedUser?.email || ''}
       />
     </div>
   );

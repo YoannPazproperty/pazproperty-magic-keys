@@ -39,6 +39,39 @@ export type Database = {
         }
         Relationships: []
       }
+      company_users_old: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          email: string
+          id: string
+          level: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          email: string
+          id: string
+          level: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          email?: string
+          id?: string
+          level?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       contactos_comerciais: {
         Row: {
           created_at: string
@@ -520,6 +553,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_company_user: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       create_password_reset_tokens_table: {
         Args: Record<PropertyKey, never>
         Returns: undefined
