@@ -8,7 +8,7 @@ import { CrmTab } from "./tabs/CrmTab";
 import { ProvidersTab } from "./tabs/ProvidersTab";
 import { AdminUsersTab } from "./tabs/AdminUsersTab";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth"; // Updated import to match the AuthProvider source
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {

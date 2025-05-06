@@ -1,5 +1,4 @@
 
-import { useEffect } from "react";
 import AdminDashboard from "@/components/admin/dashboard/AdminDashboard";
 import { AuthProvider } from "@/hooks/auth";
 
