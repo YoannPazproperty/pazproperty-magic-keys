@@ -7,25 +7,26 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, UserCog, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { AdminUserFormDialog } from "../../users/AdminUserFormDialog";
-import { getAdminUsers } from "@/services/admin/adminUserService";
+import { getCompanyUsers } from "@/services/admin/companyUserService";
 
-interface AdminUser {
+interface CompanyUser {
   id: string;
+  user_id: string;
   email: string;
   name: string;
   level: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export const AdminUsersTab = () => {
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [users, setUsers] = useState<CompanyUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   
   const loadUsers = async () => {
     setIsLoading(true);
     try {
-      const result = await getAdminUsers();
+      const result = await getCompanyUsers();
       if (result.success) {
         setUsers(result.users || []);
       } else {
@@ -48,10 +49,10 @@ export const AdminUsersTab = () => {
   const handleCreateSuccess = () => {
     setDialogOpen(false);
     loadUsers();
-    toast.success("L'utilisateur a été créé avec succès");
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "Date inconnue";
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -64,22 +65,22 @@ export const AdminUsersTab = () => {
     <div className="space-y-4">
       <div className="flex justify-between">
         <div>
-          <h2 className="text-2xl font-bold mb-2">Gestion des Utilisateurs Administrateurs</h2>
+          <h2 className="text-2xl font-bold mb-2">Gestion des Employés PazProperty</h2>
           <p className="text-gray-500">
-            Créez et gérez les comptes administrateurs avec des adresses @pazproperty.pt
+            Créez et gérez les comptes employés avec des adresses @pazproperty.pt
           </p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
           <PlusCircle className="h-4 w-4 mr-2" />
-          Nouvel Administrateur
+          Nouvel Employé
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Utilisateurs Administrateurs</CardTitle>
+          <CardTitle>Utilisateurs PazProperty</CardTitle>
           <CardDescription>
-            Utilisateurs avec accès à l'interface d'administration
+            Employés avec accès à l'interface d'administration
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,7 +105,7 @@ export const AdminUsersTab = () => {
                     <TableCell colSpan={5} className="text-center h-24 text-gray-500">
                       {isLoading ? 
                         "Chargement des utilisateurs..." : 
-                        "Aucun utilisateur administrateur trouvé"}
+                        "Aucun utilisateur trouvé"}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -127,7 +128,7 @@ export const AdminUsersTab = () => {
                           )}
                         </Badge>
                       </TableCell>
-                      <TableCell>{formatDate(user.createdAt)}</TableCell>
+                      <TableCell>{formatDate(user.created_at)}</TableCell>
                       <TableCell>
                         <Button variant="ghost" size="sm">
                           Voir détails
@@ -142,7 +143,7 @@ export const AdminUsersTab = () => {
         </CardContent>
       </Card>
 
-      {/* Dialog pour créer un nouvel administrateur */}
+      {/* Dialog pour créer un nouvel utilisateur */}
       <AdminUserFormDialog 
         isOpen={dialogOpen} 
         onClose={() => setDialogOpen(false)}

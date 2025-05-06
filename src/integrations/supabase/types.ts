@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      company_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          level: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          level: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          level?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       contactos_comerciais: {
         Row: {
           created_at: string
@@ -514,6 +544,10 @@ export type Database = {
             }
           | { _user_id: string; _role: string }
           | { role_name: string }
+        Returns: boolean
+      }
+      is_company_email: {
+        Args: { email: string }
         Returns: boolean
       }
       is_prestador: {
