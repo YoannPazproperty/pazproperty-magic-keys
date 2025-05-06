@@ -3,13 +3,13 @@
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-    CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'provider', 'prestadores_tecnicos', 'user');
+    CREATE TYPE public.user_role AS ENUM ('admin', 'manager', 'provider', 'user');
   END IF;
 EXCEPTION
   WHEN duplicate_object THEN NULL;
 END$$;
 
--- Make sure we can add the new enum values if they're missing
+-- Make sure we can add the new enum value if it's missing
 DO $$
 BEGIN
   -- Check if provider is already part of the enum
@@ -20,16 +20,6 @@ BEGIN
   ) THEN
     -- Add the new enum value
     ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'provider';
-  END IF;
-  
-  -- Check if prestadores_tecnicos is already part of the enum
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_enum e 
-    JOIN pg_type t ON e.enumtypid = t.oid 
-    WHERE t.typname = 'user_role' AND e.enumlabel = 'prestadores_tecnicos'
-  ) THEN
-    -- Add the new enum value
-    ALTER TYPE public.user_role ADD VALUE IF NOT EXISTS 'prestadores_tecnicos';
   END IF;
 EXCEPTION
   WHEN others THEN 
@@ -95,4 +85,23 @@ BEGIN
     INSERT INTO public.user_roles (user_id, role)
     VALUES (u.id, 'user');
   END LOOP;
+END$$;
+
+-- Update any existing prestadores_tecnicos roles to provider
+DO $$
+BEGIN
+  -- Check if the enum value exists before attempting to update
+  IF EXISTS (
+    SELECT 1 FROM pg_enum e 
+    JOIN pg_type t ON e.enumtypid = t.oid 
+    WHERE t.typname = 'user_role' AND e.enumlabel = 'prestadores_tecnicos'
+  ) THEN
+    -- Update all records with prestadores_tecnicos to provider
+    UPDATE public.user_roles 
+    SET role = 'provider'::user_role 
+    WHERE role::text = 'prestadores_tecnicos';
+  END IF;
+EXCEPTION
+  WHEN others THEN 
+    RAISE NOTICE 'Error updating roles: %', SQLERRM;
 END$$;

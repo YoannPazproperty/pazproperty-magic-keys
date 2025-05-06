@@ -1,4 +1,3 @@
-
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
 import { Resend } from 'npm:resend@2.0.0';
 import { getProviderData, getUserByEmail, updateUserMetadata, createUser, ensureUserRole } from './db/index.ts';
@@ -70,10 +69,10 @@ export async function processProviderInvite(
         console.log(`New user created with ID: ${userId}`);
       }
 
-      // Ensure user has prestadores_tecnicos role
-      console.log(`Ensuring user ${userId} has prestadores_tecnicos role`);
-      await ensureUserRole(supabase, userId, 'prestadores_tecnicos');
-      console.log("prestadores_tecnicos role assigned successfully");
+      // Ensure user has provider role
+      console.log(`Ensuring user ${userId} has provider role`);
+      await ensureUserRole(supabase, userId, 'provider');
+      console.log("provider role assigned successfully");
 
       // Send invitation email
       let emailResult = null;

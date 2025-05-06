@@ -127,9 +127,6 @@ export const resolveRedirectPathByRole = (role: UserRole, email: string | null |
     case 'provider':
       console.log("Redirection vers /extranet-technique basée sur le rôle provider");
       return "/extranet-technique";
-    case 'prestadores_tecnicos':
-      console.log("Redirection vers /extranet-technique basée sur le rôle prestadores_tecnicos");
-      return "/extranet-technique";
     case 'user':
       console.log("Redirection vers / basée sur le rôle user");
       return "/";
