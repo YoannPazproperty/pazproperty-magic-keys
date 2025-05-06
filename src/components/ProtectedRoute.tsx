@@ -16,6 +16,7 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
   const [checkingRole, setCheckingRole] = useState(!!requiredRole);
   const [checkAttempts, setCheckAttempts] = useState(0);
   const [roleChecked, setRoleChecked] = useState(false);
+  const [timeout, setTimeout] = useState<ReturnType<typeof window.setTimeout> | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -36,6 +37,35 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
       return;
     }
 
+    // Add a safety timeout to avoid infinite checking
+    const safetyTimeout = window.setTimeout(() => {
+      console.log("Safety timeout triggered after 5 seconds");
+      if (checkingRole) {
+        setCheckingRole(false);
+        
+        // In development mode, grant access by default when timeout occurs
+        if (process.env.NODE_ENV === 'development' || window.location.hostname.includes('localhost')) {
+          console.log("⚠️ Safety timeout - Development mode - Granting access by default");
+          setHasAccess(true);
+          setRoleChecked(true);
+          toast.warning("Role verification timed out", { 
+            description: "Access granted by default in development mode",
+            id: "role-timeout"
+          });
+        } else {
+          setHasAccess(false);
+          setRoleChecked(true);
+          toast.error("Authorization timeout", { 
+            description: "Could not verify your permissions in time",
+            id: "role-timeout-error"
+          });
+        }
+      }
+    }, 5000); // 5 seconds timeout
+    
+    // Store timeout reference for cleanup
+    setTimeout(safetyTimeout);
+
     const checkRole = async () => {
       try {
         // Check domain restriction first if specified
@@ -52,6 +82,15 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
             setRoleChecked(true);
             return;
           }
+        }
+
+        // Special case: if user email is from pazproperty.pt and trying to access admin
+        if (requiredRole === 'admin' && user.email?.endsWith('@pazproperty.pt')) {
+          console.log("User has pazproperty.pt email, granting admin access");
+          setHasAccess(true);
+          setCheckingRole(false);
+          setRoleChecked(true);
+          return;
         }
 
         // Then check role if needed
@@ -84,15 +123,9 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
             return;
           }
           
-          if (!userRole) {
-            console.log("⚠️ No role found for user, attempt:", checkAttempts + 1);
-            
-            // If no role is found and this is the first try, maybe the roles table is empty
-            if (checkAttempts < 3) {
-              setCheckAttempts(prev => prev + 1);
-              setTimeout(() => checkRole(), 1000); // Retry after 1 second
-              return;
-            }
+          // If we've reached max attempts or no role is found
+          if (!userRole || checkAttempts >= 2) {
+            console.log("⚠️ No role found for user or max attempts reached:", checkAttempts);
             
             // For development purposes, grant access by default
             if (process.env.NODE_ENV === 'development' || window.location.hostname.includes('localhost')) {
@@ -111,10 +144,19 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
                 id: "role-error"
               });
             }
+            setCheckingRole(false);
           } else {
+            // If no role is found and this is not the last try, retry
+            if (!userRole) {
+              console.log("⚠️ No role found for user, retrying attempt:", checkAttempts + 1);
+              setCheckAttempts(prev => prev + 1);
+              return; // Don't set checkingRole to false yet
+            }
+            
             // User with a role that doesn't have the required permission
             setHasAccess(false);
             setRoleChecked(true);
+            setCheckingRole(false);
             toast.error("Access denied", { 
               description: `You have the role "${userRole}" but this page requires the role "${requiredRole}"`,
               id: "access-denied"
@@ -148,7 +190,14 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
     };
 
     checkRole();
-  }, [user, requiredRole, getUserRole, checkAttempts, roleChecked, emailDomain]);
+
+    return () => {
+      // Clear safety timeout on unmount
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [user, requiredRole, getUserRole, checkAttempts, roleChecked, emailDomain, timeout]);
 
   // Show a loading screen during verification
   if (loading || checkingRole) {
@@ -159,6 +208,11 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
           <p className="text-center text-gray-500">
             {checkingRole ? "Checking permissions..." : "Loading..."}
           </p>
+          {checkAttempts > 0 && (
+            <p className="text-center text-gray-400 text-sm">
+              Attempt {checkAttempts + 1}...
+            </p>
+          )}
         </div>
       </div>
     );

@@ -1,8 +1,10 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchUserRole, resolveRedirectPathByRole } from "./roleService";
 import { UserRole } from "./types";
+import { toast } from "sonner";
 
 interface AuthEffectsProps {
   setUser: (user: any) => void;
@@ -51,7 +53,7 @@ export const useAuthEffects = ({
                     return;
                   }
                   
-                  // Si l'email n'est pas @pazproperty.pt, vérifier si c'est un prestataire technique
+                  // Check if this is a provider based on roles or metadata
                   console.log("Vérification si l'utilisateur est un prestataire technique");
                   const { data: prestadorData } = await supabase
                     .from('prestadores_roles')
@@ -62,7 +64,7 @@ export const useAuthEffects = ({
                   if (prestadorData) {
                     // This is a technical service provider, redirect to extranet technique
                     console.log("Utilisateur identifié comme prestataire technique");
-                    setUserRole('prestadores_tecnicos');
+                    setUserRole('provider');
                     navigate("/extranet-technique");
                     return;
                   }
@@ -87,6 +89,7 @@ export const useAuthEffects = ({
                 } catch (err) {
                   console.error("Error checking role:", err);
                   // Redirect to default page in case of error
+                  setLoading(false);
                   navigate("/");
                 }
               }, 0);
@@ -104,41 +107,49 @@ export const useAuthEffects = ({
         
         if (error) {
           console.error("Error retrieving initial session:", error);
+          setLoading(false);
         } else {
           setSession(data.session);
           setUser(data.session?.user ?? null);
           
           // Retrieve role if user is logged in
           if (data.session?.user) {
-            // PRIORITÉ: Vérifier d'abord si l'email se termine par @pazproperty.pt
-            const userEmail = data.session.user.email || '';
-            console.log("Session initiale - Vérification de l'email:", userEmail);
-            
-            if (userEmail.endsWith('@pazproperty.pt')) {
-              console.log("Session initiale - Détecté email @pazproperty.pt");
-              setUserRole('admin');
-              return;
-            }
-            
-            // Check for provider status in both roles and metadata
-            const { data: prestadorData } = await supabase
-              .from('prestadores_roles')
-              .select('nivel')
-              .eq('user_id', data.session.user.id)
-              .maybeSingle();
+            try {
+              // PRIORITÉ: Vérifier d'abord si l'email se termine par @pazproperty.pt
+              const userEmail = data.session.user.email || '';
+              console.log("Session initiale - Vérification de l'email:", userEmail);
               
-            if (prestadorData || 
-                (data.session.user.user_metadata && 
-                 data.session.user.user_metadata.is_provider)) {
-              setUserRole('provider');
-            } else {
-              const role = await fetchUserRole(data.session.user.id);
-              setUserRole(role);
+              if (userEmail.endsWith('@pazproperty.pt')) {
+                console.log("Session initiale - Détecté email @pazproperty.pt");
+                setUserRole('admin');
+                setLoading(false);
+                return;
+              }
+              
+              // Check for provider status in both roles and metadata
+              const { data: prestadorData } = await supabase
+                .from('prestadores_roles')
+                .select('nivel')
+                .eq('user_id', data.session.user.id)
+                .maybeSingle();
+                
+              if (prestadorData || 
+                  (data.session.user.user_metadata && 
+                  data.session.user.user_metadata.is_provider)) {
+                setUserRole('provider');
+              } else {
+                const role = await fetchUserRole(data.session.user.id);
+                setUserRole(role);
+              }
+              setLoading(false);
+            } catch (err) {
+              console.error("Error checking initial role:", err);
+              setLoading(false);
             }
+          } else {
+            setLoading(false);
           }
         }
-        
-        setLoading(false);
       } catch (err) {
         console.error("Unexpected error retrieving session:", err);
         setLoading(false);
