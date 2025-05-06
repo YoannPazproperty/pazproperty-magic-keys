@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
   const [checkingRole, setCheckingRole] = useState(!!requiredRole);
   const [checkAttempts, setCheckAttempts] = useState(0);
   const [roleChecked, setRoleChecked] = useState(false);
-  const [timeout, setTimeout] = useState<ReturnType<typeof window.setTimeout> | null>(null);
+  const [timeout, setTimeout] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) {
