@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { UserRole } from "@/hooks/auth/types";
 import { checkEmailDomain, hasRequiredRole, handleAccessNotification, isDevelopmentMode } from "./roleUtils";
+import { toast } from "sonner";
 
 interface UsePermissionCheckProps {
   user: User | null;
