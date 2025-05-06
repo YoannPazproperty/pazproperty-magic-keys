@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { User } from '@supabase/supabase-js';
 
 interface CreateProviderAccountParams {
   email: string;
@@ -50,7 +51,8 @@ export const createProviderAccount = async (
     }
     
     // Find if user exists by checking the email directly
-    const existingUser = usersList?.users?.find(user => user.email === params.email);
+    // Add type assertion to ensure TypeScript knows users is an array of User objects
+    const existingUser = usersList?.users?.find((user: User) => user.email === params.email);
     
     if (existingUser) {
       console.log("User already exists:", existingUser.email);
@@ -207,7 +209,8 @@ export const checkUserExists = async (email: string): Promise<boolean> => {
     }
     
     // Find the user by email in the list
-    return data && data.users && data.users.some(user => user.email === email);
+    // Add type assertion to ensure TypeScript knows users is an array of User objects
+    return data && data.users && data.users.some((user: User) => user.email === email);
   } catch (error) {
     console.error("Exception checking if user exists:", error);
     return false; // Assume no user exists if there's an exception
