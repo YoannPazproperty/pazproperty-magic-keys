@@ -8,13 +8,13 @@ import { CrmTab } from "./tabs/CrmTab";
 import { ProvidersTab } from "./tabs/ProvidersTab";
 import { AdminUsersTab } from "./tabs/AdminUsersTab";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/auth"; // Updated import to match the AuthProvider source
+import { useAuth } from "@/hooks/auth";
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const { user, signOut, getUserRole } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("declarations");
+  const [activeTab, setActiveTab] = useState("users"); // Modification: changé la valeur par défaut à "users"
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ const AdminDashboard = () => {
           <TabsTrigger value="obras">Acompanhamento das obras</TabsTrigger>
           <TabsTrigger value="crm">CRM</TabsTrigger>
           <TabsTrigger value="prestadores">Prestadores</TabsTrigger>
-          {isAdmin && <TabsTrigger value="users">Utilisateurs Admin</TabsTrigger>}
+          <TabsTrigger value="users">Utilisateurs Admin</TabsTrigger>
         </TabsList>
         
         <TabsContent value="declarations" className="space-y-4">
@@ -81,11 +81,9 @@ const AdminDashboard = () => {
           <ProvidersTab />
         </TabsContent>
         
-        {isAdmin && (
-          <TabsContent value="users" className="space-y-4">
-            <AdminUsersTab />
-          </TabsContent>
-        )}
+        <TabsContent value="users" className="space-y-4">
+          <AdminUsersTab />
+        </TabsContent>
       </Tabs>
     </AdminLayout>
   );
