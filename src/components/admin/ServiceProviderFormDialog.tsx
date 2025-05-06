@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
@@ -9,7 +8,7 @@ import { ProviderFormValues, providerFormSchema, ServiceProviderFormDialogProps 
 import { useProviderInvite } from "./providers/useProviderInvite";
 import { ProviderFormAlerts } from "./providers/ProviderFormAlerts";
 import { ProviderForm } from "./providers/ProviderForm";
-import { createProviderAccount } from "@/services/providers/providerAccountService";
+import { createProviderAccount } from "@/services/providers/account/providerAccountService";
 
 export function ServiceProviderFormDialog({
   isOpen,
