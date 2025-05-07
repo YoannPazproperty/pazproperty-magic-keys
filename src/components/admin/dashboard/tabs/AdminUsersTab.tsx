@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { AdminUserFormDialog } from "../../users/AdminUserFormDialog";
 import { AdminUserEditDialog } from "../../users/AdminUserEditDialog";
 import { AdminUserDeleteDialog } from "../../users/AdminUserDeleteDialog";
-import { getCompanyUsers, CompanyUser } from "@/services/admin/companyUserService";
+import { getCompanyUsers, CompanyUser, GetCompanyUsersResult } from "@/services/admin/companyUserService";
 
 export const AdminUsersTab = () => {
   const [users, setUsers] = useState<CompanyUser[]>([]);
@@ -22,12 +22,12 @@ export const AdminUsersTab = () => {
   const loadUsers = async () => {
     setIsLoading(true);
     try {
-      const result = await getCompanyUsers();
+      const result: GetCompanyUsersResult = await getCompanyUsers();
       if (result.success) {
         setUsers(result.users || []);
       } else {
         toast.error("Impossible de récupérer les utilisateurs", {
-          description: result.message || "Une erreur est survenue"
+          description: result.error?.message || "Une erreur est survenue"
         });
       }
     } catch (error) {

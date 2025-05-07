@@ -35,6 +35,14 @@ export interface CompanyUserResult {
   emailSent?: boolean;
 }
 
+// Interface pour la réponse de getCompanyUsers
+export interface GetCompanyUsersResult {
+  success: boolean;
+  users?: CompanyUser[];
+  error?: any;
+  message?: string; // Ajout de message dans l'interface
+}
+
 /**
  * Vérifie si l'utilisateur a une adresse email pazproperty.pt
  */
@@ -288,7 +296,7 @@ export const archiveCompanyUser = async (userId: string): Promise<CompanyUserRes
 /**
  * Récupère la liste des utilisateurs d'entreprise
  */
-export const getCompanyUsers = async (): Promise<{ success: boolean, users?: CompanyUser[], error?: any }> => {
+export const getCompanyUsers = async (): Promise<GetCompanyUsersResult> => {
   try {
     const { data, error } = await supabase
       .from('company_users')
@@ -300,15 +308,26 @@ export const getCompanyUsers = async (): Promise<{ success: boolean, users?: Com
       return { success: false, error };
     }
     
+    // Mapper les résultats pour garantir que level est de type CompanyUserLevel
+    const typedUsers: CompanyUser[] = data.map(user => ({
+      id: user.id,
+      user_id: user.user_id,
+      email: user.email,
+      name: user.name,
+      level: user.level as CompanyUserLevel,
+      created_at: user.created_at
+    }));
+    
     return { 
       success: true, 
-      users: data 
+      users: typedUsers 
     };
   } catch (error: any) {
     console.error("Exception lors de la récupération des utilisateurs:", error);
     return { 
       success: false, 
-      message: `Exception: ${error.message || "Erreur inconnue"}` 
+      message: `Exception: ${error.message || "Erreur inconnue"}`,
+      error
     };
   }
 };
@@ -352,9 +371,19 @@ export const getCompanyUser = async (userId: string): Promise<{ success: boolean
       return { success: false, error };
     }
     
+    // Cast du level pour assurer la compatibilité avec CompanyUserLevel
+    const typedUser: CompanyUser = {
+      id: data.id,
+      user_id: data.user_id,
+      email: data.email,
+      name: data.name,
+      level: data.level as CompanyUserLevel,
+      created_at: data.created_at
+    };
+    
     return { 
       success: true, 
-      user: data 
+      user: typedUser 
     };
   } catch (error: any) {
     console.error("Exception lors de la récupération de l'utilisateur:", error);
