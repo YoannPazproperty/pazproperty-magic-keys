@@ -1,20 +1,51 @@
 
+# This file controls the configuration for your Supabase project.
+# For further information on how to set up your project, check out the Supabase docs at:
+# https://supabase.com/docs
+
+# Note: The project_id is read from the supabase_project_ref env var.
+# If you want to use a different project ID, you can set it here.
 project_id = "ubztjjxmldogpwawcnrj"
 
-[functions.send-contact-form]
-verify_jwt = false
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
 
-[functions.password-reset-fix]
-verify_jwt = false
+[db]
+port = 54322
 
-[functions.generate-reset-link]
-verify_jwt = false
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost"
 
-[functions.set-admin-password]
-verify_jwt = false
+[inbucket]
+enabled = true
+port = 54324
 
-[functions.get-token-info]
-verify_jwt = false
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 3600
 
-[functions.send-provider-invite]
-verify_jwt = false
+[realtime]
+enabled = true
+
+[storage]
+enabled = true
+file_size_limit = 52428800
+
+[analytics]
+enabled = false
+
+[cdn]
+enabled = false
+
+[functions]
+check-user-exists = { verify_jwt = true }

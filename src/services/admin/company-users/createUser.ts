@@ -28,6 +28,22 @@ export const createCompanyUser = async (
       };
     }
 
+    // Vérifier d'abord si l'utilisateur existe déjà dans la table company_users
+    const { data: existingUser, error: checkError } = await supabase
+      .from('company_users')
+      .select('id, email')
+      .eq('email', params.email)
+      .maybeSingle();
+
+    if (existingUser) {
+      console.log("L'utilisateur existe déjà dans la table company_users:", existingUser);
+      return {
+        success: false,
+        message: "Un utilisateur avec cette adresse email existe déjà",
+        error: "User already exists in company_users"
+      };
+    }
+
     // Créer l'utilisateur via l'edge function qui utilise le rôle service
     const { data, error } = await supabase.functions.invoke("create-company-user", {
       body: {
@@ -44,8 +60,28 @@ export const createCompanyUser = async (
     if (error) {
       console.error("Erreur lors de la création de l'utilisateur:", error);
       
-      // Traiter spécifiquement l'erreur d'utilisateur existant
-      if (error.message && error.message.includes('non-2xx status code')) {
+      // Vérifier si l'erreur contient des informations sur un utilisateur existant
+      if (error.message && (
+          error.message.includes('non-2xx status code') ||
+          error.message.includes('Edge Function returned a non-2xx')
+      )) {
+        // Essayer de récupérer l'utilisateur existant dans auth.users via un appel à la fonction edge
+        try {
+          const { data: checkUserData } = await supabase.functions.invoke("check-user-exists", {
+            body: { email: params.email }
+          });
+          
+          if (checkUserData && checkUserData.exists) {
+            return {
+              success: false,
+              message: "Un compte avec cette adresse email existe déjà dans l'authentification Supabase",
+              error: "User already exists in auth.users"
+            };
+          }
+        } catch (checkErr) {
+          console.error("Erreur lors de la vérification de l'utilisateur:", checkErr);
+        }
+        
         return {
           success: false,
           message: "Un utilisateur avec cette adresse email existe déjà",

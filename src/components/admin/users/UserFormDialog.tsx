@@ -74,11 +74,12 @@ export const UserFormDialog: React.FC<UserFormDialogProps> = ({
         // Si l'erreur concerne un utilisateur déjà existant, l'afficher de manière spécifique
         if (result.error && (
             result.error.includes("already registered") || 
-            result.error.includes("already exists")
+            result.error.includes("already exists") ||
+            result.error.includes("duplicate key")
         )) {
-          setApiError("Cet email est déjà utilisé par un compte existant");
+          setApiError("Cet email est déjà utilisé par un compte existant. Si vous ne le voyez pas dans l'interface, il pourrait être dans Supabase Auth mais pas associé à un utilisateur d'entreprise.");
           toast.error("Email déjà utilisé", {
-            description: "Un utilisateur avec cette adresse email existe déjà"
+            description: "Un utilisateur avec cette adresse email existe déjà dans le système"
           });
         } else {
           setApiError(result.message || "Une erreur est survenue lors de la création du compte");
