@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ import {
   CompanyUserLevel, 
   isValidCompanyEmail,
   generateTemporaryPassword
-} from "@/services/admin/companyUserService";
+} from "@/services/admin/company-users";
 
 interface AdminUserFormDialogProps {
   isOpen: boolean;

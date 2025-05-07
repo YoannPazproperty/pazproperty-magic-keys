@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   AlertDialog,
@@ -11,7 +10,7 @@ import {
   AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { archiveCompanyUser } from "@/services/admin/companyUserService";
+import { archiveCompanyUser } from "@/services/admin/company-users";
 
 interface AdminUserDeleteDialogProps {
   isOpen: boolean;

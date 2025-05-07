@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { toast } from "sonner";
 import { AdminUserFormDialog } from "../../users/AdminUserFormDialog";
 import { AdminUserEditDialog } from "../../users/AdminUserEditDialog";
 import { AdminUserDeleteDialog } from "../../users/AdminUserDeleteDialog";
-import { getCompanyUsers, CompanyUser, GetCompanyUsersResult } from "@/services/admin/companyUserService";
+import { getCompanyUsers, CompanyUser, GetCompanyUsersResult } from "@/services/admin/company-users";
 
 export const AdminUsersTab = () => {
   const [users, setUsers] = useState<CompanyUser[]>([]);
