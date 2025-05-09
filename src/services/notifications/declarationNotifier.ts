@@ -1,5 +1,5 @@
 
-import { Declaration } from "../types";
+import { Declaration, ServiceProvider } from "../types";
 import { getProviderDetails, logNotification, sendEmail } from "./index";
 import { supabase } from "@/integrations/supabase/client";
 
