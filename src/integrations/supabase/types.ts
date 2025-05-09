@@ -161,6 +161,44 @@ export type Database = {
         }
         Relationships: []
       }
+      declaration_files: {
+        Row: {
+          declaration_id: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id: string
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          declaration_id: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          declaration_id?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "declaration_files_declaration_id_fkey"
+            columns: ["declaration_id"]
+            isOneToOne: false
+            referencedRelation: "declarations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       declarations: {
         Row: {
           city: string | null
@@ -169,6 +207,8 @@ export type Database = {
           id: string
           issueType: string | null
           mediaFiles: string | null
+          meeting_date: string | null
+          meeting_notes: string | null
           mondayId: string | null
           name: string
           nif: string | null
@@ -177,6 +217,11 @@ export type Database = {
           prestador_assigned_at: string | null
           prestador_id: string | null
           property: string | null
+          quote_amount: number | null
+          quote_approved: boolean | null
+          quote_file_path: string | null
+          quote_rejection_reason: string | null
+          quote_response_date: string | null
           status: Database["public"]["Enums"]["declaration_status"] | null
           submittedAt: string | null
           urgency: string | null
@@ -188,6 +233,8 @@ export type Database = {
           id: string
           issueType?: string | null
           mediaFiles?: string | null
+          meeting_date?: string | null
+          meeting_notes?: string | null
           mondayId?: string | null
           name: string
           nif?: string | null
@@ -196,6 +243,11 @@ export type Database = {
           prestador_assigned_at?: string | null
           prestador_id?: string | null
           property?: string | null
+          quote_amount?: number | null
+          quote_approved?: boolean | null
+          quote_file_path?: string | null
+          quote_rejection_reason?: string | null
+          quote_response_date?: string | null
           status?: Database["public"]["Enums"]["declaration_status"] | null
           submittedAt?: string | null
           urgency?: string | null
@@ -207,6 +259,8 @@ export type Database = {
           id?: string
           issueType?: string | null
           mediaFiles?: string | null
+          meeting_date?: string | null
+          meeting_notes?: string | null
           mondayId?: string | null
           name?: string
           nif?: string | null
@@ -215,6 +269,11 @@ export type Database = {
           prestador_assigned_at?: string | null
           prestador_id?: string | null
           property?: string | null
+          quote_amount?: number | null
+          quote_approved?: boolean | null
+          quote_file_path?: string | null
+          quote_rejection_reason?: string | null
+          quote_response_date?: string | null
           status?: Database["public"]["Enums"]["declaration_status"] | null
           submittedAt?: string | null
           urgency?: string | null
@@ -338,6 +397,50 @@ export type Database = {
           techBoardId?: string | null
         }
         Relationships: []
+      }
+      notification_logs: {
+        Row: {
+          declaration_id: string
+          error_message: string | null
+          id: string
+          message_content: string
+          notification_type: string
+          recipient_email: string
+          recipient_type: string
+          sent_at: string | null
+          success: boolean
+        }
+        Insert: {
+          declaration_id: string
+          error_message?: string | null
+          id?: string
+          message_content: string
+          notification_type: string
+          recipient_email: string
+          recipient_type: string
+          sent_at?: string | null
+          success: boolean
+        }
+        Update: {
+          declaration_id?: string
+          error_message?: string | null
+          id?: string
+          message_content?: string
+          notification_type?: string
+          recipient_email?: string
+          recipient_type?: string
+          sent_at?: string | null
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_declaration_id_fkey"
+            columns: ["declaration_id"]
+            isOneToOne: false
+            referencedRelation: "declarations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_preferences: {
         Row: {
@@ -743,6 +846,9 @@ export type Database = {
         | "Orçamento recebido"
         | "Em curso de reparação"
         | "Resolvido"
+        | "Em espera do encontro de diagnostico"
+        | "Encontramento de diagnostico planeado"
+        | "Annulé"
       user_role: "admin" | "manager" | "user" | "provider"
     }
     CompositeTypes: {
@@ -865,6 +971,9 @@ export const Constants = {
         "Orçamento recebido",
         "Em curso de reparação",
         "Resolvido",
+        "Em espera do encontro de diagnostico",
+        "Encontramento de diagnostico planeado",
+        "Annulé",
       ],
       user_role: ["admin", "manager", "user", "provider"],
     },

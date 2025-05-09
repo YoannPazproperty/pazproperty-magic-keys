@@ -23,10 +23,18 @@ export const StatusUpdate = ({ currentStatus, onStatusUpdate }: StatusUpdateProp
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onStatusUpdate("Transmitido")}
-          className={currentStatus === "Transmitido" ? "bg-blue-100" : ""}
+          onClick={() => onStatusUpdate("Em espera do encontro de diagnostico")}
+          className={currentStatus === "Em espera do encontro de diagnostico" ? "bg-blue-50" : ""}
         >
-          Transmitido
+          Em espera do encontro
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onStatusUpdate("Encontramento de diagnostico planeado")}
+          className={currentStatus === "Encontramento de diagnostico planeado" ? "bg-sky-100" : ""}
+        >
+          Encontro planeado
         </Button>
         <Button
           variant="outline"
@@ -51,6 +59,14 @@ export const StatusUpdate = ({ currentStatus, onStatusUpdate }: StatusUpdateProp
           className={currentStatus === "Resolvido" ? "bg-green-100" : ""}
         >
           Resolvido
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onStatusUpdate("Annulé")}
+          className={currentStatus === "Annulé" ? "bg-red-100" : ""}
+        >
+          Annulé
         </Button>
       </div>
     </div>

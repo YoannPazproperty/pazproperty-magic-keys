@@ -4,8 +4,11 @@ import { ProblemInfo } from "./declaration-details/ProblemInfo";
 import { MediaFiles } from "./declaration-details/MediaFiles";
 import { StatusUpdate } from "./declaration-details/StatusUpdate";
 import { MondayInfo } from "./declaration-details/MondayInfo";
-import { ProviderAssignment } from "./declaration-details/ProviderAssignment";
-import type { Declaration } from "@/services/types";
+import { ProviderAssignmentForm } from "./declaration-details/ProviderAssignmentForm";
+import { QuoteApprovalForm } from "./declaration-details/QuoteApprovalForm";
+import type { Declaration, DeclarationFile } from "@/services/types";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DeclarationDetailsProps {
   declaration: Declaration;
@@ -20,6 +23,27 @@ export const DeclarationDetails = ({
   getStatusBadgeColor,
   translateStatus
 }: DeclarationDetailsProps) => {
+  const [quoteFiles, setQuoteFiles] = useState<DeclarationFile[]>([]);
+
+  // Récupérer les fichiers de devis associés à la déclaration
+  useEffect(() => {
+    const fetchQuoteFiles = async () => {
+      if (declaration.status === "Orçamento recebido") {
+        const { data, error } = await supabase
+          .from('declaration_files')
+          .select('*')
+          .eq('declaration_id', declaration.id)
+          .eq('file_type', 'quote');
+          
+        if (!error && data) {
+          setQuoteFiles(data);
+        }
+      }
+    };
+    
+    fetchQuoteFiles();
+  }, [declaration.id, declaration.status]);
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
@@ -38,7 +62,23 @@ export const DeclarationDetails = ({
         </div>
       </div>
       
-      <ProviderAssignment declaration={declaration} />
+      <ProviderAssignmentForm 
+        declaration={declaration} 
+        onSuccess={() => onStatusUpdate(declaration.id, declaration.status)}
+        isReadOnly={![
+          "Novo", 
+          "Em espera do encontro de diagnostico"
+        ].includes(declaration.status as string)}
+      />
+      
+      {declaration.status === "Orçamento recebido" && (
+        <QuoteApprovalForm 
+          declaration={declaration} 
+          quoteFiles={quoteFiles}
+          onSuccess={() => onStatusUpdate(declaration.id, declaration.status)}
+          isReadOnly={declaration.quote_approved !== null}
+        />
+      )}
       
       <MediaFiles files={declaration.mediaFiles} />
       

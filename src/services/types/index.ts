@@ -41,11 +41,43 @@ export type Declaration = {
   urgency: string | null;
   nif: string | null;
   mediaFiles: string[] | null; // URLs des fichiers médias
-  status: "Novo" | "Transmitido" | "Orçamento recebido" | "Em curso de reparação" | "Resolvido" | null;
+  status: "Novo" | "Em espera do encontro de diagnostico" | "Encontramento de diagnostico planeado" | "Orçamento recebido" | "Em curso de reparação" | "Resolvido" | "Annulé" | null;
   submittedAt: string | null;
   mondayId?: string | null;
   prestador_id?: string | null;
   prestador_assigned_at?: string | null;
+  // Nouveaux champs
+  meeting_date?: string | null;
+  meeting_notes?: string | null;
+  quote_file_path?: string | null;
+  quote_amount?: number | null;
+  quote_approved?: boolean | null;
+  quote_rejection_reason?: string | null;
+  quote_response_date?: string | null;
+};
+
+// Type pour les fichiers liés aux déclarations
+export type DeclarationFile = {
+  id: string;
+  declaration_id: string;
+  file_path: string;
+  file_type: "quote" | "image" | "video";
+  file_name: string;
+  uploaded_at: string;
+  uploaded_by?: string | null;
+};
+
+// Type pour les logs de notification
+export type NotificationLog = {
+  id: string;
+  declaration_id: string;
+  notification_type: string;
+  recipient_email: string;
+  recipient_type: "provider" | "tenant" | "admin";
+  sent_at: string;
+  success: boolean;
+  error_message?: string | null;
+  message_content: string;
 };
 
 // Export affaires types after defining the basic types to avoid circular dependencies
