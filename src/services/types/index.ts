@@ -1,4 +1,5 @@
 
+
 export * from "./affaires";
 
 export type CommercialContact = {
@@ -11,6 +12,7 @@ export type CommercialContact = {
   created_at: string;
 };
 
+// Export CommercialContact as Contact for compatibility with affaires types
 export type Contact = CommercialContact;
 
 export interface ServiceProvider {

@@ -1,6 +1,6 @@
 
-// Import from the correct location
-import { Contact } from '@/services/types';
+// Correctly import Contact from the parent module
+import { Contact } from '../types';
 
 export type Affaire = {
   id: string;
