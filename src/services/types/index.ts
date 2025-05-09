@@ -47,7 +47,7 @@ export type Declaration = {
   mondayId?: string | null;
   prestador_id?: string | null;
   prestador_assigned_at?: string | null;
-  // Nouveaux champs
+  // Additional fields
   meeting_date?: string | null;
   meeting_notes?: string | null;
   quote_file_path?: string | null;
@@ -57,7 +57,7 @@ export type Declaration = {
   quote_response_date?: string | null;
 };
 
-// Type pour les fichiers liés aux déclarations
+// Type for files related to declarations
 export type DeclarationFile = {
   id: string;
   declaration_id: string;
@@ -68,7 +68,7 @@ export type DeclarationFile = {
   uploaded_by?: string | null;
 };
 
-// Type pour les logs de notification
+// Type for notification logs
 export type NotificationLog = {
   id: string;
   declaration_id: string;

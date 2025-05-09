@@ -9,7 +9,7 @@ export const useProviderAssignment = () => {
   
   const handleProviderAssignment = async (declarationId: string, providerId: string) => {
     if (!declarationId || !providerId) {
-      toast.error("Données insuffisantes pour assigner le prestataire");
+      toast.error("Dados insuficientes para assigner le prestataire");
       return false;
     }
     
