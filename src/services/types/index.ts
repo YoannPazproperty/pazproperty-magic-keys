@@ -1,7 +1,5 @@
 
-
-export * from "./affaires";
-
+// First export the basic types
 export type CommercialContact = {
   id: string;
   nome: string;
@@ -12,9 +10,10 @@ export type CommercialContact = {
   created_at: string;
 };
 
-// Export CommercialContact as Contact for compatibility with affaires types
+// Then export the alias for backward compatibility
 export type Contact = CommercialContact;
 
+// Then export other types
 export interface ServiceProvider {
   id: string;
   empresa: string;
@@ -48,3 +47,6 @@ export type Declaration = {
   prestador_id?: string | null;
   prestador_assigned_at?: string | null;
 };
+
+// Export affaires types after defining the basic types to avoid circular dependencies
+export * from "./affaires";

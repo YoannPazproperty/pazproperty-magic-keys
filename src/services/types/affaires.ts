@@ -1,6 +1,6 @@
 
-// Correctly import Contact from the parent module
-import { Contact } from '../types';
+// Import CommercialContact directly rather than Contact to avoid circular dependencies
+import type { CommercialContact } from '../types';
 
 export type Affaire = {
   id: string;
@@ -34,7 +34,7 @@ export type AffaireFormData = Omit<Affaire, 'id' | 'created_at' | 'updated_at'>;
 export type HistoriqueActionFormData = Omit<HistoriqueAction, 'id' | 'created_at'>;
 
 export type AffaireAvecContact = Affaire & {
-  contact: Contact;
+  contact: CommercialContact;
 };
 
 export type StatutAffaire = 
