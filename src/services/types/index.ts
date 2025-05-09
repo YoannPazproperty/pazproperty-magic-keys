@@ -29,6 +29,7 @@ export interface ServiceProvider {
   deleted_at?: string | null;
 };
 
+// Updated Declaration type with all required properties and status values
 export type Declaration = {
   id: string;
   name: string;
@@ -41,7 +42,7 @@ export type Declaration = {
   issueType: string | null;
   urgency: string | null;
   nif: string | null;
-  mediaFiles: string[] | null; // URLs des fichiers médias
+  mediaFiles: string[] | null;
   status: "Novo" | "Em espera do encontro de diagnostico" | "Encontramento de diagnostico planeado" | "Orçamento recebido" | "Em curso de reparação" | "Resolvido" | "Annulé" | "Transmitido" | null;
   submittedAt: string | null;
   mondayId?: string | null;
