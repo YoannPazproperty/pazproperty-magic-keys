@@ -1,5 +1,6 @@
 
 
+
 // First export the basic types
 export type CommercialContact = {
   id: string;
@@ -26,7 +27,8 @@ export interface ServiceProvider {
   endereco?: string | null;
   codigo_postal?: string | null;
   nif?: string | null;
-  created_at?: string;
+  created_at: string;
+  deleted_at?: string | null;
 };
 
 export type Declaration = {
@@ -42,7 +44,7 @@ export type Declaration = {
   urgency: string | null;
   nif: string | null;
   mediaFiles: string[] | null; // URLs des fichiers médias
-  status: "Novo" | "Em espera do encontro de diagnostico" | "Encontramento de diagnostico planeado" | "Orçamento recebido" | "Em curso de reparação" | "Resolvido" | "Annulé" | null;
+  status: "Novo" | "Em espera do encontro de diagnostico" | "Encontramento de diagnostico planeado" | "Orçamento recebido" | "Em curso de reparação" | "Resolvido" | "Annulé" | "Transmitido" | null;
   submittedAt: string | null;
   mondayId?: string | null;
   prestador_id?: string | null;
@@ -83,3 +85,4 @@ export type NotificationLog = {
 
 // Export affaires types after defining the basic types to avoid circular dependencies
 export * from "./affaires";
+
