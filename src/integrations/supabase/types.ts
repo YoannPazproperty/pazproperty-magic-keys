@@ -9,6 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      affaires: {
+        Row: {
+          client_email: string | null
+          client_nom: string
+          client_telephone: string | null
+          contact_id: string
+          created_at: string
+          date_paiement: string | null
+          description: string | null
+          honoraires_percus: number | null
+          id: string
+          notes: string | null
+          remuneration_payee: number | null
+          remuneration_prevue: number | null
+          statut: string
+          updated_at: string
+        }
+        Insert: {
+          client_email?: string | null
+          client_nom: string
+          client_telephone?: string | null
+          contact_id: string
+          created_at?: string
+          date_paiement?: string | null
+          description?: string | null
+          honoraires_percus?: number | null
+          id?: string
+          notes?: string | null
+          remuneration_payee?: number | null
+          remuneration_prevue?: number | null
+          statut?: string
+          updated_at?: string
+        }
+        Update: {
+          client_email?: string | null
+          client_nom?: string
+          client_telephone?: string | null
+          contact_id?: string
+          created_at?: string
+          date_paiement?: string | null
+          description?: string | null
+          honoraires_percus?: number | null
+          id?: string
+          notes?: string | null
+          remuneration_payee?: number | null
+          remuneration_prevue?: number | null
+          statut?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affaires_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contactos_comerciais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_users: {
         Row: {
           created_at: string | null
@@ -166,6 +225,44 @@ export type Database = {
             columns: ["prestador_id"]
             isOneToOne: false
             referencedRelation: "prestadores_de_servicos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historique_actions: {
+        Row: {
+          action: string
+          affaire_id: string
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          utilisateur: string | null
+        }
+        Insert: {
+          action: string
+          affaire_id: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          utilisateur?: string | null
+        }
+        Update: {
+          action?: string
+          affaire_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          utilisateur?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historique_actions_affaire_id_fkey"
+            columns: ["affaire_id"]
+            isOneToOne: false
+            referencedRelation: "affaires"
             referencedColumns: ["id"]
           },
         ]

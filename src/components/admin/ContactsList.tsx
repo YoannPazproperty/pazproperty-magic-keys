@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Trash, Eye } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import type { CommercialContact } from "@/services/types";
 import { deleteContact } from "@/services/contacts/contactQueries";
 import { ContactFormDialog } from "./ContactFormDialog";
+import { ContactDetailsDialog } from "./contact-details/ContactDetailsDialog";
 
 interface ContactsListProps {
   contacts: CommercialContact[];
@@ -36,7 +37,9 @@ interface ContactsListProps {
 export const ContactsList = ({ contacts, isLoading, onRefresh }: ContactsListProps) => {
   const [contactToEdit, setContactToEdit] = useState<CommercialContact | undefined>();
   const [contactToDelete, setContactToDelete] = useState<CommercialContact | undefined>();
+  const [contactToView, setContactToView] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
   const handleAddNew = () => {
     setContactToEdit(undefined);
@@ -46,6 +49,11 @@ export const ContactsList = ({ contacts, isLoading, onRefresh }: ContactsListPro
   const handleEdit = (contact: CommercialContact) => {
     setContactToEdit(contact);
     setIsFormOpen(true);
+  };
+
+  const handleView = (contactId: string) => {
+    setContactToView(contactId);
+    setIsDetailsOpen(true);
   };
   
   const handleDeleteConfirm = async () => {
@@ -77,6 +85,11 @@ export const ContactsList = ({ contacts, isLoading, onRefresh }: ContactsListPro
     setIsFormOpen(false);
     setContactToEdit(undefined);
     onRefresh();
+  };
+
+  const handleDetailsClose = () => {
+    setIsDetailsOpen(false);
+    setContactToView(null);
   };
 
   if (isLoading) {
@@ -128,6 +141,9 @@ export const ContactsList = ({ contacts, isLoading, onRefresh }: ContactsListPro
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleView(contact.id)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(contact)}>
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -143,12 +159,20 @@ export const ContactsList = ({ contacts, isLoading, onRefresh }: ContactsListPro
         </div>
       )}
       
-      {/* Edit/Add Form Dialog */}
+      {/* Contact Form Dialog */}
       <ContactFormDialog 
         isOpen={isFormOpen}
         onClose={handleFormClose}
         onSuccess={handleFormSuccess}
         contactToEdit={contactToEdit}
+      />
+
+      {/* Contact Details Dialog */}
+      <ContactDetailsDialog
+        isOpen={isDetailsOpen}
+        onClose={handleDetailsClose}
+        contactId={contactToView}
+        onContactUpdated={onRefresh}
       />
       
       {/* Delete Confirmation Dialog */}

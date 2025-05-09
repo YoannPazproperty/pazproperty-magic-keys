@@ -32,6 +32,34 @@ export const getContactsList = async (): Promise<CommercialContact[]> => {
   }
 };
 
+export const getContactById = async (id: string): Promise<CommercialContact | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('contactos_comerciais')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error) {
+      console.error(`Error fetching contact with ID ${id}:`, error);
+      return null;
+    }
+    
+    // Valider le tipo
+    const validTipo = ["Proprietario", "Inquilino", "Outros", "Agente Imobiliario"].includes(data.tipo) 
+      ? (data.tipo as CommercialContact["tipo"])
+      : "Outros";
+    
+    return {
+      ...data,
+      tipo: validTipo
+    } as CommercialContact;
+  } catch (err) {
+    console.error(`Error in getContactById for ID ${id}:`, err);
+    return null;
+  }
+};
+
 export const createContact = async (contact: Omit<CommercialContact, 'id' | 'created_at'>): Promise<CommercialContact | null> => {
   try {
     const { data, error } = await supabase
