@@ -44,8 +44,9 @@ export const usePermissionCheck = ({
     }
 
     // Add a safety timeout to avoid infinite checking
+    // Increased from 5 seconds to 15 seconds to give more time for role verification
     const safetyTimeout = window.setTimeout(() => {
-      console.log("Safety timeout triggered after 5 seconds");
+      console.log("Safety timeout triggered after 15 seconds");
       if (checkingRole) {
         setCheckingRole(false);
         
@@ -62,7 +63,7 @@ export const usePermissionCheck = ({
         
         handleAccessNotification(devMode, devMode, 'timeout');
       }
-    }, 5000); // 5 seconds timeout
+    }, 15000); // Changed from 5000 to 15000 (15 seconds timeout)
     
     // Store timeout reference for cleanup
     setTimeout(safetyTimeout);
