@@ -1,6 +1,4 @@
 
-
-
 // First export the basic types
 export type CommercialContact = {
   id: string;
@@ -64,7 +62,7 @@ export type DeclarationFile = {
   id: string;
   declaration_id: string;
   file_path: string;
-  file_type: "quote" | "image" | "video";
+  file_type: "quote" | "image" | "video" | string;
   file_name: string;
   uploaded_at: string;
   uploaded_by?: string | null;
@@ -85,4 +83,3 @@ export type NotificationLog = {
 
 // Export affaires types after defining the basic types to avoid circular dependencies
 export * from "./affaires";
-
