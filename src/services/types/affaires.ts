@@ -1,4 +1,5 @@
 
+// Import from the correct location
 import { Contact } from '@/services/types';
 
 export type Affaire = {

@@ -1,7 +1,4 @@
 
-import { Declaration } from "./declarations";
-
-export * from "./declarations";
 export * from "./affaires";
 
 export type CommercialContact = {
