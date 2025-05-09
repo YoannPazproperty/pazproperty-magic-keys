@@ -11,7 +11,7 @@ export interface ServiceProvider {
   codigo_postal?: string | null;
   nif?: string | null;
   tipo_de_obras: "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais";
-  created_at: string;
+  created_at?: string; // Make created_at optional
   deleted_at?: string | null;
 }
 

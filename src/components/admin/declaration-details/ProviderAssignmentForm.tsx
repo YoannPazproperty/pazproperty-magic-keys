@@ -121,13 +121,15 @@ export const ProviderAssignmentForm = ({
   };
 
   // Helper for checking if a provider is complete enough to display
-  const isValidProvider = (provider: ServiceProvider) => {
-    return provider && provider.id && provider.empresa && provider.nome_gerente && provider.tipo_de_obras;
+  const isValidProvider = (provider: Partial<ServiceProvider> | null | undefined): provider is ServiceProvider => {
+    return !!provider && !!provider.id && !!provider.empresa && !!provider.nome_gerente && !!provider.tipo_de_obras;
   };
 
   // Find current provider with safety checks
-  const currentProvider = providers?.find(p => p.id === declaration.prestador_id && isValidProvider(p));
-  const currentProviderDisplay = currentProvider ? formatProviderDisplay(currentProvider) : 'Prestataire non trouvé';
+  const currentProvider = providers?.find(p => p.id === declaration.prestador_id);
+  const currentProviderDisplay = currentProvider && isValidProvider(currentProvider) 
+    ? `${currentProvider.empresa} - ${currentProvider.nome_gerente} - ${currentProvider.tipo_de_obras}` 
+    : 'Prestataire non trouvé';
 
   return (
     <div className="space-y-4 border rounded-md p-4">
@@ -148,7 +150,7 @@ export const ProviderAssignmentForm = ({
             <SelectContent>
               {providers?.filter(isValidProvider).map((provider) => (
                 <SelectItem key={provider.id} value={provider.id}>
-                  {formatProviderDisplay(provider)}
+                  {`${provider.empresa} - ${provider.nome_gerente} - ${provider.tipo_de_obras}`}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -164,7 +166,7 @@ export const ProviderAssignmentForm = ({
           )}
         </div>
         
-        {declaration.prestador_id && providers && currentProvider && (
+        {declaration.prestador_id && currentProvider && (
           <p className="text-sm text-muted-foreground">
             Prestataire actuel: {currentProviderDisplay}
           </p>
