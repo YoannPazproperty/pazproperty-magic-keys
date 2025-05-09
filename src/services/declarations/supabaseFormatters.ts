@@ -7,16 +7,11 @@ import { Declaration } from "../types";
 
 // Convert Declaration to Supabase format
 export const convertToSupabaseFormat = (declaration: Declaration) => {
-  console.log("supabaseFormatters: Converting to Supabase format:", declaration);
-  console.log("supabaseFormatters: Media files before conversion:", declaration.mediaFiles);
-  
   // S'il y a des mediaFiles et c'est un tableau, le convertir en string JSON
   const mediaFilesString = declaration.mediaFiles && Array.isArray(declaration.mediaFiles) && declaration.mediaFiles.length > 0 
     ? JSON.stringify(declaration.mediaFiles) 
     : null;
     
-  console.log("supabaseFormatters: Media files after conversion:", mediaFilesString);
-  
   return {
     ...declaration,
     // Convert mediaFiles array to string for Supabase
@@ -26,8 +21,6 @@ export const convertToSupabaseFormat = (declaration: Declaration) => {
 
 // Convert Supabase format back to Declaration
 export const convertFromSupabaseFormat = (record: any): Declaration => {
-  console.log("supabaseFormatters: Converting from Supabase format:", record);
-  
   let mediaFiles = null;
   
   // Parse mediaFiles string back to array if it exists
@@ -40,9 +33,8 @@ export const convertFromSupabaseFormat = (record: any): Declaration => {
         // Sinon on essaie de parser le JSON
         mediaFiles = JSON.parse(record.mediaFiles);
       }
-      console.log("supabaseFormatters: Parsed media files:", mediaFiles);
     } catch (error) {
-      console.error("supabaseFormatters: Error parsing media files:", error);
+      console.error("Error parsing media files:", error);
       // Si on ne peut pas parser, on le traite comme un tableau avec un seul élément
       mediaFiles = record.mediaFiles ? [record.mediaFiles] : null;
     }

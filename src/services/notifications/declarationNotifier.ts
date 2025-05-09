@@ -1,6 +1,8 @@
+
 import { Declaration, ServiceProvider } from "../types";
 import { getProviderDetails, logNotification, sendEmail } from "./index";
 import { supabase } from "@/integrations/supabase/client";
+import { convertFromSupabaseFormat } from "../declarations/supabaseFormatters";
 
 // Notification lors d'un changement de statut
 export const notifyStatusChange = async (
@@ -106,7 +108,7 @@ export const notifyNewDeclaration = async (declaration: Declaration): Promise<bo
     await logNotification(
       declaration.id,
       'new_declaration',
-      declaration.email,
+      declaration.email || '',
       'tenant',
       false,
       content,
@@ -131,16 +133,19 @@ export const updateStatusAndNotify = async (
 ): Promise<boolean> => {
   try {
     // Récupération de la déclaration actuelle pour avoir le statut précédent
-    const { data: currentDeclaration } = await supabase
+    const { data: currentDeclarationData } = await supabase
       .from('declarations')
       .select('*')
       .eq('id', id)
       .single();
     
-    if (!currentDeclaration) {
+    if (!currentDeclarationData) {
       console.error(`Déclaration ${id} non trouvée`);
       return false;
     }
+    
+    // Convert to proper type with mediaFiles as string[]
+    const currentDeclaration = convertFromSupabaseFormat(currentDeclarationData);
     
     const previousStatus = currentDeclaration.status;
     
@@ -170,7 +175,7 @@ export const updateStatusAndNotify = async (
     }
     
     // Mettre à jour la déclaration
-    const { data: updatedDeclaration, error } = await supabase
+    const { data: updatedDeclarationData, error } = await supabase
       .from('declarations')
       .update(updateData)
       .eq('id', id)
@@ -181,6 +186,9 @@ export const updateStatusAndNotify = async (
       console.error(`Erreur lors de la mise à jour de la déclaration ${id}:`, error);
       return false;
     }
+    
+    // Convert to proper type with mediaFiles as string[]
+    const updatedDeclaration = updatedDeclarationData ? convertFromSupabaseFormat(updatedDeclarationData) : null;
     
     // Envoi des notifications en fonction du changement de statut
     if (updatedDeclaration) {
@@ -194,7 +202,7 @@ export const updateStatusAndNotify = async (
       
       // Si un rendez-vous est planifié
       if (options?.meeting_date && status === "Encontramento de diagnostico planeado") {
-        const provider = await getProviderDetails(updatedDeclaration.prestador_id);
+        const provider = await getProviderDetails(updatedDeclaration.prestador_id!);
         if (provider && updatedDeclaration.email) {
           await notifyTenantMeetingScheduled(updatedDeclaration, provider, options.meeting_date);
         }
@@ -202,7 +210,7 @@ export const updateStatusAndNotify = async (
       
       // Si le devis est approuvé et que le statut passe à "Em curso de reparação"
       if (status === "Em curso de reparação" && options?.quote_approved === true) {
-        const provider = await getProviderDetails(updatedDeclaration.prestador_id);
+        const provider = await getProviderDetails(updatedDeclaration.prestador_id!);
         if (provider) {
           await notifyProviderQuoteApproved(updatedDeclaration, provider);
           await notifyTenantQuoteApproved(updatedDeclaration);

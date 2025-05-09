@@ -12,7 +12,7 @@ export interface ServiceProvider {
   nif?: string | null;
   tipo_de_obras: "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais";
   created_at: string;
-  deleted_at?: string;
+  deleted_at?: string | null;
 }
 
 // Types pour les déclarations

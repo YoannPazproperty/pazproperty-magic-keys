@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Declaration, NotificationLog, ServiceProvider } from "../types";
 import { toast } from "sonner";
+import { convertFromSupabaseFormat } from "../declarations/supabaseFormatters";
 
 // Récupère les informations du prestataire
 export const getProviderDetails = async (providerId: string): Promise<ServiceProvider | null> => {
@@ -19,7 +20,16 @@ export const getProviderDetails = async (providerId: string): Promise<ServicePro
       return null;
     }
     
-    return data;
+    // Ensure the data conforms to ServiceProvider type
+    if (data) {
+      const provider = {
+        ...data,
+        tipo_de_obras: data.tipo_de_obras as "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais"
+      };
+      return provider;
+    }
+    
+    return null;
   } catch (err) {
     console.error('Exception lors de la récupération du prestataire:', err);
     return null;
@@ -339,7 +349,16 @@ export const getDeclarationNotificationHistory = async (declarationId: string): 
       return [];
     }
     
-    return data;
+    // Ensure the data conforms to NotificationLog type
+    if (data) {
+      const notifications: NotificationLog[] = data.map(item => ({
+        ...item,
+        recipient_type: item.recipient_type as "provider" | "tenant" | "admin"
+      }));
+      return notifications;
+    }
+    
+    return [];
   } catch (err) {
     console.error('Exception lors de la récupération de l\'historique des notifications:', err);
     return [];
