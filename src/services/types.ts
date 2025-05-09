@@ -28,13 +28,31 @@ export interface Declaration {
   issueType: string | null;
   urgency: string | null;
   description: string | null;
-  mediaFiles: string[] | null;  // Changé de string à string[]
+  mediaFiles: string[] | null;
   submittedAt: string | null;
-  status: "Novo" | "Transmitido" | "Orçamento recebido" | "Em curso de reparação" | "Resolvido";
+  status: "Novo" | "Em espera do encontro de diagnostico" | "Encontramento de diagnostico planeado" | "Orçamento recebido" | "Em curso de reparação" | "Resolvido" | "Annulé" | "Transmitido";
   mondayId: string | null;
   prestador_id: string | null;
   prestador_assigned_at: string | null;
+  meeting_date?: string | null;
+  meeting_notes?: string | null;
+  quote_file_path?: string | null;
+  quote_amount?: number | null;
+  quote_approved?: boolean | null;
+  quote_rejection_reason?: string | null;
+  quote_response_date?: string | null;
 }
+
+// Type for files related to declarations
+export type DeclarationFile = {
+  id: string;
+  declaration_id: string;
+  file_path: string;
+  file_type: "quote" | "image" | "video" | string;
+  file_name: string;
+  uploaded_at: string;
+  uploaded_by?: string | null;
+};
 
 // Types pour les contacts commerciaux
 export interface CommercialContact {
@@ -56,6 +74,19 @@ export interface NotificationPreference {
   recipientEmail: string | null;
   recipientPhone: string | null;
 }
+
+// Type for notification logs
+export type NotificationLog = {
+  id: string;
+  declaration_id: string;
+  notification_type: string;
+  recipient_email: string;
+  recipient_type: "provider" | "tenant" | "admin";
+  sent_at: string;
+  success: boolean;
+  error_message?: string | null;
+  message_content: string;
+};
 
 // Types pour les rapports techniciens
 export interface TechnicianReport {

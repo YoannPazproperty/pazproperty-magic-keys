@@ -1,4 +1,5 @@
 
+
 // First export the basic types
 export type CommercialContact = {
   id: string;
@@ -84,3 +85,4 @@ export type NotificationLog = {
 
 // Export affaires types after defining the basic types to avoid circular dependencies
 export * from "./affaires";
+
