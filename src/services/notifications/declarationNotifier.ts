@@ -1,7 +1,7 @@
 
 import { Declaration } from "../types";
 import { getProviderDetails, logNotification, sendEmail } from "./index";
-import { updateDeclaration } from "../declarations/declarationStorage";
+import { supabase } from "@/integrations/supabase/client";
 
 // Notification lors d'un changement de statut
 export const notifyStatusChange = async (
@@ -221,4 +221,38 @@ export const updateStatusAndNotify = async (
     console.error(`Erreur lors de la mise à jour du statut et de la notification pour ${id}:`, error);
     return false;
   }
+};
+
+// Les fonctions suivantes sont supposées être définies dans le fichier index.ts
+// Nous les déclarons ici comme fonctions de référence qui seront implémentées ailleurs
+export const notifyProviderAssignment = async (
+  declaration: Declaration, 
+  provider: ServiceProvider
+): Promise<boolean> => {
+  // Cette fonction sera implémentée dans index.ts
+  return true;
+};
+
+export const notifyTenantMeetingScheduled = async (
+  declaration: Declaration,
+  provider: ServiceProvider,
+  meetingDate: string
+): Promise<boolean> => {
+  // Cette fonction sera implémentée dans index.ts
+  return true;
+};
+
+export const notifyProviderQuoteApproved = async (
+  declaration: Declaration,
+  provider: ServiceProvider
+): Promise<boolean> => {
+  // Cette fonction sera implémentée dans index.ts
+  return true;
+};
+
+export const notifyTenantQuoteApproved = async (
+  declaration: Declaration
+): Promise<boolean> => {
+  // Cette fonction sera implémentée dans index.ts
+  return true;
 };

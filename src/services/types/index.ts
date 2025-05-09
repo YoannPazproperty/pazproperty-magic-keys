@@ -1,4 +1,5 @@
 
+
 // First export the basic types
 export type CommercialContact = {
   id: string;
@@ -26,7 +27,7 @@ export interface ServiceProvider {
   codigo_postal?: string | null;
   nif?: string | null;
   created_at?: string;
-}
+};
 
 export type Declaration = {
   id: string;
