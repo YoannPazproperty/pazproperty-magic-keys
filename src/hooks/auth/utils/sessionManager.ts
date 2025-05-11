@@ -27,6 +27,8 @@ export const handleRedirectionByRole = (
   // Otherwise check role for redirection
   if (role === 'provider') {
     navigate("/extranet-technique");
+  } else if (role === 'customer') {
+    navigate("/area-cliente");
   } else {
     // Use dynamic import to avoid circular dependencies
     import('../roleService').then(({ resolveRedirectPathByRole }) => {

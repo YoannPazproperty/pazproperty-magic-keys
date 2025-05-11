@@ -33,7 +33,14 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/propriedades" element={<Propriedades />} />
           <Route path="/propriedades/:id" element={<PropertyDetail />} />
-          <Route path="/area-cliente" element={<AreaCliente connectionStatus={connectionStatus} />} />
+          <Route 
+            path="/area-cliente" 
+            element={
+              <ProtectedRoute requiredRole="customer">
+                <AreaCliente connectionStatus={connectionStatus} />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/access-denied" element={<AccessDenied />} />
