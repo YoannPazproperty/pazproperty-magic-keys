@@ -86,6 +86,7 @@ export const usePermissionCheck = ({
           const domainMatch = checkEmailDomain(user.email, emailDomain);
           if (!domainMatch) {
             console.log(`Access denied: email ${user.email} is not from domain ${emailDomain}`);
+            // Fix: Use correct parameters for domain reason
             handleAccessNotification(false, isDevelopmentMode(), 'domain', emailDomain);
             setHasAccess(false);
             setCheckingRole(false);
@@ -158,6 +159,7 @@ export const usePermissionCheck = ({
             setHasAccess(false);
             setRoleChecked(true);
             setCheckingRole(false);
+            // Fix: Use correct parameters for role reason
             handleAccessNotification(false, isDevelopmentMode(), 'role', undefined, userRole, requiredRole);
           }
         } else {
