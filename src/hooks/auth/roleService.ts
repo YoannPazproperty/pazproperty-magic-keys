@@ -47,7 +47,8 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
             .from('user_roles')
             .insert({ 
               user_id: userId,
-              role: 'admin' as UserRole
+              // Use type casting to handle the mismatch between our TypeScript type and Supabase expected type
+              role: 'admin' as any
             });
             
           if (insertError) {
@@ -65,7 +66,8 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
               .from('user_roles')
               .insert({ 
                 user_id: userId,
-                role: 'provider' as UserRole
+                // Use type casting to handle the mismatch
+                role: 'provider' as any
               });
               
             if (insertError) {
@@ -81,7 +83,8 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
               .from('user_roles')
               .insert({ 
                 user_id: userId,
-                role: 'user' as UserRole
+                // Use type casting to handle the mismatch
+                role: 'user' as any
               });
               
             if (insertError) {

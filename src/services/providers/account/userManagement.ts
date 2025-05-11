@@ -67,7 +67,8 @@ export const createUserRole = async (userId: string): Promise<boolean> => {
       .from('user_roles')
       .insert({
         user_id: userId,
-        role: 'provider'
+        // Use type casting to avoid TypeScript error until database schema is updated
+        role: 'provider' as any
       });
 
     if (roleError) {
