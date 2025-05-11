@@ -8,7 +8,7 @@ import { UserRole } from "@/hooks/auth/types";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin" | "manager" | "provider" | "user" | "customer";
+  requiredRole?: Exclude<UserRole, null>;
   emailDomain?: string;
 }
 

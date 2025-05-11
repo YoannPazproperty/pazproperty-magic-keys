@@ -7,7 +7,7 @@ import { toast } from "sonner";
 interface PermissionCheckProps {
   user: any;
   getUserRole: () => Promise<UserRole>;
-  requiredRole?: "admin" | "manager" | "provider" | "user" | "customer";
+  requiredRole?: Exclude<UserRole, null>;
   emailDomain?: string;
 }
 
