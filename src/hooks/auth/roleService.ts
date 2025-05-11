@@ -1,4 +1,3 @@
-
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "./types";
@@ -138,5 +137,70 @@ export const resolveRedirectPathByRole = (role: UserRole, email: string | null |
       // If no role, redirect to a default page
       console.log("Redirection vers / par défaut (aucun rôle spécifié)");
       return "/";
+  }
+};
+
+/**
+ * Assign the customer role to a user if they don't already have a role
+ * @param userId The user's ID
+ * @returns A boolean indicating whether the role was assigned
+ */
+export const assignCustomerRole = async (userId: string): Promise<boolean> => {
+  try {
+    console.log("Checking existing role for user:", userId);
+    
+    // First check if the user already has a role in user_roles
+    const { data: existingRole, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .single();
+      
+    if (roleError) {
+      // No existing role found, check if this is a provider or admin
+      console.log("No existing role found in user_roles, checking if provider");
+      
+      // Check if user is a provider
+      const { data: providerData } = await supabase
+        .from('prestadores_roles')
+        .select('nivel')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (providerData) {
+        console.log("User is a provider, not assigning customer role");
+        return false;
+      }
+      
+      // Check if user has an @pazproperty.pt email (admin)
+      const { data: userData } = await supabase.auth.admin.getUserById(userId);
+      if (userData?.user?.email?.endsWith('@pazproperty.pt')) {
+        console.log("User has @pazproperty.pt email, not assigning customer role");
+        return false;
+      }
+      
+      // No role and not a special case, assign customer role
+      console.log("Assigning customer role to user:", userId);
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({ 
+          user_id: userId,
+          role: 'customer' as UserRole
+        });
+        
+      if (insertError) {
+        console.error("Error assigning customer role:", insertError);
+        return false;
+      }
+      
+      console.log("Customer role successfully assigned");
+      return true;
+    }
+    
+    console.log("User already has a role:", existingRole?.role);
+    return false; // Role already exists, no change needed
+  } catch (err) {
+    console.error("Unexpected error assigning customer role:", err);
+    return false;
   }
 };

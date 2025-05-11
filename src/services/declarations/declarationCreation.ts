@@ -6,6 +6,8 @@ import { createSupabaseDeclaration } from "./supabaseDeclarationStorage";
 import { isSupabaseConnected, createBucketIfNotExists } from "../supabaseService";
 import { toast } from "sonner";
 import { generateUniqueId } from "./declarationStorage";
+import { supabase } from "@/integrations/supabase/client";
+import { assignCustomerRole } from "@/hooks/auth/roleService";
 
 // Create a new declaration with media files
 export const addWithMedia = async (
@@ -75,6 +77,16 @@ export const addWithMedia = async (
     
     // Send notification
     await notifyNewDeclaration(newDeclaration);
+
+    // Check if user is authenticated and assign customer role if needed
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      console.log("declarationCreation: User is authenticated, checking/assigning customer role");
+      // Assign customer role if the user doesn't already have one
+      await assignCustomerRole(session.user.id);
+    } else {
+      console.log("declarationCreation: User not authenticated, skipping role assignment");
+    }
     
     return newDeclaration;
   } catch (error) {
