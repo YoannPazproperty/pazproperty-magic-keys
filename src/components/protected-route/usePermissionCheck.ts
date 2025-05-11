@@ -22,7 +22,8 @@ export const usePermissionCheck = ({
   const [checkingRole, setCheckingRole] = useState(!!requiredRole);
   const [checkAttempts, setCheckAttempts] = useState(0);
   const [roleChecked, setRoleChecked] = useState(false);
-  const [timeout, setTimeout] = useState<number | null>(null);
+  // Renommer pour éviter le conflit avec la fonction native setTimeout
+  const [timeoutId, setTimeoutId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -81,7 +82,7 @@ export const usePermissionCheck = ({
     }, 45000); // Changed from 15000 to 45000 (45 seconds timeout)
     
     // Store timeout reference for cleanup
-    setTimeout(safetyTimeout);
+    setTimeoutId(safetyTimeout);
 
     const checkRole = async () => {
       try {
@@ -167,8 +168,8 @@ export const usePermissionCheck = ({
               const nextAttempt = checkAttempts + 1;
               console.log(`⚠️ No role found for user, retrying attempt ${nextAttempt} in ${nextAttempt * 2} seconds`);
               
-              // Use exponential backoff for retries
-              setTimeout(() => {
+              // Use exponential backoff for retries - using window.setTimeout to be explicit
+              window.setTimeout(() => {
                 setCheckAttempts(nextAttempt);
               }, nextAttempt * 2000); // Wait longer between attempts
               return; // Don't set checkingRole to false yet
@@ -223,11 +224,11 @@ export const usePermissionCheck = ({
 
     return () => {
       // Clear safety timeout on unmount
-      if (timeout) {
-        clearTimeout(timeout);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
     };
-  }, [user, requiredRole, getUserRole, checkAttempts, roleChecked, emailDomain, timeout]);
+  }, [user, requiredRole, getUserRole, checkAttempts, roleChecked, emailDomain, timeoutId]);
 
   return {
     hasAccess,
