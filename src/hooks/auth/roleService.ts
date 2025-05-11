@@ -1,3 +1,4 @@
+
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "./types";
@@ -46,7 +47,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
             .from('user_roles')
             .insert({ 
               user_id: userId,
-              role: 'admin'
+              role: 'admin' as UserRole
             });
             
           if (insertError) {
@@ -64,7 +65,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
               .from('user_roles')
               .insert({ 
                 user_id: userId,
-                role: 'provider'
+                role: 'provider' as UserRole
               });
               
             if (insertError) {
@@ -80,7 +81,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
               .from('user_roles')
               .insert({ 
                 user_id: userId,
-                role: 'user'
+                role: 'user' as UserRole
               });
               
             if (insertError) {
@@ -127,6 +128,9 @@ export const resolveRedirectPathByRole = (role: UserRole, email: string | null |
     case 'provider':
       console.log("Redirection vers /extranet-technique basée sur le rôle provider");
       return "/extranet-technique";
+    case 'customer':
+      console.log("Redirection vers /area-cliente basée sur le rôle customer");
+      return "/area-cliente";
     case 'user':
       console.log("Redirection vers / basée sur le rôle user");
       return "/";

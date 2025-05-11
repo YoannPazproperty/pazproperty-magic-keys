@@ -65,9 +65,9 @@ export const createUserRole = async (userId: string): Promise<boolean> => {
     // Then add to user_roles table
     const { error: roleError } = await supabase
       .from('user_roles')
-      .insert({ 
-        user_id: userId, 
-        role: 'provider' as UserRole
+      .insert({
+        user_id: userId,
+        role: 'provider'
       });
 
     if (roleError) {

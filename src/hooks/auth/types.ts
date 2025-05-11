@@ -1,4 +1,5 @@
-export type UserRole = "admin" | "provider" | "client" | null;
+
+export type UserRole = "admin" | "manager" | "provider" | "customer" | "user" | null;
 
 // Define the structure of the authentication context
 // Update the AuthContextType to include userRole
