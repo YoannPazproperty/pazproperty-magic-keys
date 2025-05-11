@@ -1,14 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { UserRole } from "@/hooks/auth/types";
 import { checkEmailDomain, hasRequiredRole, handleAccessNotification, isDevelopmentMode } from "./roleUtils";
 import { toast } from "sonner";
 
-interface UsePermissionCheckProps {
-  user: User | null;
+interface PermissionCheckProps {
+  user: any;
   getUserRole: () => Promise<UserRole>;
-  requiredRole?: "admin" | "manager" | "provider" | "user";
+  requiredRole?: "admin" | "manager" | "provider" | "user" | "customer";
   emailDomain?: string;
 }
 
@@ -17,7 +16,7 @@ export const usePermissionCheck = ({
   getUserRole,
   requiredRole,
   emailDomain
-}: UsePermissionCheckProps) => {
+}: PermissionCheckProps) => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [checkingRole, setCheckingRole] = useState(!!requiredRole);
   const [checkAttempts, setCheckAttempts] = useState(0);

@@ -4,10 +4,11 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import { usePermissionCheck } from "./usePermissionCheck";
 import LoadingScreen from "./LoadingScreen";
+import { UserRole } from "@/hooks/auth/types";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin" | "manager" | "provider" | "user";
+  requiredRole?: "admin" | "manager" | "provider" | "user" | "customer";
   emailDomain?: string;
 }
 
