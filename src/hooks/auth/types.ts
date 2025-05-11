@@ -1,28 +1,15 @@
+export type UserRole = "admin" | "provider" | "client" | null;
 
-import { Session, User } from "@supabase/supabase-js";
-
-export type UserRole = "admin" | "manager" | "provider" | "user" | null;
-
+// Define the structure of the authentication context
+// Update the AuthContextType to include userRole
 export interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: any;
+  session: any;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{
-    error: any | null;
-    success: boolean;
-  }>;
-  signInWithGoogle: () => Promise<{
-    error: any | null;
-    success: boolean;
-  }>;
-  signOut: () => Promise<{
-    error: any | null;
-    success: boolean;
-  }>;
-  resetPassword: (email: string) => Promise<{
-    error: any | null;
-    success: boolean;
-    message?: string;
-  }>;
+  userRole?: UserRole; // Add userRole to context
+  signIn: (email: string, password: string) => Promise<{ error: any; success: boolean }>;
+  signInWithGoogle: () => Promise<{ error: any; success: boolean }>;
+  resetPassword: (email: string) => Promise<any>;
+  signOut: () => Promise<{ error: any; success: boolean }>;
   getUserRole: () => Promise<UserRole>;
 }

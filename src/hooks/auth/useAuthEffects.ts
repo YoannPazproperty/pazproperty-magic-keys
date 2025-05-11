@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ interface AuthEffectsProps {
   setSession: (session: any) => void;
   setLoading: (loading: boolean) => void;
   setUserRole: (role: any) => void;
+  setTokenExpiresAt: (expiresAt: number | null) => void;
 }
 
 export const useAuthEffects = ({
@@ -21,6 +23,7 @@ export const useAuthEffects = ({
   setSession,
   setLoading,
   setUserRole,
+  setTokenExpiresAt,
 }: AuthEffectsProps) => {
   const navigate = useNavigate();
 
@@ -44,85 +47,96 @@ export const useAuthEffects = ({
     }
   };
 
+  // Helper to update token expiration information
+  const updateTokenExpiryInfo = (session: any) => {
+    if (session?.expires_at) {
+      setTokenExpiresAt(session.expires_at * 1000); // Convert to milliseconds
+    } else {
+      setTokenExpiresAt(null);
+    }
+  };
+
   useEffect(() => {
+    // Set up auth state change listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         if (process.env.NODE_ENV === 'development') {
           console.log("Auth state changed:", event);
         }
         
-        // Use setTimeout to avoid potential blocking in the callback
-        setTimeout(() => {
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-          
-          if (event === "SIGNED_OUT") {
-            navigate("/auth");
-            setUserRole(null);
-            // Clear role cache
-            localStorage.removeItem(USER_ROLE_KEY);
-            localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
-          } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-            // Check user's role for redirection
-            if (newSession?.user?.id) {
-              setTimeout(async () => {
-                try {
-                  // Check if user email is @pazproperty.pt first
-                  const userEmail = newSession.user.email || '';
-                  
-                  if (userEmail.endsWith('@pazproperty.pt')) {
-                    setUserRole('admin');
-                    navigate("/admin");
-                    return;
-                  }
-                  
-                  // Try to get role from cache first
-                  const cachedRole = getCachedRole();
-                  if (cachedRole) {
-                    setUserRole(cachedRole);
-                    handleRedirectionByRole(cachedRole, userEmail);
-                    return;
-                  }
-                  
-                  // Check if this is a provider based on roles
-                  const { data: prestadorData } = await supabase
-                    .from('prestadores_roles')
-                    .select('nivel')
-                    .eq('user_id', newSession.user.id)
-                    .maybeSingle();
-                  
-                  if (prestadorData) {
-                    setUserRole('provider');
-                    navigate("/extranet-technique");
-                    return;
-                  }
-                  
-                  // Check standard roles
-                  const role = await fetchUserRole(newSession.user.id);
-                  setUserRole(role);
-                  
-                  // Cache the role
-                  try {
-                    localStorage.setItem(USER_ROLE_KEY, role);
-                    localStorage.setItem(ROLE_CACHE_EXPIRY_KEY, (Date.now() + 30 * 60 * 1000).toString()); // 30 min cache
-                  } catch (err) {
-                    // Silently fail if localStorage is unavailable
-                  }
-                  
-                  handleRedirectionByRole(role, userEmail);
-                } catch (err) {
-                  if (process.env.NODE_ENV === 'development') {
-                    console.error("Error checking role:", err);
-                  }
-                  setLoading(false);
-                  navigate("/");
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        
+        if (newSession) {
+          updateTokenExpiryInfo(newSession);
+        }
+        
+        if (event === "SIGNED_OUT") {
+          navigate("/auth");
+          setUserRole(null);
+          // Clear role cache
+          localStorage.removeItem(USER_ROLE_KEY);
+          localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
+        } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+          // Check user's role for redirection
+          if (newSession?.user?.id) {
+            Promise.resolve().then(async () => {
+              try {
+                // Check if user email is @pazproperty.pt first
+                const userEmail = newSession.user.email || '';
+                
+                if (userEmail.endsWith('@pazproperty.pt')) {
+                  setUserRole('admin');
+                  navigate("/admin");
+                  return;
                 }
-              }, 0);
-            }
-          } else if (event === "PASSWORD_RECOVERY") {
-            navigate("/auth/callback?reset=true");
+                
+                // Try to get role from cache first
+                const cachedRole = getCachedRole();
+                if (cachedRole) {
+                  setUserRole(cachedRole);
+                  handleRedirectionByRole(cachedRole, userEmail);
+                  return;
+                }
+                
+                // Check if this is a provider based on roles
+                const { data: prestadorData } = await supabase
+                  .from('prestadores_roles')
+                  .select('nivel')
+                  .eq('user_id', newSession.user.id)
+                  .maybeSingle();
+                
+                if (prestadorData) {
+                  setUserRole('provider');
+                  navigate("/extranet-technique");
+                  return;
+                }
+                
+                // Check standard roles
+                const role = await fetchUserRole(newSession.user.id);
+                setUserRole(role);
+                
+                // Cache the role
+                try {
+                  localStorage.setItem(USER_ROLE_KEY, role);
+                  localStorage.setItem(ROLE_CACHE_EXPIRY_KEY, (Date.now() + 30 * 60 * 1000).toString()); // 30 min cache
+                } catch (err) {
+                  // Silently fail if localStorage is unavailable
+                }
+                
+                handleRedirectionByRole(role, userEmail);
+              } catch (err) {
+                if (process.env.NODE_ENV === 'development') {
+                  console.error("Error checking role:", err);
+                }
+                setLoading(false);
+                navigate("/");
+              }
+            });
           }
-        }, 0);
+        } else if (event === "PASSWORD_RECOVERY") {
+          navigate("/auth/callback?reset=true");
+        }
       }
     );
 
@@ -137,8 +151,10 @@ export const useAuthEffects = ({
       }
     };
 
+    // Then check for existing session
     const getInitialSession = async () => {
       try {
+        setLoading(true);
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -149,6 +165,10 @@ export const useAuthEffects = ({
         } else {
           setSession(data.session);
           setUser(data.session?.user ?? null);
+          
+          if (data.session) {
+            updateTokenExpiryInfo(data.session);
+          }
           
           // Retrieve role if user is logged in
           if (data.session?.user) {
@@ -217,5 +237,5 @@ export const useAuthEffects = ({
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, setLoading, setSession, setUser, setUserRole]);
+  }, [navigate, setLoading, setSession, setUser, setUserRole, setTokenExpiresAt]);
 };

@@ -12,6 +12,7 @@ export const useAuthState = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [roleLoading, setRoleLoading] = useState(false);
+  const [tokenExpiresAt, setTokenExpiresAt] = useState<number | null>(null);
 
   return {
     user,
@@ -24,5 +25,7 @@ export const useAuthState = () => {
     setUserRole,
     roleLoading,
     setRoleLoading,
+    tokenExpiresAt,
+    setTokenExpiresAt,
   };
 };
