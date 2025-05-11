@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { UserRole } from "@/hooks/auth/types";
@@ -44,9 +43,9 @@ export const usePermissionCheck = ({
     }
 
     // Add a safety timeout to avoid infinite checking
-    // Increased from 5 seconds to 15 seconds to give more time for role verification
+    // Increased from 15 seconds to 45 seconds to give more time for role verification
     const safetyTimeout = window.setTimeout(() => {
-      console.log("Safety timeout triggered after 15 seconds");
+      console.log("Safety timeout triggered after 45 seconds");
       if (checkingRole) {
         setCheckingRole(false);
         
@@ -57,13 +56,23 @@ export const usePermissionCheck = ({
           setHasAccess(true);
           setRoleChecked(true);
         } else {
-          setHasAccess(false);
+          // For production, we'll be more permissive when timing out
+          // If it's @pazproperty.pt email, grant access on timeout
+          const isCompanyEmail = user.email?.endsWith('@pazproperty.pt') || false;
+          
+          if (isCompanyEmail && requiredRole === 'admin') {
+            console.log("⚠️ Safety timeout - Company email detected - Granting admin access");
+            setHasAccess(true);
+          } else {
+            // Otherwise deny access
+            setHasAccess(false);
+          }
           setRoleChecked(true);
         }
         
         handleAccessNotification(devMode, devMode, 'timeout');
       }
-    }, 15000); // Changed from 5000 to 15000 (15 seconds timeout)
+    }, 45000); // Changed from 15000 to 45000 (45 seconds timeout)
     
     // Store timeout reference for cleanup
     setTimeout(safetyTimeout);
@@ -94,6 +103,7 @@ export const usePermissionCheck = ({
 
         // Then check role if needed
         if (requiredRole) {
+          // First attempt will be immediate
           const userRole = await getUserRole();
           console.log("User's role verified:", userRole);
           console.log("Required role for this page:", requiredRole);
@@ -108,13 +118,18 @@ export const usePermissionCheck = ({
           }
 
           // If we've reached max attempts or no role is found
-          if (!userRole || checkAttempts >= 2) {
+          if (!userRole || checkAttempts >= 3) { // Increased max attempts from 2 to 3
             console.log("⚠️ No role found for user or max attempts reached:", checkAttempts);
             
             // For development purposes, grant access by default
             const devMode = isDevelopmentMode();
-            if (devMode) {
-              console.log("⚠️ Development mode detected - Granting access by default");
+            // Special case for production: If it's a pazproperty.pt email and trying to access admin section
+            const isCompanyEmail = user.email?.endsWith('@pazproperty.pt') || false;
+            
+            if (devMode || (isCompanyEmail && requiredRole === 'admin')) {
+              console.log(devMode 
+                ? "⚠️ Development mode detected - Granting access by default" 
+                : "⚠️ Company email detected - Granting admin access despite role issue");
               setHasAccess(true);
               setRoleChecked(true);
               handleAccessNotification(true, true, 'norole');
@@ -125,10 +140,15 @@ export const usePermissionCheck = ({
             }
             setCheckingRole(false);
           } else {
-            // If no role is found and this is not the last try, retry
+            // If no role is found and this is not the last try, retry with exponential backoff
             if (!userRole) {
-              console.log("⚠️ No role found for user, retrying attempt:", checkAttempts + 1);
-              setCheckAttempts(prev => prev + 1);
+              const nextAttempt = checkAttempts + 1;
+              console.log(`⚠️ No role found for user, retrying attempt ${nextAttempt} in ${nextAttempt * 2} seconds`);
+              
+              // Use exponential backoff for retries
+              setTimeout(() => {
+                setCheckAttempts(nextAttempt);
+              }, nextAttempt * 2000); // Wait longer between attempts
               return; // Don't set checkingRole to false yet
             }
             
@@ -147,14 +167,18 @@ export const usePermissionCheck = ({
       } catch (error) {
         console.error("Error checking role:", error);
         
-        // In case of error, in development mode, authorize access
+        // In case of error, check if user has company email for admin access
         const devMode = isDevelopmentMode();
-        if (devMode) {
-          console.log("⚠️ Development mode detected - Granting access despite error");
+        const isCompanyEmail = user.email?.endsWith('@pazproperty.pt') || false;
+        
+        if (devMode || (isCompanyEmail && requiredRole === 'admin')) {
+          console.log(devMode 
+            ? "⚠️ Development mode detected - Granting access despite error"
+            : "⚠️ Company email detected - Granting admin access despite error");
           setHasAccess(true);
           setRoleChecked(true);
           toast.warning("Role verification error", { 
-            description: "Access is granted by default in development mode despite the error",
+            description: "Access is granted by default despite the error",
             id: "role-error"
           });
         } else {

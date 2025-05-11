@@ -45,8 +45,8 @@ export const handleAccessNotification = (
 ): void => {
   if (hasAccess) {
     if (isDevelopment && (reason === 'timeout' || reason === 'norole')) {
-      toast.warning(reason === 'timeout' ? "Role verification timed out" : "No role defined", {
-        description: "Access granted by default in development mode",
+      toast.warning(reason === 'timeout' ? "Vérification du rôle expirée" : "Aucun rôle défini", {
+        description: "Accès accordé par défaut en mode développement",
         id: reason === 'timeout' ? "role-timeout" : "role-warning"
       });
     }
@@ -56,26 +56,26 @@ export const handleAccessNotification = (
   // Handle access denied cases
   switch (reason) {
     case 'timeout':
-      toast.error("Authorization timeout", {
-        description: "Could not verify your permissions in time",
+      toast.error("Délai d'autorisation dépassé", {
+        description: "Impossible de vérifier vos autorisations dans le temps imparti",
         id: "role-timeout-error"
       });
       break;
     case 'domain':
-      toast.error("Access denied", {
-        description: `This area is restricted to users with an email @${emailDomain}`,
+      toast.error("Accès refusé", {
+        description: `Cette zone est réservée aux utilisateurs avec un email @${emailDomain}`,
         id: "domain-restricted"
       });
       break;
     case 'role':
-      toast.error("Access denied", {
-        description: `You have the role "${userRole}" but this page requires the role "${requiredRole}"`,
+      toast.error("Accès refusé", {
+        description: `Vous avez le rôle "${userRole}" mais cette page nécessite le rôle "${requiredRole}"`,
         id: "access-denied"
       });
       break;
     case 'norole':
-      toast.error("Authorization error", {
-        description: "Your account doesn't have an assigned role",
+      toast.error("Erreur d'autorisation", {
+        description: "Votre compte n'a pas de rôle assigné",
         id: "role-error"
       });
       break;
