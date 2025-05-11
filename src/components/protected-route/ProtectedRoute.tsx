@@ -2,7 +2,7 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
-import { usePermissionCheck } from "./usePermissionCheck";
+import { usePermissionCheck } from "./hooks";
 import LoadingScreen from "./LoadingScreen";
 import { UserRole } from "@/hooks/auth/types";
 
