@@ -1,4 +1,6 @@
+
 import { Session } from "@supabase/supabase-js";
+import { UserRole } from "../types";
 
 /**
  * Extract token expiration information from session
@@ -12,7 +14,7 @@ export const getTokenExpiryTime = (session: Session | null): number | null => {
  * Handle redirection based on user role and email
  */
 export const handleRedirectionByRole = (
-  role: string | null, 
+  role: UserRole, 
   email: string | null | undefined,
   navigate: (path: string) => void
 ): void => {
