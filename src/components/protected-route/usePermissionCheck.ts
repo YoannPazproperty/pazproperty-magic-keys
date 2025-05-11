@@ -71,7 +71,7 @@ export const usePermissionCheck = ({
           setRoleChecked(true);
         }
         
-        // Fix: Pass correct arguments to handleAccessNotification
+        // Fix: Update parameters to match handleAccessNotification signature 
         handleAccessNotification(devMode, devMode, 'timeout');
       }
     }, 45000); // Changed from 15000 to 45000 (45 seconds timeout)
@@ -86,7 +86,7 @@ export const usePermissionCheck = ({
           const domainMatch = checkEmailDomain(user.email, emailDomain);
           if (!domainMatch) {
             console.log(`Access denied: email ${user.email} is not from domain ${emailDomain}`);
-            // Fix: Use correct parameters for domain reason
+            // Fix: Update parameters to match handleAccessNotification signature
             handleAccessNotification(false, isDevelopmentMode(), 'domain', emailDomain);
             setHasAccess(false);
             setCheckingRole(false);
@@ -159,7 +159,7 @@ export const usePermissionCheck = ({
             setHasAccess(false);
             setRoleChecked(true);
             setCheckingRole(false);
-            // Fix: Use correct parameters for role reason
+            // Fix: Update parameters to match handleAccessNotification signature
             handleAccessNotification(false, isDevelopmentMode(), 'role', undefined, userRole, requiredRole);
           }
         } else {
