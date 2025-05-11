@@ -2,13 +2,11 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchUserRole, resolveRedirectPathByRole } from "./roleService";
 import { UserRole } from "./types";
-import { toast } from "sonner";
-
-// Constants for role cache
-const USER_ROLE_KEY = "paz_user_role";
-const ROLE_CACHE_EXPIRY_KEY = "paz_role_cache_expiry";
+import { clearRoleCache } from "./utils/roleCache";
+import { getTokenExpiryTime } from "./utils/sessionManager";
+import { handleAuthStateChange } from "./utils/authStateHandlers";
+import { getInitialSession } from "./utils/initialSession";
 
 interface AuthEffectsProps {
   setUser: (user: any) => void;
@@ -18,6 +16,9 @@ interface AuthEffectsProps {
   setTokenExpiresAt: (expiresAt: number | null) => void;
 }
 
+/**
+ * Hook to manage authentication effects including session state and token refresh
+ */
 export const useAuthEffects = ({
   setUser,
   setSession,
@@ -27,35 +28,7 @@ export const useAuthEffects = ({
 }: AuthEffectsProps) => {
   const navigate = useNavigate();
 
-  // Helper to get cached role (duplicated here to avoid dependencies)
-  const getCachedRole = (): UserRole | null => {
-    try {
-      const expiryStr = localStorage.getItem(ROLE_CACHE_EXPIRY_KEY);
-      if (!expiryStr) return null;
-      
-      const expiry = parseInt(expiryStr, 10);
-      if (isNaN(expiry) || Date.now() > expiry) {
-        // Clear expired cache
-        localStorage.removeItem(USER_ROLE_KEY);
-        localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
-        return null;
-      }
-      
-      return localStorage.getItem(USER_ROLE_KEY) as UserRole;
-    } catch (err) {
-      return null;
-    }
-  };
-
-  // Helper to update token expiration information
-  const updateTokenExpiryInfo = (session: any) => {
-    if (session?.expires_at) {
-      setTokenExpiresAt(session.expires_at * 1000); // Convert to milliseconds
-    } else {
-      setTokenExpiresAt(null);
-    }
-  };
-
+  // Main effect for auth state management
   useEffect(() => {
     // Set up auth state change listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -68,70 +41,28 @@ export const useAuthEffects = ({
         setUser(newSession?.user ?? null);
         
         if (newSession) {
-          updateTokenExpiryInfo(newSession);
+          setTokenExpiresAt(getTokenExpiryTime(newSession));
         }
         
         if (event === "SIGNED_OUT") {
           navigate("/auth");
           setUserRole(null);
-          // Clear role cache
-          localStorage.removeItem(USER_ROLE_KEY);
-          localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
+          clearRoleCache();
         } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          // Check user's role for redirection
+          // Process auth state change with the utility function
           if (newSession?.user?.id) {
-            Promise.resolve().then(async () => {
-              try {
-                // Check if user email is @pazproperty.pt first
-                const userEmail = newSession.user.email || '';
-                
-                if (userEmail.endsWith('@pazproperty.pt')) {
-                  setUserRole('admin');
-                  navigate("/admin");
-                  return;
-                }
-                
-                // Try to get role from cache first
-                const cachedRole = getCachedRole();
-                if (cachedRole) {
-                  setUserRole(cachedRole);
-                  handleRedirectionByRole(cachedRole, userEmail);
-                  return;
-                }
-                
-                // Check if this is a provider based on roles
-                const { data: prestadorData } = await supabase
-                  .from('prestadores_roles')
-                  .select('nivel')
-                  .eq('user_id', newSession.user.id)
-                  .maybeSingle();
-                
-                if (prestadorData) {
-                  setUserRole('provider');
-                  navigate("/extranet-technique");
-                  return;
-                }
-                
-                // Check standard roles
-                const role = await fetchUserRole(newSession.user.id);
-                setUserRole(role);
-                
-                // Cache the role
-                try {
-                  localStorage.setItem(USER_ROLE_KEY, role);
-                  localStorage.setItem(ROLE_CACHE_EXPIRY_KEY, (Date.now() + 30 * 60 * 1000).toString()); // 30 min cache
-                } catch (err) {
-                  // Silently fail if localStorage is unavailable
-                }
-                
-                handleRedirectionByRole(role, userEmail);
-              } catch (err) {
-                if (process.env.NODE_ENV === 'development') {
-                  console.error("Error checking role:", err);
-                }
+            Promise.resolve().then(() => {
+              handleAuthStateChange(
+                event, 
+                newSession.user.id,
+                newSession.user.email, 
+                setUserRole,
+                navigate
+              ).catch(err => {
                 setLoading(false);
                 navigate("/");
-              }
+                console.error("Auth state handling error:", err);
+              });
             });
           }
         } else if (event === "PASSWORD_RECOVERY") {
@@ -140,102 +71,38 @@ export const useAuthEffects = ({
       }
     );
 
-    const handleRedirectionByRole = (role: UserRole, email: string | null | undefined) => {
-      // If role indicates provider or metadata shows provider, redirect to extranet
-      if (role === 'provider') {
-        navigate("/extranet-technique");
-      } else {
-        // Otherwise use standard role-based redirection
-        const redirectPath = resolveRedirectPathByRole(role, email);
-        navigate(redirectPath);
-      }
-    };
-
     // Then check for existing session
-    const getInitialSession = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error("Error retrieving initial session:", error);
-          }
-          setLoading(false);
-        } else {
-          setSession(data.session);
-          setUser(data.session?.user ?? null);
-          
-          if (data.session) {
-            updateTokenExpiryInfo(data.session);
-          }
-          
-          // Retrieve role if user is logged in
-          if (data.session?.user) {
-            try {
-              // First check if email is @pazproperty.pt
-              const userEmail = data.session.user.email || '';
-              
-              if (userEmail.endsWith('@pazproperty.pt')) {
-                setUserRole('admin');
-                setLoading(false);
-                return;
-              }
-              
-              // Try to get role from cache first
-              const cachedRole = getCachedRole();
-              if (cachedRole) {
-                setUserRole(cachedRole);
-                setLoading(false);
-                return;
-              }
-              
-              // Check for provider status in roles
-              const { data: prestadorData } = await supabase
-                .from('prestadores_roles')
-                .select('nivel')
-                .eq('user_id', data.session.user.id)
-                .maybeSingle();
-                
-              if (prestadorData || 
-                  (data.session.user.user_metadata && 
-                  data.session.user.user_metadata.is_provider)) {
-                setUserRole('provider');
-              } else {
-                const role = await fetchUserRole(data.session.user.id);
-                setUserRole(role);
-                
-                // Cache the role
-                try {
-                  localStorage.setItem(USER_ROLE_KEY, role);
-                  localStorage.setItem(ROLE_CACHE_EXPIRY_KEY, (Date.now() + 30 * 60 * 1000).toString()); // 30 min cache
-                } catch (err) {
-                  // Silently fail if localStorage is unavailable
-                }
-              }
-              setLoading(false);
-            } catch (err) {
-              if (process.env.NODE_ENV === 'development') {
-                console.error("Error checking initial role:", err);
-              }
-              setLoading(false);
-            }
-          } else {
-            setLoading(false);
-          }
-        }
-      } catch (err) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error("Unexpected error retrieving session:", err);
-        }
-        setLoading(false);
-      }
-    };
-
-    getInitialSession();
+    getInitialSession(setLoading, setUser, setSession, setUserRole, setTokenExpiresAt);
 
     return () => {
       subscription.unsubscribe();
     };
   }, [navigate, setLoading, setSession, setUser, setUserRole, setTokenExpiresAt]);
+
+  // Additional effect for token refresh monitoring
+  useEffect(() => {
+    // Set up token health check every 10 minutes
+    const tokenHealthCheck = setInterval(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        const session = data.session;
+        if (!session?.expires_at) return;
+
+        // Convert session expiry to timestamp (in milliseconds)
+        const expiresAt = session.expires_at * 1000;
+        const now = Date.now();
+        const timeUntilExpiry = expiresAt - now;
+
+        // If token expires in less than 15 minutes, request a refresh
+        if (timeUntilExpiry < 15 * 60 * 1000) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log("Auth token expiring soon, refreshing...");
+          }
+          // Force token refresh
+          supabase.auth.refreshSession();
+        }
+      });
+    }, 10 * 60 * 1000); // Check every 10 minutes
+
+    return () => clearInterval(tokenHealthCheck);
+  }, []);
 };
