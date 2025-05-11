@@ -849,7 +849,7 @@ export type Database = {
         | "Em espera do encontro de diagnostico"
         | "Encontramento de diagnostico planeado"
         | "Annulé"
-      user_role: "admin" | "manager" | "user" | "provider"
+      user_role: "admin" | "manager" | "user" | "provider" | "customer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -975,7 +975,7 @@ export const Constants = {
         "Encontramento de diagnostico planeado",
         "Annulé",
       ],
-      user_role: ["admin", "manager", "user", "provider"],
+      user_role: ["admin", "manager", "user", "provider", "customer"],
     },
   },
 } as const
