@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { UserRole } from "@/hooks/auth/types";
@@ -70,6 +71,7 @@ export const usePermissionCheck = ({
           setRoleChecked(true);
         }
         
+        // Fix: Pass correct arguments to handleAccessNotification
         handleAccessNotification(devMode, devMode, 'timeout');
       }
     }, 45000); // Changed from 15000 to 45000 (45 seconds timeout)
@@ -84,7 +86,7 @@ export const usePermissionCheck = ({
           const domainMatch = checkEmailDomain(user.email, emailDomain);
           if (!domainMatch) {
             console.log(`Access denied: email ${user.email} is not from domain ${emailDomain}`);
-            handleAccessNotification(false, false, 'domain', emailDomain);
+            handleAccessNotification(false, isDevelopmentMode(), 'domain', emailDomain);
             setHasAccess(false);
             setCheckingRole(false);
             setRoleChecked(true);
@@ -132,11 +134,11 @@ export const usePermissionCheck = ({
                 : "⚠️ Company email detected - Granting admin access despite role issue");
               setHasAccess(true);
               setRoleChecked(true);
-              handleAccessNotification(true, true, 'norole');
+              handleAccessNotification(true, devMode, 'norole');
             } else {
               setHasAccess(false);
               setRoleChecked(true);
-              handleAccessNotification(false, false, 'norole');
+              handleAccessNotification(false, devMode, 'norole');
             }
             setCheckingRole(false);
           } else {
@@ -156,7 +158,7 @@ export const usePermissionCheck = ({
             setHasAccess(false);
             setRoleChecked(true);
             setCheckingRole(false);
-            handleAccessNotification(false, false, 'role', undefined, userRole, requiredRole);
+            handleAccessNotification(false, isDevelopmentMode(), 'role', undefined, userRole, requiredRole);
           }
         } else {
           // If only checking the domain and we reach here, the domain is correct

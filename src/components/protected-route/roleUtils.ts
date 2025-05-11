@@ -88,3 +88,4 @@ export const handleAccessNotification = (
 export const isDevelopmentMode = (): boolean => {
   return process.env.NODE_ENV === 'development' || window.location.hostname.includes('localhost');
 };
+
