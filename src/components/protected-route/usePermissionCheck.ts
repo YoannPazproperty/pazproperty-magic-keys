@@ -71,8 +71,12 @@ export const usePermissionCheck = ({
           setRoleChecked(true);
         }
         
-        // Fix: Update parameters to match handleAccessNotification signature 
-        handleAccessNotification(devMode, devMode, 'timeout');
+        // Fix: Correct call to handleAccessNotification with a single object argument
+        handleAccessNotification({
+          hasAccess: devMode,
+          isDevelopment: devMode,
+          reason: 'timeout'
+        });
       }
     }, 45000); // Changed from 15000 to 45000 (45 seconds timeout)
     
@@ -86,8 +90,13 @@ export const usePermissionCheck = ({
           const domainMatch = checkEmailDomain(user.email, emailDomain);
           if (!domainMatch) {
             console.log(`Access denied: email ${user.email} is not from domain ${emailDomain}`);
-            // Fix: Update parameters to match handleAccessNotification signature
-            handleAccessNotification(false, isDevelopmentMode(), 'domain', emailDomain);
+            // Fix: Correct call to handleAccessNotification with a single object argument
+            handleAccessNotification({
+              hasAccess: false,
+              isDevelopment: isDevelopmentMode(),
+              reason: 'domain',
+              emailDomain
+            });
             setHasAccess(false);
             setCheckingRole(false);
             setRoleChecked(true);
@@ -135,11 +144,21 @@ export const usePermissionCheck = ({
                 : "⚠️ Company email detected - Granting admin access despite role issue");
               setHasAccess(true);
               setRoleChecked(true);
-              handleAccessNotification(true, devMode, 'norole');
+              // Fix: Correct call to handleAccessNotification with a single object argument
+              handleAccessNotification({
+                hasAccess: true,
+                isDevelopment: devMode,
+                reason: 'norole'
+              });
             } else {
               setHasAccess(false);
               setRoleChecked(true);
-              handleAccessNotification(false, devMode, 'norole');
+              // Fix: Correct call to handleAccessNotification with a single object argument
+              handleAccessNotification({
+                hasAccess: false,
+                isDevelopment: devMode,
+                reason: 'norole'
+              });
             }
             setCheckingRole(false);
           } else {
@@ -159,8 +178,14 @@ export const usePermissionCheck = ({
             setHasAccess(false);
             setRoleChecked(true);
             setCheckingRole(false);
-            // Fix: Update parameters to match handleAccessNotification signature
-            handleAccessNotification(false, isDevelopmentMode(), 'role', undefined, userRole, requiredRole);
+            // Fix: Correct call to handleAccessNotification with a single object argument
+            handleAccessNotification({
+              hasAccess: false,
+              isDevelopment: isDevelopmentMode(),
+              reason: 'role',
+              userRole,
+              requiredRole
+            });
           }
         } else {
           // If only checking the domain and we reach here, the domain is correct

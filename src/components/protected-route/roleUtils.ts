@@ -33,16 +33,25 @@ export const hasRequiredRole = (userRole: UserRole, requiredRole?: string): bool
 };
 
 /**
+ * Interface defining parameters for access notification
+ */
+interface AccessNotificationParams {
+  hasAccess: boolean;
+  isDevelopment: boolean;
+  reason: 'timeout' | 'domain' | 'role' | 'norole';
+  emailDomain?: string;
+  userRole?: UserRole;
+  requiredRole?: string;
+}
+
+/**
  * Handles displaying toast messages for access issues
  */
 export const handleAccessNotification = (
-  hasAccess: boolean, 
-  isDevelopment: boolean, 
-  reason: 'timeout' | 'domain' | 'role' | 'norole',
-  emailDomain?: string,
-  userRole?: UserRole, 
-  requiredRole?: string
+  params: AccessNotificationParams
 ): void => {
+  const { hasAccess, isDevelopment, reason, emailDomain, userRole, requiredRole } = params;
+  
   if (hasAccess) {
     if (isDevelopment && (reason === 'timeout' || reason === 'norole')) {
       toast.warning(reason === 'timeout' ? "Vérification du rôle expirée" : "Aucun rôle défini", {
