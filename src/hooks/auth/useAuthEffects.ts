@@ -1,10 +1,13 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchUserRole, resolveRedirectPathByRole } from "./roleService";
 import { UserRole } from "./types";
 import { toast } from "sonner";
+
+// Constants for role cache
+const USER_ROLE_KEY = "paz_user_role";
+const ROLE_CACHE_EXPIRY_KEY = "paz_role_cache_expiry";
 
 interface AuthEffectsProps {
   setUser: (user: any) => void;
@@ -21,10 +24,32 @@ export const useAuthEffects = ({
 }: AuthEffectsProps) => {
   const navigate = useNavigate();
 
+  // Helper to get cached role (duplicated here to avoid dependencies)
+  const getCachedRole = (): UserRole | null => {
+    try {
+      const expiryStr = localStorage.getItem(ROLE_CACHE_EXPIRY_KEY);
+      if (!expiryStr) return null;
+      
+      const expiry = parseInt(expiryStr, 10);
+      if (isNaN(expiry) || Date.now() > expiry) {
+        // Clear expired cache
+        localStorage.removeItem(USER_ROLE_KEY);
+        localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
+        return null;
+      }
+      
+      return localStorage.getItem(USER_ROLE_KEY) as UserRole;
+    } catch (err) {
+      return null;
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        console.log("Auth state changed:", event, newSession?.user?.email);
+        if (process.env.NODE_ENV === 'development') {
+          console.log("Auth state changed:", event);
+        }
         
         // Use setTimeout to avoid potential blocking in the callback
         setTimeout(() => {
@@ -34,27 +59,32 @@ export const useAuthEffects = ({
           if (event === "SIGNED_OUT") {
             navigate("/auth");
             setUserRole(null);
+            // Clear role cache
+            localStorage.removeItem(USER_ROLE_KEY);
+            localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
           } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-            console.log("User logged in or token refreshed");
-            
             // Check user's role for redirection
             if (newSession?.user?.id) {
               setTimeout(async () => {
                 try {
-                  // PRIORITÉ: Vérifier d'abord si l'email se termine par @pazproperty.pt
+                  // Check if user email is @pazproperty.pt first
                   const userEmail = newSession.user.email || '';
-                  console.log("Vérification de l'email pour redirection:", userEmail);
                   
                   if (userEmail.endsWith('@pazproperty.pt')) {
-                    console.log("Détecté email @pazproperty.pt, redirection vers Admin");
-                    // Si oui, assigner le rôle admin et rediriger vers /admin
                     setUserRole('admin');
                     navigate("/admin");
                     return;
                   }
                   
-                  // Check if this is a provider based on roles or metadata
-                  console.log("Vérification si l'utilisateur est un prestataire technique");
+                  // Try to get role from cache first
+                  const cachedRole = getCachedRole();
+                  if (cachedRole) {
+                    setUserRole(cachedRole);
+                    handleRedirectionByRole(cachedRole, userEmail);
+                    return;
+                  }
+                  
+                  // Check if this is a provider based on roles
                   const { data: prestadorData } = await supabase
                     .from('prestadores_roles')
                     .select('nivel')
@@ -62,33 +92,28 @@ export const useAuthEffects = ({
                     .maybeSingle();
                   
                   if (prestadorData) {
-                    // This is a technical service provider, redirect to extranet technique
-                    console.log("Utilisateur identifié comme prestataire technique");
                     setUserRole('provider');
                     navigate("/extranet-technique");
                     return;
                   }
                   
-                  // Si non, vérifier les rôles standard
-                  console.log("Vérification des rôles standard");
+                  // Check standard roles
                   const role = await fetchUserRole(newSession.user.id);
                   setUserRole(role);
-                  console.log("Rôle récupéré:", role);
                   
-                  // Si les métadonnées indiquent que c'est un prestataire, rediriger vers extranet
-                  if (role === 'provider' || 
-                      (newSession.user.user_metadata && newSession.user.user_metadata.is_provider)) {
-                    console.log("Métadonnées indiquent prestataire, redirection vers Extranet");
-                    navigate("/extranet-technique");
-                  } else {
-                    // Sinon, utiliser la redirection standard basée sur le rôle
-                    const redirectPath = resolveRedirectPathByRole(role, newSession.user.email);
-                    console.log("Redirection standard basée sur le rôle vers:", redirectPath);
-                    navigate(redirectPath);
+                  // Cache the role
+                  try {
+                    localStorage.setItem(USER_ROLE_KEY, role);
+                    localStorage.setItem(ROLE_CACHE_EXPIRY_KEY, (Date.now() + 30 * 60 * 1000).toString()); // 30 min cache
+                  } catch (err) {
+                    // Silently fail if localStorage is unavailable
                   }
+                  
+                  handleRedirectionByRole(role, userEmail);
                 } catch (err) {
-                  console.error("Error checking role:", err);
-                  // Redirect to default page in case of error
+                  if (process.env.NODE_ENV === 'development') {
+                    console.error("Error checking role:", err);
+                  }
                   setLoading(false);
                   navigate("/");
                 }
@@ -101,12 +126,25 @@ export const useAuthEffects = ({
       }
     );
 
+    const handleRedirectionByRole = (role: UserRole, email: string | null | undefined) => {
+      // If role indicates provider or metadata shows provider, redirect to extranet
+      if (role === 'provider') {
+        navigate("/extranet-technique");
+      } else {
+        // Otherwise use standard role-based redirection
+        const redirectPath = resolveRedirectPathByRole(role, email);
+        navigate(redirectPath);
+      }
+    };
+
     const getInitialSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Error retrieving initial session:", error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error("Error retrieving initial session:", error);
+          }
           setLoading(false);
         } else {
           setSession(data.session);
@@ -115,18 +153,24 @@ export const useAuthEffects = ({
           // Retrieve role if user is logged in
           if (data.session?.user) {
             try {
-              // PRIORITÉ: Vérifier d'abord si l'email se termine par @pazproperty.pt
+              // First check if email is @pazproperty.pt
               const userEmail = data.session.user.email || '';
-              console.log("Session initiale - Vérification de l'email:", userEmail);
               
               if (userEmail.endsWith('@pazproperty.pt')) {
-                console.log("Session initiale - Détecté email @pazproperty.pt");
                 setUserRole('admin');
                 setLoading(false);
                 return;
               }
               
-              // Check for provider status in both roles and metadata
+              // Try to get role from cache first
+              const cachedRole = getCachedRole();
+              if (cachedRole) {
+                setUserRole(cachedRole);
+                setLoading(false);
+                return;
+              }
+              
+              // Check for provider status in roles
               const { data: prestadorData } = await supabase
                 .from('prestadores_roles')
                 .select('nivel')
@@ -140,10 +184,20 @@ export const useAuthEffects = ({
               } else {
                 const role = await fetchUserRole(data.session.user.id);
                 setUserRole(role);
+                
+                // Cache the role
+                try {
+                  localStorage.setItem(USER_ROLE_KEY, role);
+                  localStorage.setItem(ROLE_CACHE_EXPIRY_KEY, (Date.now() + 30 * 60 * 1000).toString()); // 30 min cache
+                } catch (err) {
+                  // Silently fail if localStorage is unavailable
+                }
               }
               setLoading(false);
             } catch (err) {
-              console.error("Error checking initial role:", err);
+              if (process.env.NODE_ENV === 'development') {
+                console.error("Error checking initial role:", err);
+              }
               setLoading(false);
             }
           } else {
@@ -151,7 +205,9 @@ export const useAuthEffects = ({
           }
         }
       } catch (err) {
-        console.error("Unexpected error retrieving session:", err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error("Unexpected error retrieving session:", err);
+        }
         setLoading(false);
       }
     };
