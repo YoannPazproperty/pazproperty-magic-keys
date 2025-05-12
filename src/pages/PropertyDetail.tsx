@@ -243,8 +243,10 @@ Interessado em fazer deste apartamento o seu novo lar? Contacte-nos para marcar 
               </div>
               
               <div className="mt-8">
-                <Button className="w-full bg-brand-blue hover:bg-primary/90">
-                  Contactar Agência
+                <Button asChild className="w-full bg-brand-blue hover:bg-primary/90">
+                  <Link to="/contacto">
+                    Contactar Agência
+                  </Link>
                 </Button>
               </div>
             </div>
