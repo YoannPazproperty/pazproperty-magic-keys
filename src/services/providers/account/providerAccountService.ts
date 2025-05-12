@@ -39,7 +39,8 @@ export const createProviderAccount = async (
         is_provider: true,
         password_reset_required: true,
         first_login: true
-      }
+      },
+      "provider"  // Ajout de l'argument role manquant
     );
     
     if (createError) {
@@ -64,7 +65,7 @@ export const createProviderAccount = async (
     console.log("User created successfully:", userId);
     
     // 4. Create provider role for the user
-    const roleCreated = await createUserRole(userId);
+    const roleCreated = await createUserRole(userId, "provider", true);
     
     if (!roleCreated) {
       console.warn("Failed to create role, but continuing with account creation");
