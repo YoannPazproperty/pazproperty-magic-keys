@@ -372,5 +372,6 @@ export const getDeclarationNotificationHistory = async (declarationId: string): 
   }
 };
 
-// Import and re-export everything from declarationNotifier (except the ones we've defined here)
-export * from './declarationNotifier';
+// Export functions from declarationNotifier (importing only what we need)
+export { notifyStatusChange, notifyNewDeclaration, updateStatusAndNotify } from './declarationNotifier';
+

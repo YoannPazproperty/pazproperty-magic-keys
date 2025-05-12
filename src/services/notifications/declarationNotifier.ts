@@ -192,8 +192,13 @@ export const updateStatusAndNotify = async (
     
     // Envoi des notifications en fonction du changement de statut
     if (updatedDeclaration) {
-      // Import the notification functions from the parent module to avoid circular imports
-      const { notifyProviderAssignment, notifyTenantMeetingScheduled, notifyProviderQuoteApproved, notifyTenantQuoteApproved } = require('./index');
+      // Import the notification functions directly
+      const { 
+        notifyProviderAssignment, 
+        notifyTenantMeetingScheduled, 
+        notifyProviderQuoteApproved, 
+        notifyTenantQuoteApproved 
+      } = require('./index');
       
       // Si un prestataire est assigné
       if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
@@ -232,3 +237,4 @@ export const updateStatusAndNotify = async (
     return false;
   }
 };
+
