@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Declaration, NotificationLog, ServiceProvider } from "../types";
 import { toast } from "sonner";
@@ -82,16 +81,13 @@ export const sendEmail = async (
   subject: string,
   content: string
 ): Promise<boolean> => {
-  // Simulate email sending (replace with edge function call)
   console.log(`[SIMULATED EMAIL] to ${to}:`, { subject, content });
   
-  // Show a toast notification to simulate the email
-  toast.info(`Email simulado para ${to}`, {
+  toast.info(`Email simulé pour ${to}`, {
     description: subject,
     duration: 5000
   });
   
-  // TODO: In a real implementation, call an edge function here
   return true;
 };
 
@@ -130,11 +126,9 @@ export const notifyProviderAssignment = async (
   `;
   
   try {
-    // Send the email
     const emailSent = await sendEmail(provider.email, subject, content);
     console.log(`Provider notification email ${emailSent ? 'sent' : 'failed'}`);
     
-    // Log the notification
     await logNotification(
       declaration.id,
       'provider_assignment',
@@ -149,7 +143,6 @@ export const notifyProviderAssignment = async (
   } catch (error) {
     console.error('Error notifying provider:', error);
     
-    // Log the failure
     await logNotification(
       declaration.id,
       'provider_assignment',
@@ -202,10 +195,9 @@ export const notifyTenantMeetingScheduled = async (
   `;
   
   try {
-    // Envoyer l'email
     const emailSent = await sendEmail(declaration.email, subject, content);
+    console.log(`Tenant meeting notification email ${emailSent ? 'sent' : 'failed'}`);
     
-    // Enregistrer la notification
     await logNotification(
       declaration.id,
       'meeting_scheduled',
@@ -220,7 +212,6 @@ export const notifyTenantMeetingScheduled = async (
   } catch (error) {
     console.error('Erreur lors de la notification du locataire:', error);
     
-    // Enregistrer l'échec
     await logNotification(
       declaration.id,
       'meeting_scheduled',
@@ -257,10 +248,9 @@ export const notifyProviderQuoteApproved = async (
   `;
   
   try {
-    // Envoyer l'email
     const emailSent = await sendEmail(provider.email, subject, content);
+    console.log(`Provider quote approval notification email ${emailSent ? 'sent' : 'failed'}`);
     
-    // Enregistrer la notification
     await logNotification(
       declaration.id,
       'quote_approved',
@@ -275,7 +265,6 @@ export const notifyProviderQuoteApproved = async (
   } catch (error) {
     console.error('Erreur lors de la notification du prestataire:', error);
     
-    // Enregistrer l'échec
     await logNotification(
       declaration.id,
       'quote_approved',
@@ -309,10 +298,9 @@ export const notifyTenantQuoteApproved = async (
   `;
   
   try {
-    // Envoyer l'email
     const emailSent = await sendEmail(declaration.email, subject, content);
+    console.log(`Tenant quote approval notification email ${emailSent ? 'sent' : 'failed'}`);
     
-    // Enregistrer la notification
     await logNotification(
       declaration.id,
       'tenant_quote_approved',
@@ -327,7 +315,6 @@ export const notifyTenantQuoteApproved = async (
   } catch (error) {
     console.error('Erreur lors de la notification du locataire:', error);
     
-    // Enregistrer l'échec
     await logNotification(
       declaration.id,
       'tenant_quote_approved',
@@ -356,7 +343,6 @@ export const getDeclarationNotificationHistory = async (declarationId: string): 
       return [];
     }
     
-    // Ensure the data conforms to NotificationLog type
     if (data) {
       const notifications: NotificationLog[] = data.map(item => ({
         ...item,
@@ -372,6 +358,5 @@ export const getDeclarationNotificationHistory = async (declarationId: string): 
   }
 };
 
-// Export functions from declarationNotifier (importing only what we need)
+// Export functions from declarationNotifier
 export { notifyStatusChange, notifyNewDeclaration, updateStatusAndNotify } from './declarationNotifier';
-

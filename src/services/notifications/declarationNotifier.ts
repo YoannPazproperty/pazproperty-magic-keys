@@ -1,4 +1,3 @@
-
 import { Declaration, ServiceProvider } from "../types";
 import { logNotification, sendEmail, getProviderDetails } from "./index";
 import { supabase } from "@/integrations/supabase/client";
@@ -192,13 +191,14 @@ export const updateStatusAndNotify = async (
     
     // Envoi des notifications en fonction du changement de statut
     if (updatedDeclaration) {
-      // Import the notification functions directly
+      // Import the notification functions directly from index.ts
+      // We're now using imports at the top rather than require() calls
       const { 
         notifyProviderAssignment, 
         notifyTenantMeetingScheduled, 
         notifyProviderQuoteApproved, 
         notifyTenantQuoteApproved 
-      } = require('./index');
+      } = await import('./index');
       
       // Si un prestataire est assigné
       if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
@@ -237,4 +237,3 @@ export const updateStatusAndNotify = async (
     return false;
   }
 };
-
