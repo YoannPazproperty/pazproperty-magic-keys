@@ -1,6 +1,6 @@
 
 import { generateTemporaryPassword } from './passwordGenerator';
-import { checkUserExists, createUserRole, createAuthUser } from './userManagement';
+import { checkUserExists, createUserRole, createAuthUser, ensureUserWithRole } from './userManagement';
 import { sendProviderInviteEmail } from './emailService';
 import { CreateProviderAccountParams, CreateAccountResult } from './types';
 
@@ -13,24 +13,12 @@ export const createProviderAccount = async (
   try {
     console.log("Creating provider account for:", params.email);
     
-    // 1. Check if the email already exists in Auth
-    const userExists = await checkUserExists(params.email);
-    
-    if (userExists) {
-      console.log("User already exists:", params.email);
-      return {
-        success: false,
-        message: "Un utilisateur avec cet email existe déjà dans le système",
-        emailSent: false,
-      };
-    }
-    
-    // 2. Generate a temporary password
+    // Generate a temporary password (we'll need it whether the user exists or not)
     const tempPassword = generateTemporaryPassword();
     console.log("Generated temporary password (masked):", "*".repeat(tempPassword.length));
     
-    // 3. Create the user in Auth using the edge function
-    const { data: authResult, error: createError } = await createAuthUser(
+    // Try to ensure the user has the provider role, creating them if they don't exist
+    const ensureResult = await ensureUserWithRole(
       params.email,
       tempPassword,
       {
@@ -40,55 +28,63 @@ export const createProviderAccount = async (
         password_reset_required: true,
         first_login: true
       },
-      "provider"  // Ajout de l'argument role manquant
+      "provider"
     );
     
-    if (createError) {
-      console.error("Error creating user:", createError);
+    if (!ensureResult.success) {
+      console.error("Failed to ensure user role:", ensureResult.message);
       return {
         success: false,
-        message: `Échec de la création: ${createError.message || 'Erreur inconnue'}`,
-        emailSent: false,
+        message: ensureResult.message || "Échec lors de la création ou mise à jour de l'utilisateur",
+        emailSent: false
       };
     }
     
-    if (!authResult || !authResult.user) {
-      console.error("No user data returned from createAuthUser");
+    const userId = ensureResult.userId;
+    if (!userId) {
+      console.error("No user ID returned from ensureUserWithRole");
       return {
         success: false,
-        message: "Échec de la création: Aucune donnée utilisateur retournée",
-        emailSent: false,
+        message: "Erreur interne: Aucun ID utilisateur retourné",
+        emailSent: false
       };
     }
     
-    const userId = authResult.user.id;
-    console.log("User created successfully:", userId);
+    console.log(`User ${ensureResult.message?.includes("maintenant") ? "updated with" : "created with"} ID:`, userId);
     
-    // 4. Create provider role for the user
-    const roleCreated = await createUserRole(userId, "provider", true);
+    // Send invitation email with temporary password
+    // Only send if this is a new user or we've reset their password
+    const shouldSendEmail = !ensureResult.message?.includes("maintenant");
     
-    if (!roleCreated) {
-      console.warn("Failed to create role, but continuing with account creation");
+    if (shouldSendEmail) {
+      console.log("Sending invitation email to new or password-reset user");
+      const emailResult = await sendProviderInviteEmail(
+        userId,
+        params.email,
+        params.nome,
+        tempPassword,
+        {
+          empresa: params.empresa,
+          is_provider: true
+        }
+      );
+      
+      return {
+        success: true,
+        userId: userId,
+        emailSent: emailResult.success,
+        emailError: emailResult.emailError,
+        message: ensureResult.message
+      };
+    } else {
+      console.log("User already exists with proper role, no email needed");
+      return {
+        success: true,
+        userId: userId,
+        emailSent: false,
+        message: "L'utilisateur dispose déjà du rôle prestataire et son mot de passe n'a pas été modifié"
+      };
     }
-    
-    // 5. Send invitation email
-    const emailResult = await sendProviderInviteEmail(
-      userId,
-      params.email,
-      params.nome,
-      tempPassword,
-      {
-        empresa: params.empresa,
-        is_provider: true
-      }
-    );
-    
-    return {
-      success: true,
-      userId: userId,
-      emailSent: emailResult.success,
-      emailError: emailResult.emailError
-    };
 
   } catch (error: any) {
     console.error("General exception in createProviderAccount:", error);

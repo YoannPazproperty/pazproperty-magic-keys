@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
@@ -71,7 +72,7 @@ export function ServiceProviderFormDialog({
         console.log("Création d'un nouveau prestataire:", data);
         
         try {
-          // Créer d'abord l'utilisateur dans Auth
+          // Créer d'abord l'utilisateur dans Auth ou mettre à jour son rôle s'il existe déjà
           const accountResult = await createProviderAccount({
             email: data.email,
             nome: data.nome_gerente,
@@ -80,18 +81,26 @@ export function ServiceProviderFormDialog({
           
           if (!accountResult.success) {
             // Afficher message d'erreur si la création du compte a échoué
-            toast.error("Erreur lors de la création du compte dans Supabase Auth", {
-              description: accountResult.message || "L'email existe peut-être déjà dans le système ou un problème d'accès à Supabase Auth est survenu."
+            toast.error("Erreur lors de la création ou mise à jour du compte", {
+              description: accountResult.message || "Un problème est survenu lors de l'opération."
             });
-            setTechnicalError(accountResult.message || "Erreur de création du compte utilisateur dans Auth");
+            setTechnicalError(accountResult.message || "Erreur lors de l'opération sur le compte utilisateur");
             console.error("Erreur Supabase Auth:", accountResult);
             return;
           }
-          toast.success("Compte utilisateur Supabase Auth créé avec succès", {
-            description: `ID utilisateur: ${accountResult.userId}`
-          });
           
-          // Si la création du compte a réussi, créer le prestataire dans la base
+          // Message adapté selon si c'est un nouveau compte ou une mise à jour
+          if (accountResult.message?.includes("maintenant")) {
+            toast.success("Compte utilisateur existant mis à jour", {
+              description: `Le rôle prestataire a été assigné à l'utilisateur: ${data.email}`
+            });
+          } else {
+            toast.success("Compte utilisateur Supabase Auth créé avec succès", {
+              description: `ID utilisateur: ${accountResult.userId}`
+            });
+          }
+          
+          // Si la création/mise à jour du compte a réussi, créer le prestataire dans la base
           const newProvider = await createProvider({
             empresa: data.empresa,
             tipo_de_obras: data.tipo_de_obras,
@@ -106,7 +115,9 @@ export function ServiceProviderFormDialog({
           
           if (newProvider) {
             toast.success("Prestador criado com sucesso", {
-              description: "Un compte d'accès a été créé et un email envoyé avec les instructions"
+              description: accountResult.emailSent 
+                ? "Un compte d'accès a été créé et un email envoyé avec les instructions"
+                : "Le prestataire a été ajouté au système"
             });
             providerId = newProvider.id;
             
@@ -115,7 +126,7 @@ export function ServiceProviderFormDialog({
                 description: "Le prestataire a reçu ses identifiants de connexion"
               });
             } else if (accountResult.emailError) {
-              toast.warning("Compte créé mais erreur d'envoi d'email", {
+              toast.warning("Erreur d'envoi d'email", {
                 description: accountResult.emailError.message
               });
             }
