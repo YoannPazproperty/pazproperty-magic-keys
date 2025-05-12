@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/auth";
@@ -9,6 +9,7 @@ import { useProviderDetails } from "@/hooks/useProviderDetails";
 import { HeaderSection } from "@/components/extranet/HeaderSection";
 import { OrdersTabsSection } from "@/components/extranet/OrdersTabsSection";
 import { usePasswordSettingsState } from "@/components/extranet/usePasswordSettingsState";
+import { toast } from "sonner";
 
 const ExtranetTechnique = () => {
   const { signOut, user } = useAuth();
@@ -18,13 +19,34 @@ const ExtranetTechnique = () => {
   console.log("Provider details in ExtranetTechnique:", providerDetails);
   console.log("Current user in ExtranetTechnique:", user);
 
+  // Show a welcome toast when the page loads
+  useEffect(() => {
+    if (providerDetails && !loadingProvider) {
+      toast.success(`Bienvenue, ${providerDetails.nome_gerente}`, {
+        description: "Vous êtes connecté à l'extranet technique",
+      });
+    }
+  }, [providerDetails, loadingProvider]);
+
+  // Show error if provider details can't be loaded
+  useEffect(() => {
+    if (providerError && !loadingProvider) {
+      toast.error("Erreur de chargement des données du prestataire", {
+        description: "Veuillez réessayer ou contacter l'administrateur",
+      });
+    }
+  }, [providerError, loadingProvider]);
+
   const handleLogout = async () => {
     try {
-      console.log("Iniciando processo de logout...");
+      console.log("Starting logout process...");
+      toast.info("Déconnexion en cours...");
       await signOut();
-      console.log("Logout realizado com sucesso");
+      console.log("Logout successful");
+      toast.success("Vous avez été déconnecté");
     } catch (error) {
-      console.error("Erro durante o logout:", error);
+      console.error("Error during logout:", error);
+      toast.error("Erreur lors de la déconnexion");
     }
   };
 

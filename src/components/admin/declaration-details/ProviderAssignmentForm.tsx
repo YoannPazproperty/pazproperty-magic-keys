@@ -64,6 +64,8 @@ export const ProviderAssignmentForm = ({
 
     setIsSubmitting(true);
     try {
+      console.log("Assigning provider:", selectedProviderId, "to declaration:", declaration.id);
+      
       const success = await updateStatusAndNotify(
         declaration.id,
         "Em espera do encontro de diagnostico",
@@ -72,9 +74,11 @@ export const ProviderAssignmentForm = ({
 
       if (success) {
         toast.success("Prestataire assigné avec succès");
+        console.log("Provider assignment successful");
         onSuccess();
       } else {
         toast.error("Erreur lors de l'assignation du prestataire");
+        console.error("Provider assignment failed");
       }
     } catch (error) {
       console.error("Erreur lors de l'assignation du prestataire:", error);
@@ -92,10 +96,12 @@ export const ProviderAssignmentForm = ({
 
     setIsSubmitting(true);
     try {
-      // Combiner la date et l'heure
+      // Combine date and time
       const dateTime = new Date(meetingDate);
       const [hours, minutes] = meetingTime.split(':').map(Number);
       dateTime.setHours(hours, minutes);
+
+      console.log("Setting meeting date:", dateTime, "for declaration:", declaration.id);
 
       const success = await updateStatusAndNotify(
         declaration.id,
@@ -108,9 +114,11 @@ export const ProviderAssignmentForm = ({
 
       if (success) {
         toast.success("Rendez-vous planifié avec succès");
+        console.log("Meeting schedule successful");
         onSuccess();
       } else {
         toast.error("Erreur lors de la planification du rendez-vous");
+        console.error("Meeting schedule failed");
       }
     } catch (error) {
       console.error("Erreur lors de la planification du rendez-vous:", error);

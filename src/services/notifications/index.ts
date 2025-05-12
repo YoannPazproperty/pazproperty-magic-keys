@@ -1,10 +1,9 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Declaration, NotificationLog, ServiceProvider } from "../types";
 import { toast } from "sonner";
 import { convertFromSupabaseFormat } from "../declarations/supabaseFormatters";
 
-// Récupère les informations du prestataire
+// Get provider details
 export const getProviderDetails = async (providerId: string): Promise<ServiceProvider | null> => {
   if (!providerId) return null;
   
@@ -16,7 +15,7 @@ export const getProviderDetails = async (providerId: string): Promise<ServicePro
       .single();
     
     if (error) {
-      console.error('Erreur lors de la récupération du prestataire:', error);
+      console.error('Error retrieving provider:', error);
       return null;
     }
     
@@ -31,12 +30,12 @@ export const getProviderDetails = async (providerId: string): Promise<ServicePro
     
     return null;
   } catch (err) {
-    console.error('Exception lors de la récupération du prestataire:', err);
+    console.error('Exception retrieving provider:', err);
     return null;
   }
 };
 
-// Enregistre une notification dans la base de données
+// Log a notification in the database
 export const logNotification = async (
   declaration_id: string,
   notification_type: string,
@@ -47,6 +46,8 @@ export const logNotification = async (
   error_message?: string
 ): Promise<boolean> => {
   try {
+    console.log(`Logging notification: ${notification_type} to ${recipient_email} (${recipient_type})`);
+    
     const notificationData = {
       declaration_id,
       notification_type,
@@ -62,44 +63,48 @@ export const logNotification = async (
       .insert(notificationData);
     
     if (error) {
-      console.error('Erreur lors de l\'enregistrement de la notification:', error);
+      console.error('Error logging notification:', error);
       return false;
     }
     
+    console.log('Notification logged successfully');
     return true;
   } catch (err) {
-    console.error('Exception lors de l\'enregistrement de la notification:', err);
+    console.error('Exception logging notification:', err);
     return false;
   }
 };
 
-// Envoie un email de notification (à remplacer par un appel à edge function)
+// Send an email notification (to be replaced with edge function call)
 export const sendEmail = async (
   to: string,
   subject: string,
   content: string
 ): Promise<boolean> => {
-  // Simuler l'envoi d'email (à remplacer par un appel à edge function)
-  console.log(`Email envoyé à ${to}:`, { subject, content });
+  // Simulate email sending (replace with edge function call)
+  console.log(`[SIMULATED EMAIL] to ${to}:`, { subject, content });
   
-  // Afficher une notification toast pour simuler l'envoi d'email
-  toast.info(`Email envoyé à ${to}`, {
-    description: subject
+  // Show a toast notification to simulate the email
+  toast.info(`Email simulado para ${to}`, {
+    description: subject,
+    duration: 5000
   });
   
-  // Dans une implémentation réelle, ici on appellerait une edge function
+  // TODO: In a real implementation, call an edge function here
   return true;
 };
 
-// Notifie le prestataire de service lors de l'attribution
+// Notify provider when assigned to a declaration
 export const notifyProviderAssignment = async (
   declaration: Declaration,
   provider: ServiceProvider
 ): Promise<boolean> => {
   if (!declaration || !provider || !provider.email) {
-    console.error('Données insuffisantes pour notifier le prestataire');
+    console.error('Insufficient data to notify provider');
     return false;
   }
+  
+  console.log(`Notifying provider ${provider.email} about assignment to declaration ${declaration.id}`);
   
   const subject = `Nouvelle déclaration de sinistre assignée - ${declaration.id}`;
   
@@ -124,10 +129,11 @@ export const notifyProviderAssignment = async (
   `;
   
   try {
-    // Envoyer l'email
+    // Send the email
     const emailSent = await sendEmail(provider.email, subject, content);
+    console.log(`Provider notification email ${emailSent ? 'sent' : 'failed'}`);
     
-    // Enregistrer la notification
+    // Log the notification
     await logNotification(
       declaration.id,
       'provider_assignment',
@@ -135,14 +141,14 @@ export const notifyProviderAssignment = async (
       'provider',
       emailSent,
       content,
-      emailSent ? undefined : 'Échec de l\'envoi d\'email'
+      emailSent ? undefined : 'Email sending failed'
     );
     
     return emailSent;
   } catch (error) {
-    console.error('Erreur lors de la notification du prestataire:', error);
+    console.error('Error notifying provider:', error);
     
-    // Enregistrer l'échec
+    // Log the failure
     await logNotification(
       declaration.id,
       'provider_assignment',
@@ -150,7 +156,7 @@ export const notifyProviderAssignment = async (
       'provider',
       false,
       content,
-      error instanceof Error ? error.message : 'Erreur inconnue'
+      error instanceof Error ? error.message : 'Unknown error'
     );
     
     return false;
@@ -365,4 +371,287 @@ export const getDeclarationNotificationHistory = async (declarationId: string): 
   }
 };
 
+export * from './declarationNotifier';
+// Notification lors d'un changement de statut
+export const notifyStatusChange = async (
+  declaration: Declaration, 
+  previousStatus: Declaration["status"]
+): Promise<boolean> => {
+  if (!declaration || !declaration.email) {
+    console.error('Données insuffisantes pour notifier du changement de statut');
+    return false;
+  }
+  
+  const subject = `Mise à jour de votre déclaration de sinistre`;
+  
+  const content = `
+    <h2>Mise à jour du statut</h2>
+    <p>Le statut de votre déclaration de sinistre a été mis à jour.</p>
+    <p><strong>Nouveau statut:</strong> ${declaration.status}</p>
+  `;
+  
+  try {
+    // Envoyer l'email (uniquement pour certains statuts)
+    let emailSent = false;
+    if (
+      declaration.status === "Resolvido" ||
+      declaration.status === "Em curso de reparação" ||
+      declaration.status === "Annulé"
+    ) {
+      emailSent = await sendEmail(declaration.email, subject, content);
+    } else {
+      // Ne pas envoyer d'email pour les autres statuts
+      emailSent = true;
+    }
+    
+    // Enregistrer la notification
+    await logNotification(
+      declaration.id,
+      'status_update',
+      declaration.email,
+      'tenant',
+      emailSent,
+      content,
+      emailSent ? undefined : 'Échec de l\'envoi d\'email'
+    );
+    
+    return emailSent;
+  } catch (error) {
+    console.error('Erreur lors de la notification du changement de statut:', error);
+    
+    // Enregistrer l'échec
+    await logNotification(
+      declaration.id,
+      'status_update',
+      declaration.email,
+      'tenant',
+      false,
+      content,
+      error instanceof Error ? error.message : 'Erreur inconnue'
+    );
+    
+    return false;
+  }
+};
+
+// Envoie une notification pour une nouvelle déclaration
+export const notifyNewDeclaration = async (declaration: Declaration): Promise<boolean> => {
+  if (!declaration || !declaration.email) {
+    console.error('Données insuffisantes pour notifier la nouvelle déclaration');
+    return false;
+  }
+  
+  const subject = `Confirmation de votre déclaration de sinistre`;
+  
+  const content = `
+    <h2>Votre déclaration a été enregistrée</h2>
+    <p>Nous avons bien reçu votre déclaration de sinistre. Référence: ${declaration.id}</p>
+    <p>Nous la traitons actuellement et reviendrons vers vous dès que possible.</p>
+    <h3>Résumé de votre déclaration:</h3>
+    <p><strong>Type de problème:</strong> ${declaration.issueType || 'Non spécifié'}</p>
+    <p><strong>Description:</strong> ${declaration.description || 'Aucune description'}</p>
+    <p>Merci de votre patience.</p>
+  `;
+  
+  try {
+    // Envoyer l'email
+    const emailSent = await sendEmail(declaration.email, subject, content);
+    
+    // Enregistrer la notification
+    await logNotification(
+      declaration.id,
+      'new_declaration',
+      declaration.email,
+      'tenant',
+      emailSent,
+      content,
+      emailSent ? undefined : 'Échec de l\'envoi d\'email'
+    );
+    
+    return emailSent;
+  } catch (error) {
+    console.error('Erreur lors de la notification de nouvelle déclaration:', error);
+    
+    // Enregistrer l'échec
+    await logNotification(
+      declaration.id,
+      'new_declaration',
+      declaration.email || '',
+      'tenant',
+      false,
+      content,
+      error instanceof Error ? error.message : 'Erreur inconnue'
+    );
+    
+    return false;
+  }
+};
+
+// Met à jour le statut et envoie une notification
+export const updateStatusAndNotify = async (
+  id: string, 
+  status: Declaration["status"],
+  options?: {
+    provider_id?: string;
+    meeting_date?: string;
+    meeting_notes?: string;
+    quote_approved?: boolean;
+    quote_rejection_reason?: string;
+  }
+): Promise<boolean> => {
+  try {
+    console.log(`Updating declaration ${id} to status ${status} with options:`, options);
+    
+    // Get the current declaration to have the previous status
+    const { data: currentDeclarationData } = await supabase
+      .from('declarations')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (!currentDeclarationData) {
+      console.error(`Declaration ${id} not found`);
+      toast.error(`Declaration ${id} not found`);
+      return false;
+    }
+    
+    // Convert to proper type with mediaFiles as string[]
+    const currentDeclaration = convertFromSupabaseFormat(currentDeclarationData);
+    
+    const previousStatus = currentDeclaration.status;
+    
+    // Prepare update data
+    const updateData: any = { status };
+    
+    // If a provider is assigned and the status is "Em espera do encontro de diagnostico"
+    if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
+      // IMPORTANT: Require provider selection for this status
+      if (!options.provider_id) {
+        console.error("Provider ID is required for status 'Em espera do encontro de diagnostico'");
+        toast.error("Un prestataire doit être sélectionné pour ce statut");
+        return false;
+      }
+      
+      updateData.prestador_id = options.provider_id;
+      updateData.prestador_assigned_at = new Date().toISOString();
+    }
+    
+    // If a meeting date is set and the status is "Encontramento de diagnostico planeado"
+    if (options?.meeting_date && status === "Encontramento de diagnostico planeado") {
+      updateData.meeting_date = options.meeting_date;
+      updateData.meeting_notes = options.meeting_notes || null;
+    }
+    
+    // If the status is "Em curso de reparação" and quote approval is set
+    if (status === "Em curso de reparação" && options?.quote_approved !== undefined) {
+      updateData.quote_approved = options.quote_approved;
+      updateData.quote_response_date = new Date().toISOString();
+      
+      if (!options.quote_approved && options.quote_rejection_reason) {
+        updateData.quote_rejection_reason = options.quote_rejection_reason;
+      }
+    }
+    
+    console.log("Updating declaration with data:", updateData);
+    
+    // Update the declaration
+    const { data: updatedDeclarationData, error } = await supabase
+      .from('declarations')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`Error updating declaration ${id}:`, error);
+      toast.error("Error updating declaration");
+      return false;
+    }
+    
+    // Convert to proper type with mediaFiles as string[]
+    const updatedDeclaration = updatedDeclarationData ? convertFromSupabaseFormat(updatedDeclarationData) : null;
+    
+    // Send notifications based on status change
+    if (updatedDeclaration) {
+      // If a provider is assigned
+      if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
+        const provider = await getProviderDetails(options.provider_id);
+        if (provider) {
+          console.log("Notifying provider of assignment:", provider.email);
+          const notifySuccess = await notifyProviderAssignment(updatedDeclaration, provider);
+          if (notifySuccess) {
+            toast.success(`Notification envoyée à ${provider.email}`);
+          } else {
+            toast.warning(`Échec de l'envoi de la notification à ${provider.email}`);
+          }
+        } else {
+          console.error("Provider not found for ID:", options.provider_id);
+          toast.error("Provider not found");
+        }
+      }
+      
+      // Si un rendez-vous est planifié
+      if (options?.meeting_date && status === "Encontramento de diagnostico planeado") {
+        const provider = await getProviderDetails(updatedDeclaration.prestador_id!);
+        if (provider && updatedDeclaration.email) {
+          await notifyTenantMeetingScheduled(updatedDeclaration, provider, options.meeting_date);
+        }
+      }
+      
+      // Si le devis est approuvé et que le statut passe à "Em curso de reparação"
+      if (status === "Em curso de reparação" && options?.quote_approved === true) {
+        const provider = await getProviderDetails(updatedDeclaration.prestador_id!);
+        if (provider) {
+          await notifyProviderQuoteApproved(updatedDeclaration, provider);
+          await notifyTenantQuoteApproved(updatedDeclaration);
+        }
+      }
+      
+      // General status change notification
+      await notifyStatusChange(updatedDeclaration, previousStatus);
+      
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error(`Error updating status and notifying for ${id}:`, error);
+    toast.error("Error updating declaration status");
+    return false;
+  }
+};
+
+// Les fonctions suivantes sont supposées être définies dans le fichier index.ts
+// Nous les déclarons ici comme fonctions de référence qui seront implémentées ailleurs
+export const notifyProviderAssignment = async (
+  declaration: Declaration, 
+  provider: ServiceProvider
+): Promise<boolean> => {
+  // Cette fonction sera implémentée dans index.ts
+  return true;
+};
+
+export const notifyTenantMeetingScheduled = async (
+  declaration: Declaration,
+  provider: ServiceProvider,
+  meetingDate: string
+): Promise<boolean> => {
+  // Cette fonction sera implémentée dans index.ts
+  return true;
+};
+
+export const notifyProviderQuoteApproved = async (
+  declaration: Declaration,
+  provider: ServiceProvider
+): Promise<boolean> => {
+  // Cette fonction sera implémentée dans index.ts
+  return true;
+};
+
+export const notifyTenantQuoteApproved = async (
+  declaration: Declaration
+): Promise<boolean> => {
+  // Cette fonction sera implémentée dans index.ts
+  return true;
+};
 export * from './declarationNotifier';
