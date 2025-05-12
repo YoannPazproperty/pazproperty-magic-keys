@@ -1,3 +1,4 @@
+
 import { Declaration, ServiceProvider } from "../types";
 import { logNotification, sendEmail, getProviderDetails } from "./index";
 import { supabase } from "@/integrations/supabase/client";
@@ -173,6 +174,8 @@ export const updateStatusAndNotify = async (
       }
     }
     
+    console.log("Updating declaration with data:", updateData);
+    
     // Mettre à jour la déclaration
     const { data: updatedDeclarationData, error } = await supabase
       .from('declarations')
@@ -189,49 +192,64 @@ export const updateStatusAndNotify = async (
     // Convert to proper type with mediaFiles as string[]
     const updatedDeclaration = updatedDeclarationData ? convertFromSupabaseFormat(updatedDeclarationData) : null;
     
-    // Envoi des notifications en fonction du changement de statut
-    if (updatedDeclaration) {
-      // Import the notification functions directly from index.ts
-      // We're now using imports at the top rather than require() calls
-      const { 
-        notifyProviderAssignment, 
-        notifyTenantMeetingScheduled, 
-        notifyProviderQuoteApproved, 
-        notifyTenantQuoteApproved 
-      } = await import('./index');
-      
-      // Si un prestataire est assigné
-      if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
-        const provider = await getProviderDetails(options.provider_id);
-        if (provider) {
-          await notifyProviderAssignment(updatedDeclaration, provider);
-        }
+    if (!updatedDeclaration) {
+      console.error("La déclaration mise à jour est null");
+      return false;
+    }
+    
+    console.log("Declaration updated successfully:", updatedDeclaration);
+    
+    // Import dynamiquement les fonctions de notification
+    const { 
+      notifyProviderAssignment, 
+      notifyTenantMeetingScheduled, 
+      notifyProviderQuoteApproved, 
+      notifyTenantQuoteApproved 
+    } = await import('./index');
+    
+    // Si un prestataire est assigné
+    if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
+      console.log("Getting provider details for", options.provider_id);
+      const provider = await getProviderDetails(options.provider_id);
+      if (provider) {
+        console.log("Provider found, sending notification");
+        await notifyProviderAssignment(updatedDeclaration, provider);
+      } else {
+        console.error("Provider not found for ID:", options.provider_id);
       }
-      
-      // Si un rendez-vous est planifié
-      if (options?.meeting_date && status === "Encontramento de diagnostico planeado") {
-        const provider = await getProviderDetails(updatedDeclaration.prestador_id!);
+    }
+    
+    // Si un rendez-vous est planifié
+    if (options?.meeting_date && status === "Encontramento de diagnostico planeado") {
+      if (!updatedDeclaration.prestador_id) {
+        console.error("Aucun prestataire assigné à la déclaration");
+      } else {
+        const provider = await getProviderDetails(updatedDeclaration.prestador_id);
         if (provider && updatedDeclaration.email) {
           await notifyTenantMeetingScheduled(updatedDeclaration, provider, options.meeting_date);
         }
       }
-      
-      // Si le devis est approuvé et que le statut passe à "Em curso de reparação"
-      if (status === "Em curso de reparação" && options?.quote_approved === true) {
-        const provider = await getProviderDetails(updatedDeclaration.prestador_id!);
+    }
+    
+    // Si le devis est approuvé et que le statut passe à "Em curso de reparação"
+    if (status === "Em curso de reparação" && options?.quote_approved === true) {
+      if (!updatedDeclaration.prestador_id) {
+        console.error("Aucun prestataire assigné à la déclaration");
+      } else {
+        const provider = await getProviderDetails(updatedDeclaration.prestador_id);
         if (provider) {
           await notifyProviderQuoteApproved(updatedDeclaration, provider);
           await notifyTenantQuoteApproved(updatedDeclaration);
         }
       }
-      
-      // Notification générale de changement de statut
-      await notifyStatusChange(updatedDeclaration, previousStatus);
-      
-      return true;
     }
     
-    return false;
+    // Notification générale de changement de statut
+    await notifyStatusChange(updatedDeclaration, previousStatus);
+    
+    console.log("Status update and notifications completed successfully");
+    return true;
+    
   } catch (error) {
     console.error(`Erreur lors de la mise à jour du statut et de la notification pour ${id}:`, error);
     return false;
