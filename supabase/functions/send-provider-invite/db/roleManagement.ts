@@ -3,6 +3,8 @@ import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.38.0';
 
 /**
  * Ensures the user has the specified role
+ * This function should be called with the admin client (service role)
+ * to avoid RLS issues when inserting roles
  */
 export const ensureUserRole = async (supabase: SupabaseClient, userId: string, role: string) => {
   try {

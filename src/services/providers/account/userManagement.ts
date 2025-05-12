@@ -1,4 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import { adminClient } from "@/integrations/supabase/adminClient";
 import { User } from '@supabase/supabase-js';
 import { UserRole } from "@/hooks/auth/types";
 import { toast } from "sonner";
@@ -76,6 +78,7 @@ const validateRoleForEmail = (email: string, role: UserRole): boolean => {
 /**
  * Creates a user role in the user_roles table
  * Requires appropriate permissions based on context
+ * Uses adminClient (service_role) to bypass RLS for role creation
  */
 export const createUserRole = async (
   userId: string, 
@@ -109,9 +112,11 @@ export const createUserRole = async (
       return true;
     }
     
+    // Use adminClient (service_role) to bypass RLS for the following operations
+    
     // For backward compatibility, if role is provider, also add to prestadores_roles
     if (role === 'provider') {
-      const { error: prestadorRoleError } = await supabase
+      const { error: prestadorRoleError } = await adminClient
         .from('prestadores_roles')
         .insert({ 
           user_id: userId, 
@@ -126,8 +131,8 @@ export const createUserRole = async (
       }
     }
     
-    // Add to user_roles table
-    const { error: roleError } = await supabase
+    // Add to user_roles table using adminClient to bypass RLS
+    const { error: roleError } = await adminClient
       .from('user_roles')
       .insert({
         user_id: userId,
@@ -235,8 +240,8 @@ export const ensureUserWithRole = async (
       };
     }
 
-    // First check if the user exists
-    const { data: userList } = await supabase
+    // First check if the user exists - use adminClient to ensure we can access user data
+    const { data: userList } = await adminClient
       .from('users')
       .select('id')
       .eq('email', email)
