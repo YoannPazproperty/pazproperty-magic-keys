@@ -5,7 +5,7 @@ import {
   notifyNewDeclaration,
   updateStatusAndNotify,
   getDeclarationNotificationHistory
-} from '../notifications';
+} from '@/services/notifications';
 
 export {
   notifyStatusChange,

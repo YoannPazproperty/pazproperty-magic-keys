@@ -1,6 +1,6 @@
 
 import { Declaration, ServiceProvider } from "../types";
-import { getProviderDetails, logNotification, sendEmail } from "./index";
+import { logNotification, sendEmail, getProviderDetails } from "./index";
 import { supabase } from "@/integrations/supabase/client";
 import { convertFromSupabaseFormat } from "../declarations/supabaseFormatters";
 
@@ -192,6 +192,9 @@ export const updateStatusAndNotify = async (
     
     // Envoi des notifications en fonction du changement de statut
     if (updatedDeclaration) {
+      // Import the notification functions from the parent module to avoid circular imports
+      const { notifyProviderAssignment, notifyTenantMeetingScheduled, notifyProviderQuoteApproved, notifyTenantQuoteApproved } = require('./index');
+      
       // Si un prestataire est assigné
       if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
         const provider = await getProviderDetails(options.provider_id);
@@ -228,38 +231,4 @@ export const updateStatusAndNotify = async (
     console.error(`Erreur lors de la mise à jour du statut et de la notification pour ${id}:`, error);
     return false;
   }
-};
-
-// Les fonctions suivantes sont supposées être définies dans le fichier index.ts
-// Nous les déclarons ici comme fonctions de référence qui seront implémentées ailleurs
-export const notifyProviderAssignment = async (
-  declaration: Declaration, 
-  provider: ServiceProvider
-): Promise<boolean> => {
-  // Cette fonction sera implémentée dans index.ts
-  return true;
-};
-
-export const notifyTenantMeetingScheduled = async (
-  declaration: Declaration,
-  provider: ServiceProvider,
-  meetingDate: string
-): Promise<boolean> => {
-  // Cette fonction sera implémentée dans index.ts
-  return true;
-};
-
-export const notifyProviderQuoteApproved = async (
-  declaration: Declaration,
-  provider: ServiceProvider
-): Promise<boolean> => {
-  // Cette fonction sera implémentée dans index.ts
-  return true;
-};
-
-export const notifyTenantQuoteApproved = async (
-  declaration: Declaration
-): Promise<boolean> => {
-  // Cette fonction sera implémentée dans index.ts
-  return true;
 };
