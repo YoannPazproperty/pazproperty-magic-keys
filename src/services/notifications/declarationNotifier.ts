@@ -3,6 +3,7 @@ import { Declaration, ServiceProvider } from "../types";
 import { logNotification, sendEmail, getProviderDetails } from "./index";
 import { supabase } from "@/integrations/supabase/client";
 import { convertFromSupabaseFormat } from "../declarations/supabaseFormatters";
+import { toast } from "sonner";
 
 // Notification lors d'un changement de statut
 export const notifyStatusChange = async (
@@ -37,7 +38,7 @@ export const notifyStatusChange = async (
     }
     
     // Enregistrer la notification
-    await logNotification(
+    const logSuccess = await logNotification(
       declaration.id,
       'status_update',
       declaration.email,
@@ -46,6 +47,8 @@ export const notifyStatusChange = async (
       content,
       emailSent ? undefined : 'Échec de l\'envoi d\'email'
     );
+    
+    console.log(`Notification de changement de statut enregistrée: ${logSuccess ? 'succès' : 'échec'}`);
     
     return emailSent;
   } catch (error) {
@@ -90,7 +93,7 @@ export const notifyNewDeclaration = async (declaration: Declaration): Promise<bo
     const emailSent = await sendEmail(declaration.email, subject, content);
     
     // Enregistrer la notification
-    await logNotification(
+    const logSuccess = await logNotification(
       declaration.id,
       'new_declaration',
       declaration.email,
@@ -99,6 +102,8 @@ export const notifyNewDeclaration = async (declaration: Declaration): Promise<bo
       content,
       emailSent ? undefined : 'Échec de l\'envoi d\'email'
     );
+    
+    console.log(`Notification de nouvelle déclaration enregistrée: ${logSuccess ? 'succès' : 'échec'}`);
     
     return emailSent;
   } catch (error) {
@@ -143,11 +148,18 @@ export const updateStatusAndNotify = async (
     
     if (fetchError) {
       console.error(`Erreur lors de la récupération de la déclaration ${id}:`, fetchError);
+      toast.error(`Erreur lors de la récupération de la déclaration ${id}`, {
+        description: fetchError.message,
+        duration: 3000
+      });
       return false;
     }
     
     if (!currentDeclarationData) {
       console.error(`Déclaration ${id} non trouvée`);
+      toast.error(`Déclaration ${id} non trouvée`, {
+        duration: 3000
+      });
       return false;
     }
     
@@ -196,6 +208,10 @@ export const updateStatusAndNotify = async (
     
     if (updateError) {
       console.error(`Erreur lors de la mise à jour de la déclaration ${id}:`, updateError);
+      toast.error(`Erreur lors de la mise à jour de la déclaration`, {
+        description: updateError.message,
+        duration: 3000
+      });
       return false;
     }
     
@@ -204,13 +220,17 @@ export const updateStatusAndNotify = async (
     
     if (!updatedDeclaration) {
       console.error("La déclaration mise à jour est null");
+      toast.error("Erreur lors de la mise à jour", {
+        description: "Impossible de récupérer la déclaration mise à jour",
+        duration: 3000
+      });
       return false;
     }
     
     console.log("Déclaration mise à jour avec succès:", updatedDeclaration);
     
-    // Définition des modules à importer 
-    const notificationModules = await import('./index');
+    // Importations pour les notifications
+    const notifModule = await import('./index');
     
     // Si un prestataire est assigné
     if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
@@ -218,9 +238,13 @@ export const updateStatusAndNotify = async (
       const provider = await getProviderDetails(options.provider_id);
       if (provider) {
         console.log("Prestataire trouvé, envoi de la notification d'assignation");
-        await notificationModules.notifyProviderAssignment(updatedDeclaration, provider);
+        await notifModule.notifyProviderAssignment(updatedDeclaration, provider);
       } else {
         console.error("Prestataire non trouvé pour ID:", options.provider_id);
+        toast.error("Prestataire non trouvé", {
+          description: `ID: ${options.provider_id}`,
+          duration: 3000
+        });
       }
     }
     
@@ -228,11 +252,14 @@ export const updateStatusAndNotify = async (
     if (options?.meeting_date && status === "Encontramento de diagnostico planeado") {
       if (!updatedDeclaration.prestador_id) {
         console.error("Aucun prestataire assigné à la déclaration");
+        toast.error("Aucun prestataire assigné à la déclaration", {
+          duration: 3000
+        });
       } else {
         const provider = await getProviderDetails(updatedDeclaration.prestador_id);
         if (provider && updatedDeclaration.email) {
           console.log("Envoi de notification pour rendez-vous planifié");
-          await notificationModules.notifyTenantMeetingScheduled(updatedDeclaration, provider, options.meeting_date);
+          await notifModule.notifyTenantMeetingScheduled(updatedDeclaration, provider, options.meeting_date);
         }
       }
     }
@@ -241,12 +268,15 @@ export const updateStatusAndNotify = async (
     if (status === "Em curso de reparação" && options?.quote_approved === true) {
       if (!updatedDeclaration.prestador_id) {
         console.error("Aucun prestataire assigné à la déclaration");
+        toast.error("Aucun prestataire assigné à la déclaration", {
+          duration: 3000
+        });
       } else {
         const provider = await getProviderDetails(updatedDeclaration.prestador_id);
         if (provider) {
           console.log("Envoi de notification pour devis approuvé");
-          await notificationModules.notifyProviderQuoteApproved(updatedDeclaration, provider);
-          await notificationModules.notifyTenantQuoteApproved(updatedDeclaration);
+          await notifModule.notifyProviderQuoteApproved(updatedDeclaration, provider);
+          await notifModule.notifyTenantQuoteApproved(updatedDeclaration);
         }
       }
     }
@@ -255,9 +285,18 @@ export const updateStatusAndNotify = async (
     await notifyStatusChange(updatedDeclaration, previousStatus);
     
     console.log("Mise à jour du statut et envoi des notifications terminé avec succès");
+    toast.success("Mise à jour du statut réussie", {
+      description: `Nouveau statut: ${status}`,
+      duration: 3000
+    });
+    
     return true;
   } catch (error) {
     console.error(`Erreur lors de la mise à jour du statut et de la notification pour ${id}:`, error);
+    toast.error(`Erreur lors de la mise à jour du statut`, {
+      description: error instanceof Error ? error.message : "Erreur inconnue",
+      duration: 5000
+    });
     return false;
   }
 };

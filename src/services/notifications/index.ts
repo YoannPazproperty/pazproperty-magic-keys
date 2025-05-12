@@ -355,6 +355,10 @@ export const getDeclarationNotificationHistory = async (declarationId: string): 
     
     if (error) {
       console.error('Erreur lors de la récupération de l\'historique des notifications:', error);
+      toast.error("Erreur lors du chargement de l'historique des notifications", {
+        description: error.message,
+        duration: 3000
+      });
       return [];
     }
     
@@ -374,5 +378,6 @@ export const getDeclarationNotificationHistory = async (declarationId: string): 
   }
 };
 
-// Export functions from declarationNotifier
-export { notifyStatusChange, notifyNewDeclaration, updateStatusAndNotify } from './declarationNotifier';
+// Export directly instead of re-exporting from declarationNotifier
+export * from './declarationNotifier';
+
