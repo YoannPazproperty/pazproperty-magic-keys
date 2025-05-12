@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { DeclarationDetails } from "./DeclarationDetails";
 import type { Declaration } from "@/services/types";
 import { formatDate, getStatusBadgeColor, translateStatus } from "@/utils/translationUtils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DeclarationDetailsDialogProps {
   declaration: Declaration | null;
@@ -29,7 +30,7 @@ export const DeclarationDetailsDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Détails de la déclaration</DialogTitle>
           <DialogDescription>
@@ -37,12 +38,14 @@ export const DeclarationDetailsDialog = ({
           </DialogDescription>
         </DialogHeader>
         
-        <DeclarationDetails 
-          declaration={declaration} 
-          onStatusUpdate={onStatusUpdate} 
-          getStatusBadgeColor={getStatusBadgeColor}
-          translateStatus={translateStatus}
-        />
+        <ScrollArea className="h-full max-h-[calc(85vh-10rem)] pr-4">
+          <DeclarationDetails 
+            declaration={declaration} 
+            onStatusUpdate={onStatusUpdate} 
+            getStatusBadgeColor={getStatusBadgeColor}
+            translateStatus={translateStatus}
+          />
+        </ScrollArea>
         
         <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
