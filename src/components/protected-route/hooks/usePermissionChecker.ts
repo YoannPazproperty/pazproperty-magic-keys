@@ -1,4 +1,5 @@
 
+import { UserRole } from "@/hooks/auth/types";
 import { checkEmailDomain, hasRequiredRole, handleAccessNotification, isDevelopmentMode } from "../roleUtils";
 
 interface PermissionCheckerProps {
