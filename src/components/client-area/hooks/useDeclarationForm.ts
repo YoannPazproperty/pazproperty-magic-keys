@@ -126,9 +126,9 @@ export const useDeclarationForm = ({ form, onSuccess, connectionStatus }: UseDec
         description: values.description,
         urgency: values.urgency,
         nif: values.nif,
-        mediaFiles: null,        // Ajout des champs manquants
-        mondayId: null,          // avec des valeurs null par défaut
-        prestador_id: null,      // pour satisfaire le type
+        mediaFiles: null,
+        mondayId: null,
+        prestador_id: null,
         prestador_assigned_at: null
       };
       
