@@ -132,12 +132,19 @@ export const updateStatusAndNotify = async (
   }
 ): Promise<boolean> => {
   try {
+    console.log("updateStatusAndNotify appelé avec:", { id, status, options });
+    
     // Récupération de la déclaration actuelle pour avoir le statut précédent
-    const { data: currentDeclarationData } = await supabase
+    const { data: currentDeclarationData, error: fetchError } = await supabase
       .from('declarations')
       .select('*')
       .eq('id', id)
       .single();
+    
+    if (fetchError) {
+      console.error(`Erreur lors de la récupération de la déclaration ${id}:`, fetchError);
+      return false;
+    }
     
     if (!currentDeclarationData) {
       console.error(`Déclaration ${id} non trouvée`);
@@ -156,12 +163,14 @@ export const updateStatusAndNotify = async (
     if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
       updateData.prestador_id = options.provider_id;
       updateData.prestador_assigned_at = new Date().toISOString();
+      console.log("Assignation du prestataire:", options.provider_id);
     }
     
     // Si une date de rendez-vous est définie et que le statut est "Encontramento de diagnostico planeado"
     if (options?.meeting_date && status === "Encontramento de diagnostico planeado") {
       updateData.meeting_date = options.meeting_date;
       updateData.meeting_notes = options.meeting_notes || null;
+      console.log("Planification du rendez-vous:", options.meeting_date);
     }
     
     // Si le statut est "Em curso de reparação" et que l'option d'approbation du devis est définie
@@ -172,20 +181,21 @@ export const updateStatusAndNotify = async (
       if (!options.quote_approved && options.quote_rejection_reason) {
         updateData.quote_rejection_reason = options.quote_rejection_reason;
       }
+      console.log("Approbation du devis:", options.quote_approved);
     }
     
-    console.log("Updating declaration with data:", updateData);
+    console.log("Mise à jour de la déclaration avec les données:", updateData);
     
     // Mettre à jour la déclaration
-    const { data: updatedDeclarationData, error } = await supabase
+    const { data: updatedDeclarationData, error: updateError } = await supabase
       .from('declarations')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
     
-    if (error) {
-      console.error(`Erreur lors de la mise à jour de la déclaration ${id}:`, error);
+    if (updateError) {
+      console.error(`Erreur lors de la mise à jour de la déclaration ${id}:`, updateError);
       return false;
     }
     
@@ -197,25 +207,20 @@ export const updateStatusAndNotify = async (
       return false;
     }
     
-    console.log("Declaration updated successfully:", updatedDeclaration);
+    console.log("Déclaration mise à jour avec succès:", updatedDeclaration);
     
-    // Import dynamiquement les fonctions de notification
-    const { 
-      notifyProviderAssignment, 
-      notifyTenantMeetingScheduled, 
-      notifyProviderQuoteApproved, 
-      notifyTenantQuoteApproved 
-    } = await import('./index');
+    // Définition des modules à importer 
+    const notificationModules = await import('./index');
     
     // Si un prestataire est assigné
     if (options?.provider_id && status === "Em espera do encontro de diagnostico") {
-      console.log("Getting provider details for", options.provider_id);
+      console.log("Récupération des détails du prestataire:", options.provider_id);
       const provider = await getProviderDetails(options.provider_id);
       if (provider) {
-        console.log("Provider found, sending notification");
-        await notifyProviderAssignment(updatedDeclaration, provider);
+        console.log("Prestataire trouvé, envoi de la notification d'assignation");
+        await notificationModules.notifyProviderAssignment(updatedDeclaration, provider);
       } else {
-        console.error("Provider not found for ID:", options.provider_id);
+        console.error("Prestataire non trouvé pour ID:", options.provider_id);
       }
     }
     
@@ -226,7 +231,8 @@ export const updateStatusAndNotify = async (
       } else {
         const provider = await getProviderDetails(updatedDeclaration.prestador_id);
         if (provider && updatedDeclaration.email) {
-          await notifyTenantMeetingScheduled(updatedDeclaration, provider, options.meeting_date);
+          console.log("Envoi de notification pour rendez-vous planifié");
+          await notificationModules.notifyTenantMeetingScheduled(updatedDeclaration, provider, options.meeting_date);
         }
       }
     }
@@ -238,8 +244,9 @@ export const updateStatusAndNotify = async (
       } else {
         const provider = await getProviderDetails(updatedDeclaration.prestador_id);
         if (provider) {
-          await notifyProviderQuoteApproved(updatedDeclaration, provider);
-          await notifyTenantQuoteApproved(updatedDeclaration);
+          console.log("Envoi de notification pour devis approuvé");
+          await notificationModules.notifyProviderQuoteApproved(updatedDeclaration, provider);
+          await notificationModules.notifyTenantQuoteApproved(updatedDeclaration);
         }
       }
     }
@@ -247,9 +254,8 @@ export const updateStatusAndNotify = async (
     // Notification générale de changement de statut
     await notifyStatusChange(updatedDeclaration, previousStatus);
     
-    console.log("Status update and notifications completed successfully");
+    console.log("Mise à jour du statut et envoi des notifications terminé avec succès");
     return true;
-    
   } catch (error) {
     console.error(`Erreur lors de la mise à jour du statut et de la notification pour ${id}:`, error);
     return false;

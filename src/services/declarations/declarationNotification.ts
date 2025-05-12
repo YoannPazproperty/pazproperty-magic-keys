@@ -4,20 +4,12 @@ import {
   notifyStatusChange,
   notifyNewDeclaration,
   updateStatusAndNotify,
-  getDeclarationNotificationHistory,
-  notifyProviderAssignment,
-  notifyTenantMeetingScheduled,
-  notifyProviderQuoteApproved,
-  notifyTenantQuoteApproved
+  getDeclarationNotificationHistory
 } from '@/services/notifications';
 
 export {
   notifyStatusChange,
   notifyNewDeclaration,
   updateStatusAndNotify,
-  getDeclarationNotificationHistory,
-  notifyProviderAssignment,
-  notifyTenantMeetingScheduled,
-  notifyProviderQuoteApproved,
-  notifyTenantQuoteApproved
+  getDeclarationNotificationHistory
 };

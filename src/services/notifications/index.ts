@@ -49,41 +49,42 @@ export const logNotification = async (
   try {
     console.log(`Logging notification: ${notification_type} to ${recipient_email} (${recipient_type})`);
     
-    // Pour éviter les erreurs de permission, on ne stocke pas en base de données pour le moment
-    // mais on garde le log dans la console
-    console.log("Notification details:", {
+    // Création de l'objet à enregistrer
+    const notificationData = {
       declaration_id,
       notification_type,
       recipient_email,
       recipient_type,
       success,
+      message_content,
       error_message: error_message || null
-    });
+    };
     
-    // Note: En production, décommentez le code ci-dessous une fois les droits RLS configurés
-    /*
-    const { error } = await supabase
+    console.log("Tentative d'insertion dans la table notification_logs:", notificationData);
+    
+    // On essaye d'insérer dans la base de données
+    const { data, error } = await supabase
       .from('notification_logs')
-      .insert({
-        declaration_id,
-        notification_type,
-        recipient_email,
-        recipient_type,
-        success,
-        message_content,
-        error_message: error_message || null
-      });
+      .insert(notificationData);
     
     if (error) {
-      console.error('Error logging notification:', error);
+      console.error('Erreur lors de l\'enregistrement de la notification dans la base:', error);
+      
+      // En cas d'échec, on affiche un toast pour alerter
+      toast.error('Échec de l\'enregistrement de la notification', {
+        description: `Erreur: ${error.message}`,
+        duration: 3000
+      });
+      
+      // On stocke quand même dans la console pour debug
+      console.log("Notification (non enregistrée dans la base):", notificationData);
       return false;
     }
-    */
     
-    console.log('Notification logged successfully');
+    console.log('Notification enregistrée avec succès dans la base');
     return true;
   } catch (err) {
-    console.error('Exception logging notification:', err);
+    console.error('Exception lors de l\'enregistrement de la notification:', err);
     return false;
   }
 };
@@ -345,6 +346,7 @@ export const notifyTenantQuoteApproved = async (
 // Récupère l'historique des notifications pour une déclaration
 export const getDeclarationNotificationHistory = async (declarationId: string): Promise<NotificationLog[]> => {
   try {
+    console.log(`Fetching notification history for declaration: ${declarationId}`);
     const { data, error } = await supabase
       .from('notification_logs')
       .select('*')
@@ -361,6 +363,7 @@ export const getDeclarationNotificationHistory = async (declarationId: string): 
         ...item,
         recipient_type: item.recipient_type as "provider" | "tenant" | "admin"
       }));
+      console.log(`Found ${notifications.length} notifications for declaration ${declarationId}`);
       return notifications;
     }
     
