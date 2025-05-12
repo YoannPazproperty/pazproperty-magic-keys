@@ -241,18 +241,20 @@ export const ensureUserWithRole = async (
     }
 
     // First check if the user exists - use adminClient to ensure we can access user data
-    const { data: userList } = await adminClient
+    const { data: existingUser } = await adminClient
       .from('users')
       .select('id')
       .eq('email', email)
       .maybeSingle();
       
-    if (userList?.id) {
+    if (existingUser?.id) {
       // User exists, add the role if they don't have it
-      const hasRole = await checkUserHasRole(userList.id, role);
+      console.log(`Utilisateur existant trouvé avec l'ID: ${existingUser.id}`);
+      const hasRole = await checkUserHasRole(existingUser.id, role);
       
       if (!hasRole) {
-        const roleCreated = await createUserRole(userList.id, role, true);
+        console.log(`Attribution du rôle ${role} à l'utilisateur existant`);
+        const roleCreated = await createUserRole(existingUser.id, role, true);
         
         if (!roleCreated) {
           return {
@@ -260,15 +262,18 @@ export const ensureUserWithRole = async (
             message: `Échec de l'attribution du rôle ${role} à l'utilisateur existant`
           };
         }
+      } else {
+        console.log(`L'utilisateur a déjà le rôle ${role}`);
       }
       
       return {
         success: true,
         message: `L'utilisateur dispose maintenant du rôle ${role}`,
-        userId: userList.id
+        userId: existingUser.id
       };
     } else {
       // User doesn't exist, create them
+      console.log(`Aucun utilisateur existant trouvé pour ${email}, création d'un nouveau compte`);
       const { data, error } = await createAuthUser(email, password, metadata, role);
       
       if (error) {
