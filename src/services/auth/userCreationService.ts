@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { adminClient } from '@/integrations/supabase/adminClient';
 import { toast } from 'sonner';
@@ -35,7 +36,7 @@ export const determineUserRole = (
     case 'prestadores_creation':
       return 'provider';
     case 'crm_creation':
-      return 'customer'; // À remplacer par 'referral_partner' quand ce type sera disponible
+      return 'referral_partner'; // À remplacer par 'referral_partner' quand ce type sera disponible
     case 'customer_creation':
     case 'claim_submission':
     default:
@@ -83,6 +84,7 @@ export const createUserWithContext = async (
     
     // Après création réussie dans Auth, créer l'entrée dans user_roles
     if (data.user) {
+      // Fixed: Convert role to string to match database type requirements
       const { error: roleError } = await adminClient
         .from('user_roles')
         .insert({

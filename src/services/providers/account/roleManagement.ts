@@ -19,7 +19,7 @@ export const checkUserHasRole = async (userId: string, role: UserRole): Promise<
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', role.toString())
+      .eq('role', role)
       .maybeSingle();
       
     if (error) {
@@ -118,7 +118,7 @@ export const createUserRole = async (
       .from('user_roles')
       .insert({
         user_id: userId,
-        role: role.toString()
+        role: role
       });
 
     if (roleError) {

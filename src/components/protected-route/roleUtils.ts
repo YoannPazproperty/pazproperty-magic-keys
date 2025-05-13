@@ -34,6 +34,7 @@ export const hasRequiredRole = (userRole: UserRole, requiredRole?: string): bool
 
 /**
  * Interface defining parameters for access notification
+ * Fixed: Added missing userEmail field to ensure compatibility
  */
 interface AccessNotificationParams {
   hasAccess: boolean;
@@ -42,6 +43,7 @@ interface AccessNotificationParams {
   emailDomain?: string;
   userRole?: UserRole;
   requiredRole?: string;
+  userEmail?: string; // Added missing field
 }
 
 /**
@@ -50,7 +52,7 @@ interface AccessNotificationParams {
 export const handleAccessNotification = (
   params: AccessNotificationParams
 ): void => {
-  const { hasAccess, isDevelopment, reason, emailDomain, userRole, requiredRole } = params;
+  const { hasAccess, isDevelopment, reason, emailDomain, userRole, requiredRole, userEmail } = params;
   
   if (hasAccess) {
     if (isDevelopment && (reason === 'timeout' || reason === 'norole')) {

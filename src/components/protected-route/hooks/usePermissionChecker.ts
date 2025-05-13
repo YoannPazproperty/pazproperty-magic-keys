@@ -30,7 +30,8 @@ export const usePermissionChecker = ({
     const devMode = isDevelopmentMode();
 
     try {
-      setCheckAttempts(prev => prev + 1);
+      // Fixed: Using direct number instead of function that returns a number
+      setCheckAttempts(checkAttempts + 1);
       
       // Check domain match first if specified
       if (emailDomain && !checkEmailDomain(user.email, emailDomain)) {
@@ -39,12 +40,12 @@ export const usePermissionChecker = ({
         setCheckingRole(false);
         setRoleChecked(true);
         
+        // Fixed: Updated to match AccessNotificationParams interface
         handleAccessNotification({
           hasAccess: false,
           isDevelopment: devMode,
           reason: 'domain',
-          emailDomain,
-          userEmail: user.email
+          emailDomain
         });
         
         return;
