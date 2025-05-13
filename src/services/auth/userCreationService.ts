@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { adminClient } from '@/integrations/supabase/adminClient';
 import { toast } from 'sonner';
 import { UserRole } from '@/hooks/auth/types';
+import { castRoleForDB } from '@/hooks/auth/utils/roleUtils';
 
 // Types pour le contexte de création d'utilisateur
 export type UserCreationContext = 
@@ -84,14 +85,14 @@ export const createUserWithContext = async (
     
     // Après création réussie dans Auth, créer l'entrée dans user_roles
     if (data.user) {
-      // Convertir le rôle en string pour satisfaire le typage
-      const roleValue = userRoleToAssign as string;
+      // Convertir le rôle de manière sécurisée pour la base de données
+      const roleForDB = castRoleForDB(userRoleToAssign);
       
       const { error: roleError } = await adminClient
         .from('user_roles')
         .insert({
           user_id: data.user.id,
-          role: roleValue
+          role: roleForDB as any // Use type assertion since we know we've safely cast the role
         });
       
       if (roleError) {

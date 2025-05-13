@@ -1,3 +1,4 @@
 
 // Re-export from the new files for backwards compatibility
-export { AuthProvider, useAuth } from "./AuthProviderNew";
+import { AuthProvider, useAuth } from "./AuthProviderNew";
+export { AuthProvider, useAuth };

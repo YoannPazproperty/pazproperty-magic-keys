@@ -1,8 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { adminClient } from "@/integrations/supabase/adminClient";
 import { UserRole } from "@/hooks/auth/types";
 import { toast } from "sonner";
+import { castRoleForDB } from "@/hooks/auth/utils/roleUtils";
 
 /**
  * Checks if a user has a specific role
@@ -15,8 +15,8 @@ export const checkUserHasRole = async (userId: string, role: UserRole): Promise<
     // Ne vérifions que si le rôle n'est pas null
     if (!role) return false;
 
-    // Convertir le rôle en string pour satisfaire le typage
-    const roleValue = role as string;
+    // Convertir le rôle en string de façon sécurisée
+    const roleValue = castRoleForDB(role);
 
     const { data, error } = await supabase
       .from('user_roles')
@@ -116,15 +116,15 @@ export const createUserRole = async (
       }
     }
     
-    // Convertir le rôle en string pour satisfaire le typage
-    const roleValue = role as string;
+    // Convertir le rôle en string de façon sécurisée
+    const roleForDB = castRoleForDB(role);
     
     // Add to user_roles table using adminClient to bypass RLS
     const { error: roleError } = await adminClient
       .from('user_roles')
       .insert({
         user_id: userId,
-        role: roleValue
+        role: roleForDB as any // Use type assertion since we know we've safely cast the role
       });
 
     if (roleError) {
