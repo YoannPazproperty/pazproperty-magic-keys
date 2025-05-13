@@ -1,6 +1,7 @@
 
 import { generateTemporaryPassword } from './passwordGenerator';
-import { checkUserExists, createUserRole, createAuthUser, ensureUserWithRole } from './userManagement';
+import { checkUserExists } from './userVerification';
+import { ensureUserWithRole } from './userRoleService';
 import { sendProviderInviteEmail } from './emailService';
 import { CreateProviderAccountParams, CreateAccountResult } from './types';
 
@@ -97,4 +98,4 @@ export const createProviderAccount = async (
 };
 
 // Re-export utility functions
-export { checkUserExists } from './userManagement';
+export { checkUserExists };
