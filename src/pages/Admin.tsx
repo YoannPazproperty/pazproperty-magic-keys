@@ -1,12 +1,14 @@
 
 import AdminDashboard from "@/components/admin/dashboard/AdminDashboard";
 import { AuthProvider } from "@/hooks/auth";
+import { UserCreationProvider } from "@/contexts/UserCreationContext";
 
 const Admin = () => {
-  // We need to wrap the AdminDashboard with AuthProvider
   return (
     <AuthProvider>
-      <AdminDashboard />
+      <UserCreationProvider>
+        <AdminDashboard />
+      </UserCreationProvider>
     </AuthProvider>
   );
 };

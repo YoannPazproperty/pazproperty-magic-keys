@@ -9,6 +9,7 @@ import { AdminUserFormDialog } from "../../users/AdminUserFormDialog";
 import { AdminUserEditDialog } from "../../users/AdminUserEditDialog";
 import { AdminUserDeleteDialog } from "../../users/AdminUserDeleteDialog";
 import { getCompanyUsers, CompanyUser, GetCompanyUsersResult } from "@/services/admin/company-users";
+import { UserCreationProvider } from "@/contexts/UserCreationContext";
 
 export const AdminUsersTab = () => {
   const [users, setUsers] = useState<CompanyUser[]>([]);
@@ -177,36 +178,39 @@ export const AdminUsersTab = () => {
         </CardContent>
       </Card>
 
-      {/* Dialog pour créer un nouvel utilisateur */}
-      <AdminUserFormDialog 
-        isOpen={createDialogOpen} 
-        onClose={() => setCreateDialogOpen(false)}
-        onSuccess={handleCreateSuccess}
-      />
-      
-      {/* Dialog pour modifier un utilisateur */}
-      <AdminUserEditDialog
-        isOpen={editDialogOpen}
-        onClose={() => {
-          setEditDialogOpen(false);
-          setSelectedUser(null);
-        }}
-        onSuccess={handleEditSuccess}
-        user={selectedUser}
-      />
-      
-      {/* Dialog pour supprimer un utilisateur */}
-      <AdminUserDeleteDialog
-        isOpen={deleteDialogOpen}
-        onClose={() => {
-          setDeleteDialogOpen(false);
-          setSelectedUser(null);
-        }}
-        onSuccess={handleDeleteSuccess}
-        userId={selectedUser?.user_id || null}
-        userName={selectedUser?.name || ''}
-        userEmail={selectedUser?.email || ''}
-      />
+      {/* Dialog components wrapped with UserCreationProvider */}
+      <UserCreationProvider defaultContext="employee_creation">
+        {/* Dialog pour créer un nouvel utilisateur */}
+        <AdminUserFormDialog 
+          isOpen={createDialogOpen} 
+          onClose={() => setCreateDialogOpen(false)}
+          onSuccess={handleCreateSuccess}
+        />
+        
+        {/* Dialog pour modifier un utilisateur */}
+        <AdminUserEditDialog
+          isOpen={editDialogOpen}
+          onClose={() => {
+            setEditDialogOpen(false);
+            setSelectedUser(null);
+          }}
+          onSuccess={handleEditSuccess}
+          user={selectedUser}
+        />
+        
+        {/* Dialog pour supprimer un utilisateur */}
+        <AdminUserDeleteDialog
+          isOpen={deleteDialogOpen}
+          onClose={() => {
+            setDeleteDialogOpen(false);
+            setSelectedUser(null);
+          }}
+          onSuccess={handleDeleteSuccess}
+          userId={selectedUser?.user_id || null}
+          userName={selectedUser?.name || ''}
+          userEmail={selectedUser?.email || ''}
+        />
+      </UserCreationProvider>
     </div>
   );
 };

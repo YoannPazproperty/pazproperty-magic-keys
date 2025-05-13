@@ -1,5 +1,39 @@
 
-import { UserFormDialog } from "./UserFormDialog";
+import React from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { UserCreationForm } from "@/components/auth/UserCreationForm";
+import { useUserCreationContext } from "@/contexts/UserCreationContext";
 
-// Re-export the UserFormDialog component as AdminUserFormDialog for backwards compatibility
-export const AdminUserFormDialog = UserFormDialog;
+interface AdminUserFormDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export const AdminUserFormDialog: React.FC<AdminUserFormDialogProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSuccess 
+}) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        onClose();
+      }
+    }}>
+      <DialogContent className="sm:max-w-md">
+        <UserCreationForm 
+          context="employee_creation"
+          showRoleSelector={true}
+          allowedRoles={['admin', 'user']}
+          onSuccess={onSuccess}
+          onCancel={onClose}
+          additionalMetadata={{
+            is_company_user: true,
+            domain: 'pazproperty.pt'
+          }}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};
