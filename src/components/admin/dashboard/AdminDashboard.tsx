@@ -21,6 +21,7 @@ const AdminDashboard = () => {
     // Vérifier si l'utilisateur est un administrateur complet
     const checkAdminPermission = async () => {
       try {
+        // Fix: call getUserRole without parameters since it uses the current user
         const role = await getUserRole();
         setIsAdmin(role === 'admin');
       } catch (error) {

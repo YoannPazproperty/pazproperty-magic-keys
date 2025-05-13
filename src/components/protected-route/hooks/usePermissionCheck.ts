@@ -54,20 +54,50 @@ export const usePermissionCheck = ({
       return;
     }
 
-    // Use the permission checker hook to handle the role checking logic
-    const permissionChecker = usePermissionChecker({
-      user,
-      getUserRole,
-      requiredRole,
-      emailDomain,
-      checkAttempts,
-      setCheckAttempts,
-      setHasAccess,
-      setCheckingRole,
-      setRoleChecked
-    });
-
-    permissionChecker.checkPermissions();
+    // Check permission manually since we can't directly call the hook's method
+    const checkPermission = async () => {
+      if (checkingRole) return;
+      
+      setCheckingRole(true);
+      setCheckAttempts(prevAttempts => prevAttempts + 1);
+      
+      try {
+        // Check email domain first if specified
+        if (emailDomain && user.email) {
+          const userEmailDomain = user.email.split('@')[1];
+          if (userEmailDomain !== emailDomain) {
+            setHasAccess(false);
+            setCheckingRole(false);
+            setRoleChecked(true);
+            return;
+          }
+        }
+        
+        // If no role is required, grant access
+        if (!requiredRole) {
+          setHasAccess(true);
+          setCheckingRole(false);
+          setRoleChecked(true);
+          return;
+        }
+        
+        // Check if user has the required role
+        const role = await getUserRole();
+        if (role === requiredRole || role === 'admin') {
+          setHasAccess(true);
+        } else {
+          setHasAccess(false);
+        }
+      } catch (error) {
+        console.error("Error checking permissions:", error);
+        setHasAccess(false);
+      } finally {
+        setCheckingRole(false);
+        setRoleChecked(true);
+      }
+    };
+    
+    checkPermission();
 
     return () => {
       // Clear safety timeout on unmount

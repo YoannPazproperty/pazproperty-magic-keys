@@ -7,13 +7,17 @@ import {
   checkEmailDomain, 
   handleAccessNotification 
 } from "../roleUtils";
-import { useSafetyTimeout } from "./useSafetyTimeout";
 
 interface UsePermissionCheckerProps {
   user: User | null;
-  getUserRole: (userId: string) => Promise<UserRole | null>;
+  getUserRole: () => Promise<UserRole>;
   requiredRole?: UserRole;
   emailDomain?: string;
+  checkAttempts?: number;
+  setCheckAttempts?: (value: number) => void;
+  setHasAccess?: (value: boolean | null) => void;
+  setCheckingRole?: (value: boolean) => void;
+  setRoleChecked?: (value: boolean) => void;
 }
 
 interface PermissionCheckResult {
@@ -28,34 +32,66 @@ export const usePermissionChecker = ({
   user,
   getUserRole,
   requiredRole,
-  emailDomain
+  emailDomain,
+  checkAttempts = 0,
+  setCheckAttempts,
+  setHasAccess,
+  setCheckingRole,
+  setRoleChecked
 }: UsePermissionCheckerProps): PermissionCheckResult => {
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
-  const [checkingRole, setCheckingRole] = useState<boolean>(false);
-  const [roleChecked, setRoleChecked] = useState<boolean>(false);
+  const [hasAccessState, setHasAccessState] = useState<boolean | null>(null);
+  const [checkingRoleState, setCheckingRoleState] = useState<boolean>(false);
+  const [roleCheckedState, setRoleCheckedState] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [checkAttempts, setCheckAttempts] = useState<number>(0);
+  const [checkAttemptsState, setCheckAttemptsState] = useState<number>(checkAttempts);
   
-  const { startSafetyTimeout, clearSafetyTimeout } = useSafetyTimeout();
+  // Safety timeout function
+  const startSafetyTimeout = (callback: () => void): number => {
+    return window.setTimeout(callback, 30000); // 30 seconds timeout
+  };
+  
+  const clearSafetyTimeout = (id?: number): void => {
+    if (id) clearTimeout(id);
+  };
+  
+  // Set state helpers that use both internal and external state if provided
+  const updateHasAccess = (value: boolean | null) => {
+    setHasAccessState(value);
+    if (setHasAccess) setHasAccess(value);
+  };
+  
+  const updateCheckingRole = (value: boolean) => {
+    setCheckingRoleState(value);
+    if (setCheckingRole) setCheckingRole(value);
+  };
+  
+  const updateRoleChecked = (value: boolean) => {
+    setRoleCheckedState(value);
+    if (setRoleChecked) setRoleChecked(value);
+  };
+  
+  const updateCheckAttempts = (value: number) => {
+    setCheckAttemptsState(value);
+    if (setCheckAttempts) setCheckAttempts(value);
+  };
   
   const performRoleCheck = async () => {
-    if (!user || !user.id || roleChecked || checkingRole) return;
+    if (!user || !user.id || roleCheckedState || checkingRoleState) return;
     
-    setCheckingRole(true);
+    updateCheckingRole(true);
     const devMode = isDevelopmentMode();
 
     try {
-      // Fixed: Using a numeric value directly rather than a function
-      setCheckAttempts(checkAttempts + 1);
+      // Update attempt count
+      updateCheckAttempts(checkAttemptsState + 1);
       
       // Check domain match first if specified
       if (emailDomain && !checkEmailDomain(user.email, emailDomain)) {
         console.log(`Email domain validation failed. Required: ${emailDomain}, User: ${user.email}`);
-        setHasAccess(false);
-        setCheckingRole(false);
-        setRoleChecked(true);
+        updateHasAccess(false);
+        updateCheckingRole(false);
+        updateRoleChecked(true);
         
-        // Fixed: Updated to match AccessNotificationParams interface
         handleAccessNotification({
           hasAccess: false,
           isDevelopment: devMode,
@@ -70,25 +106,25 @@ export const usePermissionChecker = ({
       // If no specific role is required, access is granted
       if (!requiredRole) {
         console.log("No specific role required, access granted");
-        setHasAccess(true);
-        setCheckingRole(false);
-        setRoleChecked(true);
+        updateHasAccess(true);
+        updateCheckingRole(false);
+        updateRoleChecked(true);
         return;
       }
       
       // Check for required role
       console.log(`Checking if user has required role: ${requiredRole}`);
-      const role = await getUserRole(user.id);
+      const role = await getUserRole();
       
       setUserRole(role);
       console.log(`User role retrieved: ${role}, required: ${requiredRole}`);
       
       if (role === requiredRole || role === 'admin') {
         console.log("Role check passed");
-        setHasAccess(true);
+        updateHasAccess(true);
       } else {
         console.log("Role check failed");
-        setHasAccess(false);
+        updateHasAccess(false);
         
         handleAccessNotification({
           hasAccess: false,
@@ -101,36 +137,36 @@ export const usePermissionChecker = ({
       }
     } catch (error) {
       console.error("Error during permission check:", error);
-      setHasAccess(false);
+      updateHasAccess(false);
       
+      // Change 'error' to 'timeout' as a valid reason value
       handleAccessNotification({
         hasAccess: false,
         isDevelopment: devMode,
-        reason: 'error',
+        reason: 'timeout',
         userEmail: user.email
       });
     } finally {
-      setCheckingRole(false);
-      setRoleChecked(true);
-      clearSafetyTimeout();
+      updateCheckingRole(false);
+      updateRoleChecked(true);
     }
   };
   
   useEffect(() => {
     if (!user) {
-      setHasAccess(false);
-      setRoleChecked(true);
+      updateHasAccess(false);
+      updateRoleChecked(true);
       return;
     }
     
-    setHasAccess(null);
-    setRoleChecked(false);
+    updateHasAccess(null);
+    updateRoleChecked(false);
     
     const timeoutId = startSafetyTimeout(() => {
       console.warn("Role check timed out");
-      setCheckingRole(false);
-      setRoleChecked(true);
-      setHasAccess(false);
+      updateCheckingRole(false);
+      updateRoleChecked(true);
+      updateHasAccess(false);
       
       handleAccessNotification({
         hasAccess: false,
@@ -143,15 +179,15 @@ export const usePermissionChecker = ({
     performRoleCheck();
     
     return () => {
-      clearSafetyTimeout();
+      clearSafetyTimeout(timeoutId);
     };
   }, [user, requiredRole, emailDomain]);
   
   return {
-    hasAccess,
-    checkingRole,
-    roleChecked,
+    hasAccess: hasAccessState,
+    checkingRole: checkingRoleState,
+    roleChecked: roleCheckedState,
     userRole,
-    checkAttempts
+    checkAttempts: checkAttemptsState
   };
 };

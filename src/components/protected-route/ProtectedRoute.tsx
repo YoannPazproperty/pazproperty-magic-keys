@@ -21,7 +21,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   
   const { hasAccess, checkingRole, checkAttempts } = usePermissionCheck({
     user,
-    getUserRole,
+    // Fix: Make sure getUserRole matches the expected signature
+    getUserRole: async () => await getUserRole(),
     requiredRole,
     emailDomain
   });

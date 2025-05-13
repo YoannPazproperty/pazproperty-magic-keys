@@ -1,17 +1,15 @@
 
 import { useState } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { UserRole } from "./types";
+import { User, Session } from "@supabase/supabase-js";
+import { UserWithMetadata, UserRole } from "./types";
 
-/**
- * Custom hook for managing authentication state
- */
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [userWithMetadata, setUserWithMetadata] = useState<UserWithMetadata | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
-  const [roleLoading, setRoleLoading] = useState(false);
   const [tokenExpiresAt, setTokenExpiresAt] = useState<number | null>(null);
 
   return {
@@ -23,9 +21,11 @@ export const useAuthState = () => {
     setLoading,
     userRole,
     setUserRole,
-    roleLoading,
-    setRoleLoading,
     tokenExpiresAt,
     setTokenExpiresAt,
+    userWithMetadata,
+    setUserWithMetadata,
+    error,
+    setError
   };
 };

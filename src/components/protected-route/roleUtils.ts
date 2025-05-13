@@ -34,16 +34,15 @@ export const hasRequiredRole = (userRole: UserRole, requiredRole?: string): bool
 
 /**
  * Interface defining parameters for access notification
- * Fixed: Added missing userEmail field to ensure compatibility
  */
-interface AccessNotificationParams {
+export interface AccessNotificationParams {
   hasAccess: boolean;
   isDevelopment: boolean;
   reason: 'timeout' | 'domain' | 'role' | 'norole';
   emailDomain?: string;
   userRole?: UserRole;
   requiredRole?: string;
-  userEmail?: string; // Added missing field
+  userEmail?: string;
 }
 
 /**

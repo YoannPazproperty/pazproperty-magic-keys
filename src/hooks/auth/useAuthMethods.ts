@@ -25,7 +25,7 @@ export const useAuthMethods = ({
     if (!role) return;
     
     try {
-      localStorage.setItem(USER_ROLE_KEY, role);
+      localStorage.setItem(USER_ROLE_KEY, role as string);
       localStorage.setItem(ROLE_CACHE_EXPIRY_KEY, (Date.now() + CACHE_DURATION).toString());
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
