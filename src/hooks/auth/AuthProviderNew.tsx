@@ -14,6 +14,7 @@ interface AuthContextType {
   userRole: UserRole;
   tokenExpiresAt: number | null;
   signOut: () => Promise<void>;
+  getUserRole: () => Promise<UserRole>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -65,6 +66,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Méthode pour récupérer le rôle d'utilisateur - ajoutons cette fonction pour résoudre l'erreur
+  const getUserRole = async (): Promise<UserRole> => {
+    // Si nous avons déjà un rôle, nous le retournons
+    if (userRole) return userRole;
+
+    // Sinon, nous essayons de le récupérer via roleService
+    if (user?.id) {
+      try {
+        // Importer de manière dynamique pour éviter les dépendances circulaires
+        const { fetchUserRole } = await import('./roleService');
+        const role = await fetchUserRole(user.id);
+        setUserRole(role);
+        return role;
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      }
+    }
+    
+    return null;
+  };
+
   const value = {
     user,
     session,
@@ -72,6 +94,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     userRole,
     tokenExpiresAt,
     signOut,
+    getUserRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

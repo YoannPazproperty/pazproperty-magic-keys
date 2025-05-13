@@ -25,8 +25,8 @@ export const hasRequiredRole = (userRole: UserRole, requiredRole?: string): bool
   // If user is admin, they have access to everything
   if (userRole === "admin") return true;
 
-  // Special case: manager can access user and customer pages
-  if (userRole === "manager" && (requiredRole === "user" || requiredRole === "customer")) return true;
+  // Special case: employee can access user and customer pages
+  if (userRole === "employee" && (requiredRole === "user" || requiredRole === "customer")) return true;
 
   // Standard role matching
   return userRole === requiredRole;

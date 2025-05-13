@@ -1,3 +1,4 @@
+
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "./types";
@@ -33,7 +34,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
         console.log("No role found for the user, assigning default role");
         
         // Get user email to check domain
-        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+        const { data: userData } = await supabase.auth.getUser(userId);
         const userEmail = userData?.user?.email || '';
         
         console.log("User email for role assignment:", userEmail);
@@ -46,7 +47,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
             .from('user_roles')
             .insert({ 
               user_id: userId,
-              role: 'admin' as UserRole
+              role: 'admin'
             });
             
           if (insertError) {
@@ -64,7 +65,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
               .from('user_roles')
               .insert({ 
                 user_id: userId,
-                role: 'provider' as UserRole
+                role: 'provider'
               });
               
             if (insertError) {
@@ -80,7 +81,7 @@ export const fetchUserRole = async (userId: string): Promise<UserRole> => {
               .from('user_roles')
               .insert({ 
                 user_id: userId,
-                role: 'user' as UserRole
+                role: 'user'
               });
               
             if (insertError) {
@@ -173,7 +174,7 @@ export const assignCustomerRole = async (userId: string): Promise<boolean> => {
       }
       
       // Check if user has an @pazproperty.pt email (admin)
-      const { data: userData } = await supabase.auth.admin.getUserById(userId);
+      const { data: userData } = await supabase.auth.getUser(userId);
       if (userData?.user?.email?.endsWith('@pazproperty.pt')) {
         console.log("User has @pazproperty.pt email, not assigning customer role");
         return false;
@@ -185,7 +186,7 @@ export const assignCustomerRole = async (userId: string): Promise<boolean> => {
         .from('user_roles')
         .insert({ 
           user_id: userId,
-          role: 'customer' as UserRole
+          role: 'customer'
         });
         
       if (insertError) {

@@ -54,3 +54,7 @@ export const clearCachedRole = (): void => {
     console.error("Erreur lors de la suppression du cache de rôle:", err);
   }
 };
+
+// Alias pour clearCachedRole pour la rétrocompatibilité
+export const clearRoleCache = clearCachedRole;
+

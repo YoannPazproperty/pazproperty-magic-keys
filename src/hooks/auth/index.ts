@@ -3,7 +3,6 @@
 export * from './AuthProviderNew';
 export * from './types';
 export * from './roleService';
-export * from './authService';
 export * from './useAuthState';
 export * from './useAuthEffects';
 export * from './useAuthMethods';
@@ -11,4 +10,3 @@ export * from './utils/roleCache';
 export * from './utils/sessionManager';
 export * from './utils/authStateHandlers';
 export * from './utils/initialSession';
-

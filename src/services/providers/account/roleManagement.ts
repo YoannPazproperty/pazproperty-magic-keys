@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { adminClient } from "@/integrations/supabase/adminClient";
 import { UserRole } from "@/hooks/auth/types";
@@ -11,11 +12,14 @@ import { toast } from "sonner";
  */
 export const checkUserHasRole = async (userId: string, role: UserRole): Promise<boolean> => {
   try {
+    // Ne vérifions que si le rôle n'est pas null
+    if (!role) return false;
+
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', role)
+      .eq('role', role.toString())
       .maybeSingle();
       
     if (error) {
@@ -58,6 +62,12 @@ export const createUserRole = async (
   skipPermissionCheck: boolean = false
 ): Promise<boolean> => {
   try {
+    // Ne créons un rôle que si role n'est pas null
+    if (!role) {
+      console.error('Tentative de création avec un rôle null');
+      return false;
+    }
+    
     // If not skipping permission check, verify that the current user has admin role
     if (!skipPermissionCheck) {
       const { data: currentUser } = await supabase.auth.getUser();
@@ -108,7 +118,7 @@ export const createUserRole = async (
       .from('user_roles')
       .insert({
         user_id: userId,
-        role: role
+        role: role.toString()
       });
 
     if (roleError) {

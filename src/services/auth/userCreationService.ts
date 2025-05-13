@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { adminClient } from '@/integrations/supabase/adminClient';
 import { toast } from 'sonner';
@@ -84,11 +83,16 @@ export const createUserWithContext = async (
     
     // Après création réussie dans Auth, créer l'entrée dans user_roles
     if (data.user) {
-      await adminClient.from('user_roles')
+      const { error: roleError } = await adminClient
+        .from('user_roles')
         .insert({
           user_id: data.user.id,
           role: userRoleToAssign
         });
+      
+      if (roleError) {
+        console.error('Erreur lors de la création du rôle utilisateur:', roleError);
+      }
       
       console.log(`Utilisateur créé avec l'ID: ${data.user.id}, rôle: ${userRoleToAssign}`);
       

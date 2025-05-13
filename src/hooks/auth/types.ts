@@ -2,7 +2,7 @@
 // Types pour la gestion de l'authentification
 
 // Définition des rôles utilisateur possibles
-export type UserRole = 'admin' | 'employee' | 'provider' | 'customer' | 'user' | 'referral_partner' | null;
+export type UserRole = 'admin' | 'employee' | 'provider' | 'customer' | 'user' | 'referral_partner' | 'manager' | null;
 
 // Interface pour les données utilisateur étendues
 export interface UserWithMetadata {

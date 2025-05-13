@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "./types";
-import { clearRoleCache } from "./utils/roleCache";
+import { clearCachedRole } from "./utils/roleCache";
 import { getTokenExpiryTime } from "./utils/sessionManager";
 import { handleAuthStateChange } from "./utils/authStateHandlers";
 import { getInitialSession } from "./utils/initialSession";
@@ -47,7 +47,7 @@ export const useAuthEffects = ({
         if (event === "SIGNED_OUT") {
           navigate("/auth");
           setUserRole(null);
-          clearRoleCache();
+          clearCachedRole();
         } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
           // Process auth state change with the utility function
           if (newSession?.user?.id) {
