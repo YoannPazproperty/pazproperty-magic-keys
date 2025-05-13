@@ -1,54 +1,56 @@
 
 import { UserRole } from "../types";
 
-// Constants for role cache
-const USER_ROLE_KEY = "paz_user_role";
-const ROLE_CACHE_EXPIRY_KEY = "paz_role_cache_expiry";
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const ROLE_CACHE_KEY = 'user_role_cache';
+const ROLE_CACHE_EXPIRY = 'user_role_cache_expiry';
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes en millisecondes
 
 /**
- * Store the user role in local storage with expiry
+ * Stocke le rôle utilisateur en cache
  */
 export const cacheUserRole = (role: UserRole): void => {
   try {
-    if (!role) return;
-    
-    localStorage.setItem(USER_ROLE_KEY, role);
-    localStorage.setItem(ROLE_CACHE_EXPIRY_KEY, (Date.now() + CACHE_DURATION).toString());
+    if (role) {
+      localStorage.setItem(ROLE_CACHE_KEY, String(role));
+      localStorage.setItem(ROLE_CACHE_EXPIRY, String(Date.now() + CACHE_DURATION));
+    } else {
+      localStorage.removeItem(ROLE_CACHE_KEY);
+      localStorage.removeItem(ROLE_CACHE_EXPIRY);
+    }
   } catch (err) {
-    // Silently fail if localStorage is unavailable
+    console.error("Erreur lors de la mise en cache du rôle:", err);
   }
 };
 
 /**
- * Get cached role from local storage, returns null if expired or not found
+ * Récupère le rôle utilisateur depuis le cache s'il est encore valide
  */
 export const getCachedRole = (): UserRole | null => {
   try {
-    const expiryStr = localStorage.getItem(ROLE_CACHE_EXPIRY_KEY);
-    if (!expiryStr) return null;
-    
-    const expiry = parseInt(expiryStr, 10);
-    if (isNaN(expiry) || Date.now() > expiry) {
-      // Clear expired cache
-      clearRoleCache();
+    const expiry = localStorage.getItem(ROLE_CACHE_EXPIRY);
+    if (!expiry || Number(expiry) < Date.now()) {
+      // Cache expiré ou inexistant
+      localStorage.removeItem(ROLE_CACHE_KEY);
+      localStorage.removeItem(ROLE_CACHE_EXPIRY);
       return null;
     }
     
-    return localStorage.getItem(USER_ROLE_KEY) as UserRole;
+    const role = localStorage.getItem(ROLE_CACHE_KEY);
+    return role as UserRole;
   } catch (err) {
+    console.error("Erreur lors de la récupération du rôle en cache:", err);
     return null;
   }
 };
 
 /**
- * Clear the role cache from local storage
+ * Efface le rôle utilisateur du cache
  */
-export const clearRoleCache = (): void => {
+export const clearCachedRole = (): void => {
   try {
-    localStorage.removeItem(USER_ROLE_KEY);
-    localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
+    localStorage.removeItem(ROLE_CACHE_KEY);
+    localStorage.removeItem(ROLE_CACHE_EXPIRY);
   } catch (err) {
-    // Silently fail if localStorage is unavailable
+    console.error("Erreur lors de la suppression du cache de rôle:", err);
   }
 };

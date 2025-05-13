@@ -1,96 +1,85 @@
 
-import { createContext, useContext, useEffect } from "react";
-import { AuthContextType } from "./types";
-import { useAuthState } from "./useAuthState";
-import { useAuthEffects } from "./useAuthEffects";
-import { useAuthMethods } from "./useAuthMethods";
+import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { UserRole } from "./types";
+import { getInitialSession } from "./utils/initialSession";
+import { handleAuthStateChange } from "./utils/authStateHandlers";
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const {
-    user,
-    setUser,
-    session,
-    setSession,
-    loading,
-    setLoading,
-    userRole,
-    setUserRole,
-    tokenExpiresAt,
-    setTokenExpiresAt,
-  } = useAuthState();
-
-  useAuthEffects({
-    setUser,
-    setSession,
-    setLoading,
-    setUserRole,
-    setTokenExpiresAt,
-  });
-
-  const {
-    signIn,
-    resetPassword,
-    signOut,
-    signInWithGoogle,
-    getUserRole,
-  } = useAuthMethods({
-    setLoading,
-    setUserRole,
-    user,
-  });
-
-  // Additional effect for token health check
-  useEffect(() => {
-    if (!session) return;
-
-    // Set up token health check every 10 minutes
-    const tokenHealthCheck = setInterval(() => {
-      if (!session?.expires_at) return;
-
-      // Convert session expiry to timestamp (in milliseconds)
-      const expiresAt = session.expires_at * 1000;
-      const now = Date.now();
-      const timeUntilExpiry = expiresAt - now;
-
-      // If token expires in less than 15 minutes, request a refresh
-      if (timeUntilExpiry < 15 * 60 * 1000) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log("Auth token expiring soon, refreshing...");
-        }
-        // Force token refresh
-        supabase.auth.refreshSession();
-      }
-    }, 10 * 60 * 1000); // Check every 10 minutes
-
-    return () => clearInterval(tokenHealthCheck);
-  }, [session]);
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        loading,
-        signIn,
-        signInWithGoogle,
-        signOut,
-        resetPassword,
-        getUserRole,
-        userRole, // Add userRole to context for easier access
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  userRole: UserRole;
+  tokenExpiresAt: number | null;
+  signOut: () => Promise<void>;
 }
 
-// Create and export the useAuth hook
+const AuthContext = createContext<AuthContextType | null>(null);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole>(null);
+  const [tokenExpiresAt, setTokenExpiresAt] = useState<number | null>(null);
+  const navigate = useNavigate();
+
+  // Initialiser la session
+  useEffect(() => {
+    getInitialSession(setLoading, setUser, setSession, setUserRole, setTokenExpiresAt);
+  }, []);
+
+  // Écouter les changements d'état d'authentification
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change:", event);
+      if (session) {
+        setUser(session.user);
+        setSession(session);
+        handleAuthStateChange(event, session.user.id, session.user.email, setUserRole, navigate);
+      } else {
+        setUser(null);
+        setSession(null);
+        setUserRole(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  // Méthode de déconnexion
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  const value = {
+    user,
+    session,
+    loading,
+    userRole,
+    tokenExpiresAt,
+    signOut,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

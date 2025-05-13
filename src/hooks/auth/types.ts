@@ -1,16 +1,25 @@
 
-export type UserRole = "admin" | "manager" | "provider" | "customer" | "user" | null;
+// Types pour la gestion de l'authentification
 
-// Define the structure of the authentication context
-// Update the AuthContextType to include userRole
-export interface AuthContextType {
-  user: any;
-  session: any;
-  loading: boolean;
-  userRole?: UserRole; // Add userRole to context
-  signIn: (email: string, password: string) => Promise<{ error: any; success: boolean }>;
-  signInWithGoogle: () => Promise<{ error: any; success: boolean }>;
-  resetPassword: (email: string) => Promise<any>;
-  signOut: () => Promise<{ error: any; success: boolean }>;
-  getUserRole: () => Promise<UserRole>;
+// Définition des rôles utilisateur possibles
+export type UserRole = 'admin' | 'employee' | 'provider' | 'customer' | 'user' | 'referral_partner' | null;
+
+// Interface pour les données utilisateur étendues
+export interface UserWithMetadata {
+  id: string;
+  email: string;
+  role: UserRole;
+  userName?: string;
+  avatarUrl?: string;
+  createdAt: string;
+  lastSignIn?: string;
+}
+
+// Interface pour les options de création d'utilisateur
+export interface CreateUserOptions {
+  email: string;
+  password: string;
+  role?: UserRole;
+  metadata?: Record<string, any>;
+  emailConfirm?: boolean;
 }
