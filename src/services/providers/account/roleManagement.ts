@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { adminClient } from "@/integrations/supabase/adminClient";
 import { UserRole } from "@/hooks/auth/types";
@@ -22,7 +23,7 @@ export const checkUserHasRole = async (userId: string, role: UserRole): Promise<
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', roleValue)
+      .eq('role', roleValue as any)
       .maybeSingle();
       
     if (error) {

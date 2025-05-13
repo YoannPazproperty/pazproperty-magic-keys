@@ -57,4 +57,3 @@ export const clearCachedRole = (): void => {
 
 // Alias pour clearCachedRole pour la rétrocompatibilité
 export const clearRoleCache = clearCachedRole;
-

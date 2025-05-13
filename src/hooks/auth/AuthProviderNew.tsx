@@ -5,13 +5,12 @@ import { User, Session } from "@supabase/supabase-js";
 import { useAuthState } from "./useAuthState";
 import { useAuthMethods } from "./useAuthMethods";
 import { useAuthEffects } from "./useAuthEffects";
-import { UserRole, UserWithMetadata } from "./types";
-import { fetchUserRole } from "./roleService";
+import { UserRole } from "./types";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  userWithMetadata: UserWithMetadata | null;
+  userWithMetadata: any | null;
   loading: boolean;
   error: Error | null;
   
@@ -31,16 +30,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { 
     user, 
     session, 
-    userWithMetadata, 
     loading, 
     error, 
     setUser, 
     setSession, 
-    setUserWithMetadata, 
     setLoading, 
     setError,
     setUserRole
   } = useAuthState();
+  
+  // Pour la rétrocompatibilité, définir userWithMetadata
+  const userWithMetadata = user ? { ...user, metadata: user.user_metadata } : null;
   
   // Authentication methods
   const { signIn, resetPassword, signOut, signInWithGoogle, getUserRole } = useAuthMethods({
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     session,
     userWithMetadata,
     loading,
-    error,
+    error: error ? new Error(error.message) : null,
     signUp,
     signIn: async (email, password) => {
       const result = await signIn(email, password);

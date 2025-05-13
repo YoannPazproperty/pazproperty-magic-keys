@@ -1,115 +1,73 @@
 
-import { useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { UserRole } from "@/hooks/auth/types";
 import { usePermissionChecker } from "./usePermissionChecker";
-import { useSafetyTimeout } from "./useSafetyTimeout";
 
-interface PermissionCheckProps {
-  user: any;
+interface UsePermissionCheckProps {
+  user: User | null;
   getUserRole: () => Promise<UserRole>;
-  requiredRole?: Exclude<UserRole, null>;
+  requiredRole?: UserRole;
   emailDomain?: string;
+}
+
+interface UsePermissionCheckResult {
+  hasAccess: boolean | null;
+  checkingRole: boolean;
+  checkPermission: () => Promise<boolean>;
+  checkAttempts: number;
 }
 
 export const usePermissionCheck = ({
   user,
   getUserRole,
   requiredRole,
-  emailDomain
-}: PermissionCheckProps) => {
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
-  const [checkingRole, setCheckingRole] = useState(!!requiredRole);
-  const [checkAttempts, setCheckAttempts] = useState(0);
-  const [roleChecked, setRoleChecked] = useState(false);
-
-  // Setup safety timeout
-  const { timeoutId } = useSafetyTimeout({
-    checkingRole,
+  emailDomain,
+}: UsePermissionCheckProps): UsePermissionCheckResult => {
+  const [manuallyChecking, setManuallyChecking] = useState(false);
+  
+  // Use the permission checker
+  const { hasAccess, checking, attempts } = usePermissionChecker({
     user,
+    getUserRole,
     requiredRole,
-    setCheckingRole,
-    setHasAccess,
-    setRoleChecked
+    emailDomain,
   });
-
-  // Use the permission checker logic
-  useEffect(() => {
-    // Early return cases
-    if (!user) {
-      setHasAccess(false);
-      setCheckingRole(false);
-      return;
-    }
-
-    if (!requiredRole && !emailDomain) {
-      // If no role or domain is required, authenticated user has access
-      setHasAccess(true);
-      setCheckingRole(false);
-      return;
-    }
-
-    // If we've already checked the role for this user and this page, don't recheck
-    if (roleChecked) {
-      return;
-    }
-
-    // Check permission manually since we can't directly call the hook's method
-    const checkPermission = async () => {
-      if (checkingRole) return;
-      
-      setCheckingRole(true);
-      setCheckAttempts(prevAttempts => prevAttempts + 1);
-      
-      try {
-        // Check email domain first if specified
-        if (emailDomain && user.email) {
-          const userEmailDomain = user.email.split('@')[1];
-          if (userEmailDomain !== emailDomain) {
-            setHasAccess(false);
-            setCheckingRole(false);
-            setRoleChecked(true);
-            return;
-          }
-        }
-        
-        // If no role is required, grant access
-        if (!requiredRole) {
-          setHasAccess(true);
-          setCheckingRole(false);
-          setRoleChecked(true);
-          return;
-        }
-        
-        // Check if user has the required role
-        const role = await getUserRole();
-        if (role === requiredRole || role === 'admin') {
-          setHasAccess(true);
-        } else {
-          setHasAccess(false);
-        }
-      } catch (error) {
-        console.error("Error checking permissions:", error);
-        setHasAccess(false);
-      } finally {
-        setCheckingRole(false);
-        setRoleChecked(true);
+  
+  // Function to manually check permission
+  const checkPermission = useCallback(async (): Promise<boolean> => {
+    try {
+      if (!user || !requiredRole) {
+        return !requiredRole; // If no required role, allow access
       }
-    };
-    
-    checkPermission();
-
-    return () => {
-      // Clear safety timeout on unmount
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      
+      setManuallyChecking(true);
+      
+      // Check email domain
+      if (emailDomain) {
+        const userEmail = user.email?.toLowerCase() || "";
+        if (!userEmail.endsWith(`@${emailDomain.toLowerCase()}`)) {
+          return false;
+        }
       }
-    };
-  }, [user, requiredRole, getUserRole, checkAttempts, roleChecked, emailDomain, timeoutId]);
-
+      
+      // Check role
+      const userRole = await getUserRole();
+      const hasRequiredPermission = userRole === requiredRole;
+      
+      setManuallyChecking(false);
+      return hasRequiredPermission;
+    } catch (err) {
+      console.error("Error checking permission manually:", err);
+      setManuallyChecking(false);
+      return false;
+    }
+  }, [user, requiredRole, emailDomain, getUserRole]);
+  
   return {
     hasAccess,
-    checkingRole,
-    checkAttempts
+    checkingRole: checking || manuallyChecking,
+    checkPermission,
+    checkAttempts: attempts,
   };
 };
