@@ -3,3 +3,5 @@
 export * from './core';
 export * from './storage';
 export * from './init';
+export * from './auth';
+
