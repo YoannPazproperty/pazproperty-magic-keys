@@ -647,6 +647,50 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          id: number
+          permission: string
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Insert: {
+          id?: number
+          permission: string
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Update: {
+          id?: number
+          permission?: string
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_role_fkey"
+            columns: ["role"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["role_name"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          description: string | null
+          id: number
+          role_name: Database["public"]["Enums"]["user_role"]
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          role_name: Database["public"]["Enums"]["user_role"]
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          role_name?: Database["public"]["Enums"]["user_role"]
+        }
+        Relationships: []
+      }
       technician_reports: {
         Row: {
           address: string | null
@@ -849,7 +893,13 @@ export type Database = {
         | "Em espera do encontro de diagnostico"
         | "Encontramento de diagnostico planeado"
         | "Annulé"
-      user_role: "admin" | "manager" | "user" | "provider" | "customer"
+      user_role:
+        | "admin"
+        | "manager"
+        | "user"
+        | "provider"
+        | "customer"
+        | "employee"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -975,7 +1025,14 @@ export const Constants = {
         "Encontramento de diagnostico planeado",
         "Annulé",
       ],
-      user_role: ["admin", "manager", "user", "provider", "customer"],
+      user_role: [
+        "admin",
+        "manager",
+        "user",
+        "provider",
+        "customer",
+        "employee",
+      ],
     },
   },
 } as const
