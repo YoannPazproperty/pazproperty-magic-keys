@@ -1,41 +1,56 @@
 
+import { useState, useEffect } from "react";
+import { User } from "@supabase/supabase-js";
 import { UserRole } from "@/hooks/auth/types";
-import { handleAccessNotification, hasRequiredRole, checkEmailDomain, isDevelopmentMode } from "../roleUtils";
+import { 
+  isDevelopmentMode, 
+  checkEmailDomain, 
+  handleAccessNotification 
+} from "../roleUtils";
+import { useSafetyTimeout } from "./useSafetyTimeout";
 
 interface UsePermissionCheckerProps {
-  user: any;
-  getUserRole: () => Promise<UserRole>;
-  requiredRole?: Exclude<UserRole, null>;
+  user: User | null;
+  getUserRole: (userId: string) => Promise<UserRole | null>;
+  requiredRole?: UserRole;
   emailDomain?: string;
+}
+
+interface PermissionCheckResult {
+  hasAccess: boolean | null;
+  checkingRole: boolean;
+  roleChecked: boolean;
+  userRole: UserRole | null;
   checkAttempts: number;
-  setCheckAttempts: (attempts: number) => void;
-  setHasAccess: (hasAccess: boolean | null) => void;
-  setCheckingRole: (checking: boolean) => void;
-  setRoleChecked: (checked: boolean) => void;
 }
 
 export const usePermissionChecker = ({
   user,
   getUserRole,
   requiredRole,
-  emailDomain,
-  checkAttempts,
-  setCheckAttempts,
-  setHasAccess,
-  setCheckingRole,
-  setRoleChecked
-}: UsePermissionCheckerProps) => {
+  emailDomain
+}: UsePermissionCheckerProps): PermissionCheckResult => {
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [checkingRole, setCheckingRole] = useState<boolean>(false);
+  const [roleChecked, setRoleChecked] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [checkAttempts, setCheckAttempts] = useState<number>(0);
   
-  const checkPermissions = async () => {
+  const { startSafetyTimeout, clearSafetyTimeout } = useSafetyTimeout();
+  
+  const performRoleCheck = async () => {
+    if (!user || !user.id || roleChecked || checkingRole) return;
+    
+    setCheckingRole(true);
     const devMode = isDevelopmentMode();
 
     try {
-      // Fixed: Using direct number instead of function that returns a number
+      // Fixed: Using a numeric value directly rather than a function
       setCheckAttempts(checkAttempts + 1);
       
       // Check domain match first if specified
       if (emailDomain && !checkEmailDomain(user.email, emailDomain)) {
-        console.log("Email domain mismatch:", user.email, emailDomain);
+        console.log(`Email domain validation failed. Required: ${emailDomain}, User: ${user.email}`);
         setHasAccess(false);
         setCheckingRole(false);
         setRoleChecked(true);
@@ -45,103 +60,98 @@ export const usePermissionChecker = ({
           hasAccess: false,
           isDevelopment: devMode,
           reason: 'domain',
-          emailDomain
+          emailDomain,
+          userEmail: user.email
         });
         
         return;
       }
       
+      // If no specific role is required, access is granted
       if (!requiredRole) {
-        // No specific role required, just authentication
+        console.log("No specific role required, access granted");
         setHasAccess(true);
         setCheckingRole(false);
         setRoleChecked(true);
         return;
       }
       
-      // Now check for required role
-      const userRole = await getUserRole();
+      // Check for required role
+      console.log(`Checking if user has required role: ${requiredRole}`);
+      const role = await getUserRole(user.id);
       
-      if (!userRole) {
-        // No role assigned to user
-        console.log("No role assigned");
-        
-        // In development, grant access after few attempts
-        if (devMode && checkAttempts >= 3) {
-          console.log("Development mode - Granting access despite missing role");
-          setHasAccess(true);
-          setCheckingRole(false);
-          setRoleChecked(true);
-          
-          handleAccessNotification({
-            hasAccess: true,
-            isDevelopment: true,
-            reason: 'norole'
-          });
-          
-          return;
-        }
-        
-        // In production, deny access if no role after several attempts
-        if (checkAttempts >= 3) {
-          console.log("Production mode - Denying access due to missing role");
-          setHasAccess(false);
-          setCheckingRole(false);
-          setRoleChecked(true);
-          
-          handleAccessNotification({
-            hasAccess: false,
-            isDevelopment: false,
-            reason: 'norole'
-          });
-          
-          return;
-        }
-        
-        // Try again if not too many attempts yet
-        console.log("Still checking for role, attempt:", checkAttempts);
-        return;
-      }
+      setUserRole(role);
+      console.log(`User role retrieved: ${role}, required: ${requiredRole}`);
       
-      // User has a role, check if it matches required role
-      const hasAccess = hasRequiredRole(userRole, requiredRole);
-      console.log(`User role: ${userRole}, Required role: ${requiredRole}, Has access: ${hasAccess}`);
-      setHasAccess(hasAccess);
-      setCheckingRole(false);
-      setRoleChecked(true);
-      
-      // Show notification if access denied
-      if (!hasAccess) {
+      if (role === requiredRole || role === 'admin') {
+        console.log("Role check passed");
+        setHasAccess(true);
+      } else {
+        console.log("Role check failed");
+        setHasAccess(false);
+        
         handleAccessNotification({
           hasAccess: false,
           isDevelopment: devMode,
           reason: 'role',
-          userRole,
-          requiredRole
+          userRole: role,
+          requiredRole: requiredRole,
+          userEmail: user.email
         });
       }
     } catch (error) {
-      console.error("Error checking permissions:", error);
+      console.error("Error during permission check:", error);
+      setHasAccess(false);
       
-      // After several attempts with errors, make a decision
-      if (checkAttempts >= 3) {
-        // In development, grant access despite errors
-        if (devMode) {
-          console.log("Development mode - Granting access despite errors");
-          setHasAccess(true);
-        } else {
-          // In production, deny access after multiple errors
-          console.log("Production mode - Denying access due to persistent errors");
-          setHasAccess(false);
-        }
-        
-        setCheckingRole(false);
-        setRoleChecked(true);
-      }
+      handleAccessNotification({
+        hasAccess: false,
+        isDevelopment: devMode,
+        reason: 'error',
+        userEmail: user.email
+      });
+    } finally {
+      setCheckingRole(false);
+      setRoleChecked(true);
+      clearSafetyTimeout();
     }
   };
-
+  
+  useEffect(() => {
+    if (!user) {
+      setHasAccess(false);
+      setRoleChecked(true);
+      return;
+    }
+    
+    setHasAccess(null);
+    setRoleChecked(false);
+    
+    const timeoutId = startSafetyTimeout(() => {
+      console.warn("Role check timed out");
+      setCheckingRole(false);
+      setRoleChecked(true);
+      setHasAccess(false);
+      
+      handleAccessNotification({
+        hasAccess: false,
+        isDevelopment: isDevelopmentMode(),
+        reason: 'timeout',
+        userEmail: user.email
+      });
+    });
+    
+    performRoleCheck();
+    
+    return () => {
+      clearSafetyTimeout();
+    };
+  }, [user, requiredRole, emailDomain]);
+  
   return {
-    checkPermissions
+    hasAccess,
+    checkingRole,
+    roleChecked,
+    userRole,
+    checkAttempts
   };
 };

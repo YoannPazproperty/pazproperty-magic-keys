@@ -36,7 +36,7 @@ export const determineUserRole = (
     case 'prestadores_creation':
       return 'provider';
     case 'crm_creation':
-      return 'referral_partner'; // À remplacer par 'referral_partner' quand ce type sera disponible
+      return 'referral_partner'; // Maintenant disponible comme type
     case 'customer_creation':
     case 'claim_submission':
     default:
@@ -84,12 +84,14 @@ export const createUserWithContext = async (
     
     // Après création réussie dans Auth, créer l'entrée dans user_roles
     if (data.user) {
-      // Fixed: Convert role to string to match database type requirements
+      // Convertir le rôle en string pour satisfaire le typage
+      const roleValue = userRoleToAssign as string;
+      
       const { error: roleError } = await adminClient
         .from('user_roles')
         .insert({
           user_id: data.user.id,
-          role: userRoleToAssign
+          role: roleValue
         });
       
       if (roleError) {

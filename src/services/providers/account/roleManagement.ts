@@ -15,11 +15,14 @@ export const checkUserHasRole = async (userId: string, role: UserRole): Promise<
     // Ne vérifions que si le rôle n'est pas null
     if (!role) return false;
 
+    // Convertir le rôle en string pour satisfaire le typage
+    const roleValue = role as string;
+
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .eq('role', role)
+      .eq('role', roleValue)
       .maybeSingle();
       
     if (error) {
@@ -113,12 +116,15 @@ export const createUserRole = async (
       }
     }
     
+    // Convertir le rôle en string pour satisfaire le typage
+    const roleValue = role as string;
+    
     // Add to user_roles table using adminClient to bypass RLS
     const { error: roleError } = await adminClient
       .from('user_roles')
       .insert({
         user_id: userId,
-        role: role
+        role: roleValue
       });
 
     if (roleError) {
