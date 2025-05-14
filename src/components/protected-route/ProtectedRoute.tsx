@@ -26,12 +26,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole,
 
   // Show loading screen while verifying user role
   if (loading || checkingRole || !role) {
-    return (
-      <LoadingScreen 
-        checkingRole={checkingRole} 
-        checkAttempts={checkAttempts} 
-      />
-    );
+    return <LoadingScreen />;
   }
 
   // Redirect if user not logged in

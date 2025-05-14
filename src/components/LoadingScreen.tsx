@@ -1,5 +1,6 @@
+
 import React from 'react';
-import './LoadingScreen.css'; // Ce chemin est correct puisque les deux fichiers sont dans le même dossier
+import './LoadingScreen.css';
 
 const LoadingScreen: React.FC = () => {
   return (
