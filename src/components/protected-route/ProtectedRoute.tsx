@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import LoadingScreen from '@/components/LoadingScreen';
+import { Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
