@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/auth/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import LoadingScreen from '@/components/LoadingScreen';
 
