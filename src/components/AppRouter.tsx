@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ErrorBoundary from "@/components/ErrorBoundary"; // 👈 Ajoute cette ligne
 import Index from "../pages/Index";
 import Servicos from "../pages/Servicos";
 import Sobre from "../pages/Sobre";
@@ -26,49 +27,51 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/servicos" element={<Servicos />} />
-          <Route path="/sobre" element={<Sobre />} />
-          <Route path="/contacto" element={<Contacto />} />
-          <Route path="/propriedades" element={<Propriedades />} />
-          <Route path="/propriedades/:id" element={<PropertyDetail />} />
-          <Route path="/area-cliente" element={<AreaCliente connectionStatus={connectionStatus} />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/access-denied" element={<AccessDenied />} />
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute 
-                requiredRole="admin" 
-                emailDomain="pazproperty.pt"
-              >
-                <Admin />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/extranet-technique" 
-            element={
-              <ProtectedRoute requiredRole="provider">
-                <ExtranetTechnique />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/auth-diagnostic" 
-            element={<AuthDiagnostic />}
-          />
-          {/* Redirection to appropriate authentication pages */}
-          <Route 
-            path="/extranet-technique-login" 
-            element={<Navigate to="/auth?provider=true" replace />} 
-          />
-          <Route path="/admin-login" element={<Navigate to="/auth?admin=true" replace />} />
-          <Route path="/auth-provider" element={<Navigate to="/auth?provider=true" replace />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <ErrorBoundary> {/* 👈 Ajoute cette ligne */}
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/servicos" element={<Servicos />} />
+            <Route path="/sobre" element={<Sobre />} />
+            <Route path="/contacto" element={<Contacto />} />
+            <Route path="/propriedades" element={<Propriedades />} />
+            <Route path="/propriedades/:id" element={<PropertyDetail />} />
+            <Route path="/area-cliente" element={<AreaCliente connectionStatus={connectionStatus} />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/access-denied" element={<AccessDenied />} />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute 
+                  requiredRole="admin" 
+                  emailDomain="pazproperty.pt"
+                >
+                  <Admin />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/extranet-technique" 
+              element={
+                <ProtectedRoute requiredRole="provider">
+                  <ExtranetTechnique />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/auth-diagnostic" 
+              element={<AuthDiagnostic />}
+            />
+            {/* Redirection to appropriate authentication pages */}
+            <Route 
+              path="/extranet-technique-login" 
+              element={<Navigate to="/auth?provider=true" replace />} 
+            />
+            <Route path="/admin-login" element={<Navigate to="/auth?admin=true" replace />} />
+            <Route path="/auth-provider" element={<Navigate to="/auth?provider=true" replace />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </ErrorBoundary> {/* 👈 Et ferme ici */}
       </AuthProvider>
     </BrowserRouter>
   );
