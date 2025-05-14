@@ -1,8 +1,8 @@
+import React, { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissionCheck } from '@/hooks/usePermissionCheck';
 import LoadingScreen from '@/components/LoadingScreen';
-import { Navigate } from 'react-router-dom';
-import React, { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,6 +20,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole,
       const userRole = await getUserRole();
       setRole(userRole);
     };
+
     fetchUserRole();
   }, [getUserRole]);
 
@@ -37,6 +38,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole,
   // User lacks required role or wrong email domain
   if (!hasAccess) {
     console.log('Access denied for user:', user.email);
+    return <Navigate to="/access-denied" replace />;
+  }
+
+  // Vérification du rôle de l'utilisateur
+  if (requiredRole && role !== requiredRole) {
+    console.log(`Access denied: role ${role} does not match required role ${requiredRole}`);
     return <Navigate to="/access-denied" replace />;
   }
 
