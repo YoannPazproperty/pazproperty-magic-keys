@@ -1,11 +1,11 @@
 
-import { UserRole } from "./types";
-import { signInWithPassword, signInWithGoogle, resetUserPassword, signOutUser } from "./authService";
-import { fetchUserRole } from "./roleService";
+import { UserRole } from "./auth/types";
+import { signInWithPassword, signOutUser, resetUserPassword, signInWithGoogle } from "./auth/authService";
+import { fetchUserRole } from "./auth/roleService";
 
 const USER_ROLE_KEY = "paz_user_role";
 const ROLE_CACHE_EXPIRY_KEY = "paz_role_cache_expiry";
-const CACHE_DURATION = 1000 * 60 * 30;
+const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
 
 interface AuthMethodsProps {
   setLoading: (loading: boolean) => void;
@@ -32,41 +32,33 @@ export const useAuthMethods = ({ setLoading, setUserRole, user }: AuthMethodsPro
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    try {
-      const result = await signInWithPassword(email, password);
-      if (result.success && result.data?.user) {
-        const role = await fetchUserRole(result.data.user.id);
-        setUserRole(role);
-        cacheUserRole(role);
-      }
-      return result;
-    } finally {
-      setLoading(false);
+    const result = await signInWithPassword(email, password);
+    if (result.success && result.data?.user) {
+      const role = await fetchUserRole(result.data.user.id);
+      setUserRole(role);
+      cacheUserRole(role);
     }
+    setLoading(false);
+    return { error: result.error, success: result.success };
   };
 
   const resetPassword = async (email: string) => {
     setLoading(true);
-    try {
-      return await resetUserPassword(email);
-    } finally {
-      setLoading(false);
-    }
+    const result = await resetUserPassword(email);
+    setLoading(false);
+    return result;
   };
 
   const signOut = async () => {
     setLoading(true);
-    try {
-      const result = await signOutUser();
-      if (result.success) {
-        setUserRole(null);
-        localStorage.removeItem(USER_ROLE_KEY);
-        localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
-      }
-      return result;
-    } finally {
-      setLoading(false);
+    const result = await signOutUser();
+    if (result.success) {
+      setUserRole(null);
+      localStorage.removeItem(USER_ROLE_KEY);
+      localStorage.removeItem(ROLE_CACHE_EXPIRY_KEY);
     }
+    setLoading(false);
+    return result;
   };
 
   const getUserRole = async (): Promise<UserRole> => {
@@ -82,5 +74,11 @@ export const useAuthMethods = ({ setLoading, setUserRole, user }: AuthMethodsPro
     return role;
   };
 
-  return { signIn, resetPassword, signOut, signInWithGoogle, getUserRole };
+  return {
+    signIn,
+    resetPassword,
+    signOut,
+    signInWithGoogle,
+    getUserRole,
+  };
 };
