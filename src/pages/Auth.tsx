@@ -99,10 +99,12 @@ const Auth = () => {
     setLoading(true);
     try {
       console.log("Tentative de connexion avec:", values.email);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password
       });
+      
+      console.log("Résultat Supabase:", { data, error }); // ➔ Diagnostic de la réponse complète
       
       if (!error) {
         toast.success("Connexion réussie", {
