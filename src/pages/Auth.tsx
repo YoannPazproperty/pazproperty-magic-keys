@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -110,7 +111,15 @@ const Auth = () => {
         toast.success("Connexion réussie", {
           description: "Vous êtes maintenant connecté."
         });
-        // La redirection sera gérée par le hook useAuth en fonction du rôle
+        
+        const userSession = await supabase.auth.getSession();
+        const userEmail = userSession.data.session?.user.email;
+
+        if (userEmail?.endsWith('@pazproperty.pt')) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
         console.error("Erreur de connexion:", error);
         
