@@ -51,7 +51,7 @@ export const AppRouter = ({ connectionStatus }: AppRouterProps) => {
             } />
             <Route path="/auth-diagnostic" element={<AuthDiagnostic />} />
             <Route path="/extranet-technique-login" element={<Navigate to="/auth?provider=true" replace />} />
-            <Route path="/admin-login" element={<Navigate to="/auth?admin=true" replace />} />
+            <Route path="/admin-login" element={<Auth />} />
             <Route path="/auth-provider" element={<Navigate to="/auth?provider=true" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

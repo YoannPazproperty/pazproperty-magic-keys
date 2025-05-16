@@ -209,14 +209,14 @@ const Auth = () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        // User is already logged in, redirect based on email domain
-        const userEmail = data.session.user.email;
-        if (userEmail?.endsWith('@pazproperty.pt')) {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
+      if (!data.session) return;
+      
+      // User is already logged in, redirect based on email domain
+      const userEmail = data.session.user.email;
+      if (userEmail?.endsWith('@pazproperty.pt')) {
+        navigate('/admin');
+      } else {
+        navigate('/');
       }
     };
     
