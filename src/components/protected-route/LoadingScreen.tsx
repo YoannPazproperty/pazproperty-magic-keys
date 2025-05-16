@@ -1,32 +1,51 @@
-
 import React from "react";
 
 interface LoadingScreenProps {
-  checkingRole: boolean;
-  checkAttempts: number;
+  checkingRole?: boolean;
 }
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ checkingRole, checkAttempts }) => {
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ checkingRole }) => {
   return (
-    <div className="h-screen flex items-center justify-center">
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        <p className="text-center text-gray-500">
-          {checkingRole ? "Vérification des autorisations en cours..." : "Chargement..."}
-        </p>
-        {checkAttempts > 0 && (
-          <p className="text-center text-gray-400 text-sm">
-            Tentative {checkAttempts + 1}...
-          </p>
-        )}
-        {checkAttempts > 1 && (
-          <p className="text-center text-amber-500 text-sm mt-2">
-            La vérification prend plus de temps que prévu. Merci de patienter...
-          </p>
-        )}
-      </div>
+    <div style={styles.container}>
+      <div style={styles.spinner}></div>
+      <p style={styles.message}>
+        {checkingRole ? "Vérification du rôle de l'utilisateur..." : "Chargement..."}
+      </p>
     </div>
   );
 };
+
+const styles = {
+  container: {
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100vh",
+    backgroundColor: "#f9f9f9",
+  },
+  spinner: {
+    width: "50px",
+    height: "50px",
+    border: "6px solid #f3f3f3",
+    borderTop: "6px solid #00A4FF", // Couleur de ta marque
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+    marginBottom: "20px",
+  },
+  message: {
+    fontSize: "18px",
+    color: "#555",
+  },
+};
+
+// Ajout des animations globales si non déjà présentes
+const styleSheet = document.styleSheets[0];
+const keyframes = `
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}`;
+styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
 
 export default LoadingScreen;
