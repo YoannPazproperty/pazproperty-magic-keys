@@ -25,7 +25,7 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
   }, [getUserRole]);
 
   if (loading || checkingRole || !role) {
-    return <LoadingScreen />;
+    return <LoadingScreen checkingRole={checkingRole} />;
   }
 
   if (!user) {

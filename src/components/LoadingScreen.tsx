@@ -1,11 +1,14 @@
 
 import React from "react";
 
-const LoadingScreen: React.FC = () => {
+interface LoadingScreenProps {
+  checkingRole?: boolean;
+}
+
+const LoadingScreen = ({ checkingRole }: LoadingScreenProps) => {
   return (
-    <div className="loading-container">
-      <div className="spinner"></div>
-      <p>Chargement en cours...</p>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      {checkingRole ? "Vérification des rôles en cours..." : "Chargement..."}
     </div>
   );
 };
