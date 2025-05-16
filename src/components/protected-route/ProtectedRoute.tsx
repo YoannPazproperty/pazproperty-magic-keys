@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
@@ -6,32 +7,32 @@ import LoadingScreen from "@/components/LoadingScreen";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole: string;
+  requiredRole?: string;
   emailDomain?: string;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole, emailDomain }) => {
+const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteProps) => {
   const { user, loading, getUserRole } = useAuth();
   const { hasAccess, checkingRole } = usePermissionCheck(user, loading, requiredRole, emailDomain);
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUserRole = async () => {
+    const fetchRole = async () => {
       const userRole = await getUserRole();
       setRole(userRole);
     };
-    fetchUserRole();
+    fetchRole();
   }, [getUserRole]);
 
-  if (loading || checkingRole || !role) return <LoadingScreen />;
+  if (loading || checkingRole || !role) {
+    return <LoadingScreen checkingRole={checkingRole} />;
+  }
 
   if (!user) {
-    console.log("User not logged in, redirecting to /auth");
     return <Navigate to="/auth" replace />;
   }
 
   if (!hasAccess) {
-    console.log("Access denied for user:", user.email);
     return <Navigate to="/access-denied" replace />;
   }
 
