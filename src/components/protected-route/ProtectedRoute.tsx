@@ -7,7 +7,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: string;
+  requiredRole: string;
   emailDomain?: string;
 }
 
@@ -25,7 +25,7 @@ const ProtectedRoute = ({ children, requiredRole, emailDomain }: ProtectedRouteP
   }, [getUserRole]);
 
   if (loading || checkingRole || !role) {
-    return <LoadingScreen checkingRole={checkingRole} />;
+    return <LoadingScreen />;
   }
 
   if (!user) {

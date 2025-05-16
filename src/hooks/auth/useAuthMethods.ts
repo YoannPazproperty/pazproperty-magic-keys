@@ -1,5 +1,6 @@
+
 import { UserRole } from "./types";
-import { signInWithPassword, signOutUser } from "./authService";
+import { signInWithPassword, signOutUser, resetUserPassword, signInWithGoogle } from "./authService";
 import { fetchUserRole } from "./roleService";
 
 const USER_ROLE_KEY = "paz_user_role";
@@ -43,6 +44,13 @@ export const useAuthMethods = ({ setLoading, setUserRole, user }: AuthMethodsPro
     return { error: result.error, success: result.success };
   };
 
+  const resetPassword = async (email: string) => {
+    setLoading(true);
+    const result = await resetUserPassword(email);
+    setLoading(false);
+    return result;
+  };
+
   const signOut = async () => {
     setLoading(true);
     const result = await signOutUser();
@@ -62,12 +70,17 @@ export const useAuthMethods = ({ setLoading, setUserRole, user }: AuthMethodsPro
       setUserRole(cachedRole);
       return cachedRole;
     }
-
     const role = await fetchUserRole(user.id);
     setUserRole(role);
     cacheUserRole(role);
     return role;
   };
 
-  return { signIn, signOut, getUserRole };
+  return {
+    signIn,
+    resetPassword,
+    signOut,
+    signInWithGoogle,
+    getUserRole,
+  };
 };
