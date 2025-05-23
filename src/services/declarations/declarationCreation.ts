@@ -16,13 +16,10 @@ export const addWithMedia = async (
 ): Promise<Declaration> => {
   try {
     // First, make sure the bucket exists
-    console.log("declarationCreation: Ensuring bucket exists before proceeding...");
     await createBucketIfNotExists('declaration-media');
     
     // Check if Supabase is connected
-    console.log("declarationCreation: Checking Supabase connection status...");
     const supabaseConnected = await isSupabaseConnected();
-    console.log("declarationCreation: Supabase connection status:", supabaseConnected);
     
     // Si Supabase n'est pas connecté, renvoyer une erreur
     if (!supabaseConnected) {
@@ -34,18 +31,12 @@ export const addWithMedia = async (
     }
     
     // Store files and get their URLs
-    console.log(`declarationCreation: Starting storage of ${mediaFiles.length} files...`);
-    
     const mediaUrls = await Promise.all(
       mediaFiles.map(async (file) => {
-        console.log(`declarationCreation: Storing file: ${file.name}`);
         const url = await storeFile(file);
-        console.log(`declarationCreation: File stored with URL: ${url}`);
         return url;
       })
     );
-    
-    console.log("declarationCreation: All files stored, URLs:", mediaUrls);
     
     // Create new declaration object
     const newDeclaration: Declaration = {
@@ -56,12 +47,8 @@ export const addWithMedia = async (
       mediaFiles: mediaUrls  // Ça va être un tableau de string
     };
     
-    console.log("declarationCreation: New declaration created:", newDeclaration);
-    console.log("declarationCreation: Media files in declaration:", newDeclaration.mediaFiles);
-    
     // Create declaration in Supabase
     const result = await createSupabaseDeclaration(newDeclaration);
-    console.log("declarationCreation: Result from Supabase save:", result);
     
     if (!result) {
       console.error("declarationCreation: Failed to save to Supabase");
@@ -81,11 +68,8 @@ export const addWithMedia = async (
     // Check if user is authenticated and assign customer role if needed
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
-      console.log("declarationCreation: User is authenticated, checking/assigning customer role");
       // Assign customer role if the user doesn't already have one
       await assignCustomerRole(session.user.id);
-    } else {
-      console.log("declarationCreation: User not authenticated, skipping role assignment");
     }
     
     return newDeclaration;

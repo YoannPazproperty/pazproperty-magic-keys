@@ -17,8 +17,6 @@ export const updateStatusAndNotify = async (
   additionalData: Record<string, any> = {}
 ): Promise<boolean> => {
   try {
-    console.log(`Updating declaration ${declarationId} to status: ${newStatus}`, additionalData);
-    
     // Prepare the update data
     const updateData = {
       status: newStatus,
@@ -40,7 +38,6 @@ export const updateStatusAndNotify = async (
       return false;
     }
     
-    console.log('Declaration updated successfully:', data);
     return true;
   } catch (err: any) {
     console.error('Exception in updateStatusAndNotify:', err);
@@ -65,8 +62,6 @@ export const notifyStatusChange = async (
   oldStatus: string
 ): Promise<boolean> => {
   try {
-    console.log(`Notifying about status change for declaration ${declarationId}: ${oldStatus} -> ${newStatus}`);
-    
     // Log the notification
     const { error } = await supabase
       .from('notification_logs')
@@ -101,8 +96,6 @@ export const notifyNewDeclaration = async (
   declarationId: string
 ): Promise<boolean> => {
   try {
-    console.log(`Notifying about new declaration ${declarationId}`);
-    
     // Get the declaration
     const { data: declaration, error: fetchError } = await supabase
       .from('declarations')

@@ -15,27 +15,18 @@ export const addWithMedia = async (
 ): Promise<Declaration> => {
   try {
     // First, make sure the bucket exists
-    console.log("declarationCreation: Ensuring bucket exists before proceeding...");
     await createBucketIfNotExists('declaration-media');
     
     // Check if Supabase is connected
-    console.log("declarationCreation: Checking Supabase connection status...");
     const supabaseConnected = await isSupabaseConnected();
-    console.log("declarationCreation: Supabase connection status:", supabaseConnected);
     
     // Store files and get their URLs
-    console.log(`declarationCreation: Starting storage of ${mediaFiles.length} files...`);
-    
     const mediaUrls = await Promise.all(
       mediaFiles.map(async (file) => {
-        console.log(`declarationCreation: Storing file: ${file.name}`);
         const url = await storeFile(file);
-        console.log(`declarationCreation: File stored with URL: ${url}`);
         return url;
       })
     );
-    
-    console.log("declarationCreation: All files stored, URLs:", mediaUrls);
     
     // Create new declaration object
     const newDeclaration: Declaration = {
@@ -46,18 +37,12 @@ export const addWithMedia = async (
       mediaFiles: mediaUrls  // Changé de string à string[]
     };
     
-    console.log("declarationCreation: New declaration created:", newDeclaration);
-    console.log("declarationCreation: Media files in declaration:", newDeclaration.mediaFiles);
-    
     if (supabaseConnected) {
-      console.log("declarationCreation: Supabase is connected, saving to Supabase...");
       try {
         // Create declaration in Supabase
         const result = await createSupabaseDeclaration(newDeclaration);
-        console.log("declarationCreation: Result from Supabase save:", result);
         
         if (!result) {
-          console.warn("declarationCreation: No result from Supabase, saving to localStorage as fallback");
           // If failed, save to localStorage as fallback
           const declarations = loadDeclarations();
           declarations.push(newDeclaration);
@@ -86,7 +71,6 @@ export const addWithMedia = async (
         });
       }
     } else {
-      console.log("declarationCreation: Supabase is not connected, saving to localStorage");
       // If Supabase is not connected, use localStorage
       const declarations = loadDeclarations();
       declarations.push(newDeclaration);

@@ -1,13 +1,15 @@
-// Supprimer les exports globaux problématiques
-// export * from './declarationNotifier';
 
+// Clean exports to avoid conflicts
 export * from './notificationHistory';
 export * from './notificationStorage';
 
-// ✅ Re-exportation explicite uniquement des fonctions utiles, pour éviter les doublons
+// Explicit re-exports to avoid ambiguity
 export {
   updateStatusAndNotify,
   notifyStatusChange,
-  notifyNewDeclaration,
+  notifyNewDeclaration
+} from './declarationNotifier';
+
+export {
   getDeclarationNotificationHistory
 } from './declarationNotifier';
