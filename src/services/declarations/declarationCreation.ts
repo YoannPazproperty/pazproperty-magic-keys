@@ -75,8 +75,8 @@ export const addWithMedia = async (
       description: "Sua declaração foi registrada no Supabase."
     });
     
-    // Send notification
-    await notifyNewDeclaration(newDeclaration);
+    // Send notification with the declaration ID instead of the entire declaration object
+    await notifyNewDeclaration(newDeclaration.id);
 
     // Check if user is authenticated and assign customer role if needed
     const { data: { session } } = await supabase.auth.getSession();
