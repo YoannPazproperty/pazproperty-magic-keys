@@ -1,12 +1,13 @@
+// Supprimer les exports globaux problématiques
+// export * from './declarationNotifier';
 
-// Re-export all functionality from our modules
-export * from './declarationNotifier';
 export * from './notificationHistory';
 export * from './notificationStorage';
 
-// Fix re-exporting issue by excluding the duplicate export
-export { 
+// ✅ Re-exportation explicite uniquement des fonctions utiles, pour éviter les doublons
+export {
   updateStatusAndNotify,
   notifyStatusChange,
-  notifyNewDeclaration 
+  notifyNewDeclaration,
+  getDeclarationNotificationHistory
 } from './declarationNotifier';
