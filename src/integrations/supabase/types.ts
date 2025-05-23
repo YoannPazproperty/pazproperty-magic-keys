@@ -131,6 +131,21 @@ export type Database = {
         }
         Relationships: []
       }
+      config: {
+        Row: {
+          key: string
+          value: string
+        }
+        Insert: {
+          key: string
+          value: string
+        }
+        Update: {
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       contactos_comerciais: {
         Row: {
           created_at: string
@@ -801,6 +816,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      bytea_to_text: {
+        Args: { data: string }
+        Returns: string
+      }
       create_password_reset_tokens_table: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -825,6 +844,58 @@ export type Database = {
             }
           | { _user_id: string; _role: string }
           | { role_name: string }
+        Returns: boolean
+      }
+      http: {
+        Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_delete: {
+        Args:
+          | { uri: string }
+          | { uri: string; content: string; content_type: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_get: {
+        Args: { uri: string } | { uri: string; data: Json }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_head: {
+        Args: { uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_header: {
+        Args: { field: string; value: string }
+        Returns: Database["public"]["CompositeTypes"]["http_header"]
+      }
+      http_list_curlopt: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          curlopt: string
+          value: string
+        }[]
+      }
+      http_patch: {
+        Args: { uri: string; content: string; content_type: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_post: {
+        Args:
+          | { uri: string; content: string; content_type: string }
+          | { uri: string; data: Json }
+          | { url: string; headers: Json; payload: Json }
+        Returns: Json
+      }
+      http_put: {
+        Args: { uri: string; content: string; content_type: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+      }
+      http_reset_curlopt: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      http_set_curlopt: {
+        Args: { curlopt: string; value: string }
         Returns: boolean
       }
       is_company_email: {
@@ -863,6 +934,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      text_to_bytea: {
+        Args: { data: string }
+        Returns: string
+      }
       update_auth_security_settings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -870,6 +945,10 @@ export type Database = {
       update_auth_settings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      urlencode: {
+        Args: { data: Json } | { string: string } | { string: string }
+        Returns: string
       }
       verify_password_reset_token: {
         Args: { token_param: string }
@@ -902,7 +981,23 @@ export type Database = {
         | "employee"
     }
     CompositeTypes: {
-      [_ in never]: never
+      http_header: {
+        field: string | null
+        value: string | null
+      }
+      http_request: {
+        method: unknown | null
+        uri: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content_type: string | null
+        content: string | null
+      }
+      http_response: {
+        status: number | null
+        content_type: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content: string | null
+      }
     }
   }
 }
