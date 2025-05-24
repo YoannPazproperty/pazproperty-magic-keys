@@ -7,7 +7,7 @@ export * from './notificationStorage';
 export {
   updateStatusAndNotify,
   notifyStatusChange,
-  notifyNewDeclaration
+  notifyNewDeclaration,
 } from './declarationNotifier';
 
 export {

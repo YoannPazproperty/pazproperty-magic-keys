@@ -72,6 +72,7 @@ const ImageGrid = () => (
         src="/lovable-uploads/fed62806-8b0e-4a0c-975a-f2bf09cb04f2.png" 
         alt="Edificio moderno em Lisboa" 
         className="w-full h-full object-cover"
+        loading="lazy"
       />
     </div>
     <div className="rounded-lg overflow-hidden shadow-md h-64">
@@ -79,6 +80,7 @@ const ImageGrid = () => (
         src="/lovable-uploads/cf3cf6fe-029e-4753-814c-8ed65cf25830.png" 
         alt="Fachada de azulejos portuguesa" 
         className="w-full h-full object-cover"
+        loading="lazy"
       />
     </div>
     <div className="rounded-lg overflow-hidden shadow-md h-64">
@@ -86,6 +88,7 @@ const ImageGrid = () => (
         src="/lovable-uploads/15c3a624-ede3-49fa-ac79-da48ffd1da44.png" 
         alt="Hotel histórico em Lisboa" 
         className="w-full h-full object-cover"
+        loading="lazy"
       />
     </div>
     <div className="rounded-lg overflow-hidden shadow-md h-64">
@@ -93,6 +96,7 @@ const ImageGrid = () => (
         src="/lovable-uploads/c73fd8db-f2c2-47a6-972c-cdcd2b79a21b.png" 
         alt="Fonte Rossio em Lisboa" 
         className="w-full h-full object-cover"
+        loading="lazy"
       />
     </div>
   </div>

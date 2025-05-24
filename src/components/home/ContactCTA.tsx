@@ -12,7 +12,6 @@ const ContactCTA = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("E-mail enviado:", email);
     setEmail("");
     alert("Obrigado pelo seu contacto! Responderemos em breve.");
   };
