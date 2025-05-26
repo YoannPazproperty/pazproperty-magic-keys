@@ -45,23 +45,23 @@ class MasterControlProgram {
 
     try {
       const { data, error } = await supabase
-        .from('declarations')
-        .insert({
-          name: claimData.name,
-          email: claimData.email,
-          phone: claimData.phone,
-          property: claimData.property,
-          city: claimData.city,
-          postalCode: claimData.postalCode,
-          issueType: claimData.issueType,
-          description: claimData.description,
-          urgency: claimData.urgency,
-          mediaFiles: claimData.mediaFiles,
-          status: 'Novo',
-          submittedAt: new Date().toISOString()
-        })
-        .select()
-        .single();
+  .from('declarations')
+  .insert([{
+    name: claimData.name,
+    email: claimData.email,
+    phone: claimData.phone,
+    property: claimData.property,
+    city: claimData.city,
+    postalCode: claimData.postalCode,
+    issueType: claimData.issueType,
+    description: claimData.description,
+    urgency: claimData.urgency,
+    mediaFiles: claimData.mediaFiles.join(','), // conversion ici
+    status: 'Novo',
+    submittedAt: new Date().toISOString()
+  } as any])  // override des types
+  .select()
+  .single();
 
       if (error) {
         console.error('MCP: Error creating declaration in database:', error);
