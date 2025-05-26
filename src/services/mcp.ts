@@ -12,6 +12,8 @@
  * - Integration with external services
  */
 
+import { supabase } from '@/integrations/supabase/client';
+
 // Interface for claim data structure
 export interface ClaimData {
   userId: string;
@@ -36,14 +38,49 @@ class MasterControlProgram {
    * @param claimData - The claim information to process
    * @returns Promise<void>
    * 
-   * Future implementation will:
-   * - Validate claim data
-   * - Store in Supabase database
-   * - Trigger notification workflows
-   * - Create audit trail
+   * Creates a new declaration in the Supabase database and logs the action.
    */
   async handleClaimCreation(claimData: ClaimData): Promise<void> {
-    console.log('MCP: Simulating claim creation with data:', claimData);
+    // Validate required fields
+    if (!claimData.userId || !claimData.type || !claimData.description || !claimData.address) {
+      console.error('MCP: Missing required fields for claim creation');
+      return;
+    }
+
+    try {
+      // Insert new declaration into Supabase database
+      const { data, error } = await supabase
+        .from('declarations')
+        .insert({
+          user_id: claimData.userId,
+          type: claimData.type,
+          description: claimData.description,
+          media: claimData.media,
+          address: claimData.address,
+          status: 'en_attente'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('MCP: Error creating declaration in database:', error);
+        return;
+      }
+
+      console.log('MCP: Declaration created successfully:', data);
+      
+      // Log the successful action
+      await this.logAction('create_declaration', {
+        declarationId: data.id,
+        userId: claimData.userId,
+        type: claimData.type,
+        status: 'en_attente',
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('MCP: Unexpected error during claim creation:', error);
+    }
   }
 
   /**
