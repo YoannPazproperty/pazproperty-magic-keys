@@ -1,63 +1,64 @@
-
 /**
  * Master Control Program (MCP) for PazProperty
- * 
+ *
  * This file contains the core structure for the MCP system that will handle
  * claim management, provider assignment, and action logging across the platform.
- * 
- * Future enhancements will include:
- * - Supabase integration for persistent storage
- * - Real-time notifications
- * - Advanced workflow management
- * - Integration with external services
  */
 
 import { supabase } from '@/integrations/supabase/client';
 
 // Interface for claim data structure
 export interface ClaimData {
-  userId: string;
-  type: string;
+  name: string;
+  email: string;
+  phone: string;
+  property: string;
+  city: string;
+  postalCode: string;
+  issueType: string;
   description: string;
-  media: string[];
-  address: string;
+  urgency: string;
+  mediaFiles: string[];
 }
 
-/**
- * Master Control Program (MCP) Class
- * 
- * Central orchestrator for PazProperty platform operations.
- * Currently implements simulation methods that will be replaced
- * with real functionality in future iterations.
- */
 class MasterControlProgram {
-  
   /**
    * Handles the creation of new claims in the system
    * 
    * @param claimData - The claim information to process
    * @returns Promise<void>
-   * 
-   * Creates a new declaration in the Supabase database and logs the action.
    */
   async handleClaimCreation(claimData: ClaimData): Promise<void> {
     // Validate required fields
-    if (!claimData.userId || !claimData.type || !claimData.description || !claimData.address) {
-      console.error('MCP: Missing required fields for claim creation');
-      return;
+    const requiredFields = [
+      'name', 'email', 'phone',
+      'property', 'city', 'postalCode',
+      'issueType', 'description', 'urgency'
+    ];
+
+    for (const field of requiredFields) {
+      if (!claimData[field as keyof ClaimData]) {
+        console.error(`MCP: Missing required field "${field}"`);
+        return;
+      }
     }
 
     try {
-      // Insert new declaration into Supabase database
       const { data, error } = await supabase
         .from('declarations')
         .insert({
-          user_id: claimData.userId,
-          type: claimData.type,
+          name: claimData.name,
+          email: claimData.email,
+          phone: claimData.phone,
+          property: claimData.property,
+          city: claimData.city,
+          postalCode: claimData.postalCode,
+          issueType: claimData.issueType,
           description: claimData.description,
-          media: claimData.media,
-          address: claimData.address,
-          status: 'Novo'
+          urgency: claimData.urgency,
+          mediaFiles: claimData.mediaFiles,
+          status: 'Novo',
+          submittedAt: new Date().toISOString()
         })
         .select()
         .single();
@@ -68,13 +69,12 @@ class MasterControlProgram {
       }
 
       console.log('MCP: Declaration created successfully:', data);
-      
-      // Log the successful action
+
       await this.logAction('create_declaration', {
         declarationId: data.id,
-        userId: claimData.userId,
-        type: claimData.type,
-        status: 'en_attente',
+        name: claimData.name,
+        issueType: claimData.issueType,
+        status: 'Novo',
         timestamp: new Date().toISOString()
       });
 
@@ -84,40 +84,19 @@ class MasterControlProgram {
   }
 
   /**
-   * Assigns a service provider to an existing claim
-   * 
-   * @param claimId - Unique identifier for the claim
-   * @param providerId - Unique identifier for the provider
-   * @returns Promise<void>
-   * 
-   * Future implementation will:
-   * - Validate claim and provider existence
-   * - Update claim status in database
-   * - Send notifications to relevant parties
-   * - Log assignment action
+   * Simulated method to assign a provider to a claim
    */
   async assignProviderToClaim(claimId: string, providerId: string): Promise<void> {
     console.log('MCP: Simulating provider assignment - Claim:', claimId, 'Provider:', providerId);
   }
 
   /**
-   * Logs system actions for audit and monitoring purposes
-   * 
-   * @param actionName - Name/type of the action performed
-   * @param metadata - Additional data related to the action
-   * @returns Promise<void>
-   * 
-   * Future implementation will:
-   * - Store action logs in dedicated audit table
-   * - Include timestamp and user context
-   * - Support filtering and searching
-   * - Generate reports for compliance
+   * Simulated method for logging actions
    */
   async logAction(actionName: string, metadata: any): Promise<void> {
     console.log('MCP: Simulating action log -', actionName, 'with metadata:', metadata);
   }
 }
 
-// Export singleton instance of the MCP
 const MCP = new MasterControlProgram();
 export default MCP;
