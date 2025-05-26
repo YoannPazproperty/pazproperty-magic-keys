@@ -57,7 +57,7 @@ class MasterControlProgram {
           description: claimData.description,
           media: claimData.media,
           address: claimData.address,
-          status: 'en_attente'
+          status: 'Novo'
         })
         .select()
         .single();
