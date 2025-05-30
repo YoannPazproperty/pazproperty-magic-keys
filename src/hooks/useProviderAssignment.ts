@@ -19,7 +19,7 @@ export const useProviderAssignment = () => {
       const success = await updateStatusAndNotify(
         declarationId,
         "Em espera do encontro de diagnostico",
-        { provider_id: providerId }
+        { prestador_id: providerId }
       );
       
       if (success) {

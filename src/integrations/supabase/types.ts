@@ -226,6 +226,7 @@ export type Database = {
           meeting_notes: string | null
           mondayId: string | null
           name: string
+          new_id: string | null
           nif: string | null
           phone: string | null
           postalCode: string | null
@@ -252,6 +253,7 @@ export type Database = {
           meeting_notes?: string | null
           mondayId?: string | null
           name: string
+          new_id?: string | null
           nif?: string | null
           phone?: string | null
           postalCode?: string | null
@@ -278,6 +280,7 @@ export type Database = {
           meeting_notes?: string | null
           mondayId?: string | null
           name?: string
+          new_id?: string | null
           nif?: string | null
           phone?: string | null
           postalCode?: string | null

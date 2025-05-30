@@ -69,7 +69,7 @@ export const ProviderAssignmentForm = ({
       const success = await updateStatusAndNotify(
         declaration.id,
         "Em espera do encontro de diagnostico",
-        { provider_id: selectedProviderId }
+        { prestador_id: selectedProviderId }
       );
 
       if (success) {

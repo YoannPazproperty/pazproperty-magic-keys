@@ -1,3 +1,4 @@
+
 /**
  * Master Control Program (MCP) for PazProperty
  *
@@ -92,8 +93,8 @@ class MasterControlProgram {
   /**
    * Simule l'affectation d'un prestataire à une réclamation
    */
-  async assignProviderToClaim(claimId: string, providerId: string): Promise<void> {
-    console.log('MCP: Simulating provider assignment - Claim:', claimId, 'Provider:', providerId);
+  async assignProviderToClaim(claimId: string, prestadorId: string): Promise<void> {
+    console.log('MCP: Simulating provider assignment - Claim:', claimId, 'Prestador:', prestadorId);
   }
 
   /**
