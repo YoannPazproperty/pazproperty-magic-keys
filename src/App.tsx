@@ -1,7 +1,7 @@
 
 import { QueryClient } from "@tanstack/react-query";
 import { AppProviders } from "./components/AppProviders";
-import { AppRouter } from "./components/AppRouter";
+import { AppRouter } from "./router/AppRouter";
 import { useSupabaseInit } from "./hooks/useSupabaseInit";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
