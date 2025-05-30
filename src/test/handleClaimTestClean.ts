@@ -19,7 +19,7 @@ const testClaim: ClaimData = {
 (async () => {
   console.log('Testing MCP.handleClaimCreation with test data...');
   
-  await MCP.handleClaimCreation(testClaim);
+await MCP.handleClaimCreation(testClaim);
   
   console.log('MCP.handleClaimCreation test completed.');
 })();
