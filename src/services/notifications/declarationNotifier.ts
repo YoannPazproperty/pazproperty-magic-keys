@@ -1,7 +1,19 @@
+/**
+ * Declaration Status Update & Notification Handler
+ * Met à jour le statut d'une déclaration dans Supabase et prépare les futurs envois de notifications automatisées.
+ * (Prochaines automatisations prévues dans le mastodonte)
+ */
 
 import { supabase } from "@/integrations/supabase/client";
 import { Declaration } from "../types";
 
+/**
+ * Met à jour le statut d’une déclaration et envoie une notification si nécessaire.
+ * @param declarationId - ID de la déclaration à mettre à jour
+ * @param newStatus - Nouveau statut à appliquer (ex : "Em espera do encontro de diagnostico", "Orçamento recebido", etc.)
+ * @param additionalUpdates - Autres champs à mettre à jour (ex : prestador_id, meeting_date, etc.)
+ * @returns {Promise<boolean>} - true si la mise à jour a réussi, false sinon.
+ */
 export const updateStatusAndNotify = async (
   declarationId: string,
   newStatus: Declaration["status"],
@@ -15,24 +27,24 @@ export const updateStatusAndNotify = async (
   } = {}
 ): Promise<boolean> => {
   try {
-    // Préparer les données de mise à jour
-    const updateData: any = {
+    // Préparation des données à mettre à jour
+    const updateData: Record<string, any> = {
       status: newStatus,
-      ...additionalUpdates
+      ...additionalUpdates,
     };
 
-    // Si on assigne un prestataire, ajouter la date d'assignation
+    // Si un prestataire est assigné, logguer la date d'assignation
     if (additionalUpdates.prestador_id) {
       updateData.prestador_assigned_at = new Date().toISOString();
     }
 
-    console.log("updateStatusAndNotify: Updating declaration", declarationId, "with data:", updateData);
+    // --- Future automation: trigger email/notification logic here if needed ---
 
-    // Mettre à jour la déclaration dans Supabase
+    // Mise à jour de la déclaration dans Supabase
     const { data, error } = await supabase
-      .from('declarations')
+      .from("declarations")
       .update(updateData)
-      .eq('id', declarationId)
+      .eq("id", declarationId)
       .select()
       .single();
 
