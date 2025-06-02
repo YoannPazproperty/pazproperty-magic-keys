@@ -2,49 +2,37 @@ import { supabase } from "@/integrations/supabase/client";
 import { isSupabaseConnected } from "../supabaseService";
 
 /**
- * Notification Logging Utility
- * Permet d’enregistrer l’historique des notifications envoyées, à la fois en localStorage (fallback)
- * et dans la table notifications de Supabase pour une centralisation future.
+ * Utilitaire pour loguer toutes les notifications dans Supabase + localStorage.
+ * Cohérence parfaite avec NotificationLog du src/services/types.ts
  */
 
-// Clé du stockage local
-const NOTIFICATIONS_STORAGE_KEY = 'notifications';
+// On utilise le type global importé pour éviter les divergences
+import type { NotificationLog } from "@/services/types"; // Assure-toi que tout le projet référence ce type
 
-/**
- * Typage de la notification pour éviter les erreurs à l’avenir
- */
-export interface NotificationLog {
-  id?: string;
-  declaration_id: string;
-  email: string;
-  type: string; // ex: "status-update", "new-assignment", "quote-approved", etc.
-  status: string; // ex: "Envoyé", "Échoué", etc.
-  sent_at?: string; // Date ISO string
-}
+const NOTIFICATIONS_STORAGE_KEY = "notifications";
 
 /**
- * Log local en fallback et pour l’UX immédiate.
+ * Log local (fallback + historique offline)
  */
-export const logNotificationLocally = (notificationData: NotificationLog) => {
+export const logNotificationLocally = (notification: NotificationLog) => {
   try {
-    const storedNotifications: NotificationLog[] = JSON.parse(localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) || '[]');
-    storedNotifications.push({
-      ...notificationData,
-      id: Date.now().toString(),
-      sent_at: new Date().toISOString(),
+    const stored: NotificationLog[] = JSON.parse(localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) || "[]");
+    stored.push({
+      ...notification,
+      id: notification.id || Date.now().toString(),
+      sent_at: notification.sent_at || new Date().toISOString(),
     });
-    localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(storedNotifications));
-    console.log("[Notification] Stockée localement:", notificationData);
+    localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(stored));
+    console.log("[Notification] Stockée localement:", notification);
   } catch (error) {
     console.error("[Notification] Erreur stockage local:", error);
   }
 };
 
 /**
- * Log dans Supabase (table notifications). 
- * Ne bloque pas l’application en cas d’échec : remonte juste une erreur dans la console.
+ * Log dans Supabase (table notifications)
  */
-export const logNotificationToSupabase = async (notificationData: NotificationLog): Promise<boolean> => {
+export const logNotificationToSupabase = async (notification: NotificationLog): Promise<boolean> => {
   try {
     if (!supabase) {
       console.error("[Notification] Supabase non initialisé");
@@ -53,29 +41,27 @@ export const logNotificationToSupabase = async (notificationData: NotificationLo
 
     const isConnected = await isSupabaseConnected();
     if (!isConnected) {
-      console.warn("[Notification] Supabase non connecté, fallback local uniquement");
+      console.warn("[Notification] Supabase non connecté, fallback local seulement");
       return false;
     }
 
-    // Adapter pour correspondre au schéma de Supabase
+    // Format pour Supabase (évite les champs inconnus)
     const supabaseData = {
-      declaration_id: notificationData.declaration_id,
-      email: notificationData.email,
-      type: notificationData.type,
-      status: notificationData.status,
-      sent_at: notificationData.sent_at || new Date().toISOString(),
+      declaration_id: notification.declaration_id,
+      email: notification.email,
+      type: notification.type,
+      status: notification.status,
+      sent_at: notification.sent_at || new Date().toISOString(),
     };
 
-    const { error } = await supabase
-      .from('notifications')
-      .insert(supabaseData);
+    const { error } = await supabase.from("notifications").insert(supabaseData);
 
     if (error) {
       console.error("[Notification] Erreur d’insertion Supabase:", error);
       return false;
     }
 
-    console.log("[Notification] Logguée dans Supabase");
+    console.log("[Notification] Logguée dans Supabase:", supabaseData);
     return true;
   } catch (err) {
     console.error("[Notification] Exception Supabase:", err);
@@ -84,15 +70,10 @@ export const logNotificationToSupabase = async (notificationData: NotificationLo
 };
 
 /**
- * Fonction principale : tente Supabase, fallback local systématique.
- * Toujours retourner true pour ne pas bloquer les workflows UX.
+ * Fonction principale qui log d'abord dans Supabase puis toujours localement (défensif)
  */
-export const logNotification = async (notificationData: NotificationLog): Promise<boolean> => {
-  // Log Supabase (tentative)
-  await logNotificationToSupabase(notificationData);
-
-  // Log local systématique (historique/fallback)
-  logNotificationLocally(notificationData);
-
+export const logNotification = async (notification: NotificationLog): Promise<boolean> => {
+  await logNotificationToSupabase(notification); // On n’arrête jamais le process
+  logNotificationLocally(notification);
   return true;
 };
