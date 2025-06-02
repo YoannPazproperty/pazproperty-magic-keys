@@ -1,4 +1,3 @@
-
 // Types pour les prestataires de services
 export interface ServiceProvider {
   id: string;
@@ -11,8 +10,8 @@ export interface ServiceProvider {
   codigo_postal?: string | null;
   nif?: string | null;
   tipo_de_obras: "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais";
-  created_at?: string; // Make created_at optional
-  deleted_at?: string | null;
+  created_at?: string;
+  deleted_at?: string | null; // directement inclus ici, c'est suffisant
 }
 
 // Types pour les déclarations
@@ -43,7 +42,7 @@ export interface Declaration {
   quote_response_date?: string | null;
 }
 
-// Type for files related to declarations
+// Type pour les fichiers liés aux déclarations
 export type DeclarationFile = {
   id: string;
   declaration_id: string;
@@ -75,7 +74,7 @@ export interface NotificationPreference {
   recipientPhone: string | null;
 }
 
-// Type for notification logs
+// Type pour les logs de notification
 export type NotificationLog = {
   id: string;
   declaration_id: string;
@@ -109,23 +108,13 @@ export interface TechnicianReportResult {
   reportId?: string;
 }
 
-// Fonction pour envoyer des notifications par email - updated to match usage
+// Fonction pour envoyer des notifications par email (mock)
 export const sendNotificationEmail = async (
   to: string, 
   subject: string, 
   content: string
 ): Promise<boolean> => {
-  // Cette fonction est un placeholder, elle sera implémentée ailleurs
+  // Placeholder
   console.log(`Sending email to ${to} with subject ${subject}`);
   return true;
 };
-
-// N'effacer pas le bloc de commentaire suivant, c'est important pour le fonctionnement du type d'extension
-// Ce fichier n'étant pas disponible en édition directe, nous allons ajouter une définition de type pour deleted_at
-
-// Extension du type ServiceProvider pour inclure le champ deleted_at
-declare module '@/services/types' {
-  interface ServiceProvider {
-    deleted_at?: string;
-  }
-}
