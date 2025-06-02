@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { updateStatusAndNotify } from "@/services/notifications";
 import type { Declaration } from "@/services/types";
 import { toast } from "sonner";
 
@@ -9,7 +10,7 @@ interface StatusUpdateProps {
 }
 
 export const StatusUpdate = ({ currentStatus, onStatusUpdate }: StatusUpdateProps) => {
-  const handleStatusUpdate = (status: Declaration["status"]) => {
+  const handleStatusUpdate = async (status: Declaration["status"]) => {
     if (status === "Em espera do encontro de diagnostico" && currentStatus !== status) {
       toast.warning("Ce statut nécessite l'affectation d'un prestataire", {
         description: "Veuillez d'abord affecter un prestataire avant de changer le statut",
@@ -26,7 +27,18 @@ export const StatusUpdate = ({ currentStatus, onStatusUpdate }: StatusUpdateProp
       return;
     }
 
-    onStatusUpdate(status);
+    try {
+      const success = await updateStatusAndNotify(status, status);
+      if (success) {
+        onStatusUpdate(status);
+        toast.success("Statut mis à jour avec succès");
+      } else {
+        toast.error("Erreur lors de la mise à jour du statut");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      toast.error("Erreur lors de la mise à jour du statut");
+    }
   };
 
   return (

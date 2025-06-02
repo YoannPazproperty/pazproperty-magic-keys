@@ -5,11 +5,5 @@ export * from './notificationStorage';
 
 // Explicit re-exports to avoid ambiguity
 export {
-  updateStatusAndNotify,
-  notifyStatusChange,
-  notifyNewDeclaration,
-} from './declarationNotifier';
-
-export {
-  getDeclarationNotificationHistory
+  updateStatusAndNotify
 } from './declarationNotifier';

@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { DeclarationList } from "@/components/admin/DeclarationList";
-import { getDeclarations, updateDeclarationStatus } from "@/services/declarationService";
+import { getDeclarations } from "@/services/declarationService";
+import { updateStatusAndNotify } from "@/services/notifications";
 import { toast } from "sonner";
 import type { Declaration } from "@/services/types";
 
@@ -29,8 +30,8 @@ export const DeclarationsTab = () => {
 
   const handleStatusUpdate = async (id: string, status: Declaration["status"]) => {
     try {
-      const updated = await updateDeclarationStatus(id, status);
-      if (updated) {
+      const success = await updateStatusAndNotify(id, status);
+      if (success) {
         await loadDeclarations();
         toast.success("Statut mis à jour");
       } else {

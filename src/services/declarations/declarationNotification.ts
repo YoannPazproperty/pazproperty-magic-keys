@@ -1,15 +1,9 @@
 
 // This file now acts as a facade to the refactored notification services
 import { 
-  notifyStatusChange,
-  notifyNewDeclaration,
-  updateStatusAndNotify,
-  getDeclarationNotificationHistory
+  updateStatusAndNotify
 } from '@/services/notifications';
 
 export {
-  notifyStatusChange,
-  notifyNewDeclaration,
-  updateStatusAndNotify,
-  getDeclarationNotificationHistory
+  updateStatusAndNotify
 };
