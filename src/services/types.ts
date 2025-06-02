@@ -1,7 +1,22 @@
-
 /**
  * Types globaux pour les déclarations et notifications
  */
+
+// Types pour les prestataires de services
+export interface ServiceProvider {
+  id: string;
+  empresa: string;
+  nome_gerente: string;
+  email: string;
+  telefone?: string | null;
+  cidade?: string | null;
+  endereco?: string | null;
+  codigo_postal?: string | null;
+  nif?: string | null;
+  tipo_de_obras: "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais";
+  created_at?: string;
+  deleted_at?: string | null; // directement inclus ici, c'est suffisant
+}
 
 // Structure d'une déclaration (extrait, à compléter selon projet réel)
 export interface Declaration {
@@ -12,7 +27,7 @@ export interface Declaration {
   property?: string | null;
   city?: string | null;
   postalCode?: string | null;
-  status: string;
+  status: "Novo" | "Em espera do encontro de diagnostico" | "Encontramento de diagnostico planeado" | "Orçamento recebido" | "Em cours de reparação" | "Resolvido" | "Annulé" | "Transmitido";
   issueType?: string | null;
   description?: string | null;
   urgency?: string | null;
@@ -28,34 +43,79 @@ export interface Declaration {
   submittedAt?: string | null;
 }
 
-// Type pour une notification logguée (localStorage ou Supabase)
-export interface NotificationLog {
-  id?: string;
-  declaration_id: string;
-  type?: string;
-  status?: string;
-  email?: string;
-  message_content?: string;
-  recipient_email?: string;
-  recipient_type?: string;
-  sent_at?: string;
-  success?: boolean;
-  error_message?: string;
-}
-
-export type ServiceProvider = {
+// Type pour les fichiers liés aux déclarations
+export type DeclarationFile = {
   id: string;
-  empresa: string;
-  nome_gerente: string;
-  tipo_de_obras: string;
-  telefone?: string | null;
-  email?: string | null;
+  declaration_id: string;
+  file_path: string;
+  file_type: "quote" | "image" | "video" | string;
+  file_name: string;
+  uploaded_at: string;
+  uploaded_by?: string | null;
 };
 
-export type UserRole =
-  | "admin"
-  | "manager"
-  | "user"
-  | "provider"
-  | "customer"
-  | "employee";
+// Types pour les contacts commerciaux
+export interface CommercialContact {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string | null;
+  tipo: "Proprietario" | "Inquilino" | "Outros" | "Agente Imobiliario";
+  mensagem: string;
+  created_at: string;
+}
+
+// Type pour les préférences de notification
+export interface NotificationPreference {
+  id: string;
+  email: boolean;
+  push: boolean | null;
+  sms: boolean | null;
+  recipientEmail: string | null;
+  recipientPhone: string | null;
+}
+
+// Type pour les logs de notification
+export type NotificationLog = {
+  id: string;
+  declaration_id: string;
+  notification_type: string;
+  recipient_email: string;
+  recipient_type: "provider" | "tenant" | "admin";
+  sent_at: string;
+  success: boolean;
+  error_message?: string | null;
+  message_content: string;
+};
+
+// Types pour les rapports techniciens
+export interface TechnicianReport {
+  interventionId: number;
+  clientName: string;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  address: string | null;
+  needsIntervention: boolean | null;
+  problemCategory: string | null;
+  diagnoseDescription: string | null;
+  estimateAmount: string | null;
+  workDescription: string | null;
+  date: string | null;
+}
+
+export interface TechnicianReportResult {
+  success: boolean;
+  message: string;
+  reportId?: string;
+}
+
+// Fonction pour envoyer des notifications par email (mock)
+export const sendNotificationEmail = async (
+  to: string, 
+  subject: string, 
+  content: string
+): Promise<boolean> => {
+  // Placeholder
+  console.log(`Sending email to ${to} with subject ${subject}`);
+  return true;
+};
