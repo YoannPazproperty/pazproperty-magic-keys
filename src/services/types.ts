@@ -1,8 +1,8 @@
 /**
- * Types globaux pour les déclarations et notifications
+ * Types globaux pour les déclarations, notifications et affaires
  */
 
-// Types pour les prestataires de services
+// --- Prestataires de services
 export interface ServiceProvider {
   id: string;
   empresa: string;
@@ -15,10 +15,10 @@ export interface ServiceProvider {
   nif?: string | null;
   tipo_de_obras: "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais";
   created_at?: string;
-  deleted_at?: string | null; // directement inclus ici, c'est suffisant
+  deleted_at?: string | null;
 }
 
-// Structure d'une déclaration (extrait, à compléter selon projet réel)
+// --- Déclarations de sinistre
 export interface Declaration {
   id: string;
   name: string;
@@ -27,7 +27,7 @@ export interface Declaration {
   property?: string | null;
   city?: string | null;
   postalCode?: string | null;
-  status: "Novo" | "Em espera do encontro de diagnostico" | "Encontramento de diagnostico planeado" | "Orçamento recebido" | "Em cours de reparação" | "Resolvido" | "Annulé" | "Transmitido";
+  status: "Novo" | "Em espera do encontro de diagnostico" | "Encontramento de diagnostico planeado" | "Orçamento reçu" | "Em cours de reparação" | "Resolvido" | "Annulé" | "Transmitido";
   issueType?: string | null;
   description?: string | null;
   urgency?: string | null;
@@ -43,7 +43,7 @@ export interface Declaration {
   submittedAt?: string | null;
 }
 
-// Type pour les fichiers liés aux déclarations
+// --- Fichiers liés aux déclarations
 export type DeclarationFile = {
   id: string;
   declaration_id: string;
@@ -54,7 +54,7 @@ export type DeclarationFile = {
   uploaded_by?: string | null;
 };
 
-// Types pour les contacts commerciaux
+// --- Contacts commerciaux
 export interface CommercialContact {
   id: string;
   nome: string;
@@ -65,7 +65,7 @@ export interface CommercialContact {
   created_at: string;
 }
 
-// Type pour les préférences de notification
+// --- Préférences de notification
 export interface NotificationPreference {
   id: string;
   email: boolean;
@@ -75,7 +75,7 @@ export interface NotificationPreference {
   recipientPhone: string | null;
 }
 
-// Type pour les logs de notification
+// --- Logs de notification
 export type NotificationLog = {
   id: string;
   declaration_id: string;
@@ -88,7 +88,7 @@ export type NotificationLog = {
   message_content: string;
 };
 
-// Types pour les rapports techniciens
+// --- Rapports techniciens
 export interface TechnicianReport {
   interventionId: number;
   clientName: string;
@@ -102,20 +102,64 @@ export interface TechnicianReport {
   workDescription: string | null;
   date: string | null;
 }
-
 export interface TechnicianReportResult {
   success: boolean;
   message: string;
   reportId?: string;
 }
 
-// Fonction pour envoyer des notifications par email (mock)
+// --- Types et constantes AFFAIRE ---
+export interface Affaire {
+  id: string;
+  contact_id: string;
+  client_nom: string;
+  client_email: string | null;
+  client_telephone: string | null;
+  description: string | null;
+  statut: StatutAffaire;
+  honoraires_percus: number | null;
+  remuneration_prevue: number | null;
+  remuneration_payee: number | null;
+  date_paiement: string | null;
+  notes: string | null;
+  created_at?: string;
+  updated_at?: string | null;
+}
+export interface AffaireFormData {
+  contact_id: string;
+  client_nom: string;
+  client_email: string | null;
+  client_telephone: string | null;
+  description: string | null;
+  statut: StatutAffaire;
+  honoraires_percus: number | null;
+  remuneration_prevue: number | null;
+  remuneration_payee: number | null;
+  date_paiement: string | null;
+  notes: string | null;
+}
+export type StatutAffaire =
+  | "Initial"
+  | "En cours"
+  | "Gagnée"
+  | "Perdue"
+  | "Facturée"
+  | "Annulée";
+export const STATUTS_AFFAIRES: StatutAffaire[] = [
+  "Initial",
+  "En cours",
+  "Gagnée",
+  "Perdue",
+  "Facturée",
+  "Annulée"
+];
+
+// --- Fonction notification email mock (laisse-la ici pour la compatibilité)
 export const sendNotificationEmail = async (
-  to: string, 
-  subject: string, 
+  to: string,
+  subject: string,
   content: string
 ): Promise<boolean> => {
-  // Placeholder
   console.log(`Sending email to ${to} with subject ${subject}`);
   return true;
 };
