@@ -16,7 +16,7 @@ import {
   getHistoriqueActions, 
   addHistoriqueAction
 } from "@/services/affaires/affairesService"; 
-import type { Affaire, HistoriqueAction } from "@/services/types/affaires";
+import type { Affaire, HistoriqueAction } from "@/services/types";
 import { AffaireFormDialog } from "./AffaireFormDialog";
 import { HistoriqueActionsList } from "./HistoriqueActionsList";
 import { NewActionForm } from "./NewActionForm";

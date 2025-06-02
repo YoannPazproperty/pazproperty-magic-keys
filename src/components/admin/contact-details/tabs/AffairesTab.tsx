@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getAffairesByContactId, deleteAffaire } from "@/services/affaires/affairesService";
-import type { Affaire } from "@/services/types/affaires";
+import type { Affaire } from "@/services/types";
 import { AffaireFormDialog } from "../AffaireFormDialog";
 import { AffaireDetailsDialog } from "../AffaireDetailsDialog";
 
