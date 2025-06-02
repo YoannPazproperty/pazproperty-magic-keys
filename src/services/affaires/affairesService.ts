@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Affaire, AffaireFormData, HistoriqueAction, HistoriqueActionFormData } from "../types/affaires";
+import type { Affaire, AffaireFormData, HistoriqueAction, HistoriqueActionFormData } from "@/services/types";
 import { toast } from "sonner";
 
 /**
