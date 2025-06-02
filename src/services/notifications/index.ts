@@ -1,9 +1,4 @@
+// src/services/notifications/index.ts
 
-// Clean exports to avoid conflicts
-export * from './notificationHistory';
-export * from './notificationStorage';
-
-// Explicit re-exports to avoid ambiguity
-export {
-  updateStatusAndNotify
-} from './declarationNotifier';
+// Export unique, centralisé sur la fonction core du workflow
+export { updateStatusAndNotify } from './declarationNotifier';
