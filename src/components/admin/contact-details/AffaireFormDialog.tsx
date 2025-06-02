@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { createAffaire, getAffaireById, updateAffaire } from "@/services/affaires/affairesService";
-import type { Affaire, AffaireFormData, StatutAffaire } from "@/services/types/affaires";
-import { STATUTS_AFFAIRES } from "@/services/types/affaires";
+import type { Affaire, AffaireFormData, StatutAffaire } from "@/services/types";
+import { STATUTS_AFFAIRES } from "@/services/types";
 
 interface AffaireFormDialogProps {
   isOpen: boolean;
