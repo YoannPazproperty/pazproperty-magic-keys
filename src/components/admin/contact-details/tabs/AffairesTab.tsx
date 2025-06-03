@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getAffairesByContactId, deleteAffaire } from "@/services/affaires/affairesService";
-import type { Affaire } from "@/services/types";
+import type { Affaire, StatutAffaire } from "@/services/types";
+import { STATUTS_AFFAIRES } from "@/services/types";
 import { AffaireFormDialog } from "../AffaireFormDialog";
 import { AffaireDetailsDialog } from "../AffaireDetailsDialog";
 
@@ -70,7 +70,6 @@ export const AffairesTab = ({ contactId, contactName }: AffairesTabProps) => {
 
   const handleDeleteConfirm = async () => {
     if (!affaireToDelete) return;
-    
     try {
       await deleteAffaire(affaireToDelete.id);
       loadAffaires();
@@ -86,14 +85,17 @@ export const AffairesTab = ({ contactId, contactName }: AffairesTabProps) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montant);
   };
 
-  const getStatutBadge = (statut: string) => {
-    switch(statut) {
+  /**
+   * Badge de statut : on centralise l’affichage depuis la liste des statuts
+   */
+  const getStatutBadge = (statut: StatutAffaire) => {
+    switch (statut) {
       case "Initial":
         return <Badge variant="outline">Initial</Badge>;
       case "En discussion":
         return <Badge variant="secondary">En discussion</Badge>;
       case "Proposition faite":
-        return <Badge variant="default">Proposition</Badge>;
+        return <Badge variant="default">Proposition faite</Badge>;
       case "Contrat signé":
         return <Badge className="bg-blue-500 hover:bg-blue-600">Contrat signé</Badge>;
       case "En cours":
@@ -155,7 +157,7 @@ export const AffairesTab = ({ contactId, contactName }: AffairesTabProps) => {
                       <TableCell>
                         <div>
                           <p className="font-medium">{affaire.client_nom}</p>
-                          <p className="text-sm text-muted-foreground">{affaire.client_email || ''}</p>
+                          <p className="text-sm text-muted-foreground">{affaire.client_email || ""}</p>
                         </div>
                       </TableCell>
                       <TableCell>{getStatutBadge(affaire.statut)}</TableCell>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,7 @@ interface NewActionFormProps {
   onSubmit: (action: string, notes: string | null) => Promise<void>;
 }
 
-const ACTION_TYPES = [
+const ACTION_TYPES: string[] = [
   "Contact initial",
   "Relance téléphonique",
   "Proposition envoyée",
@@ -24,7 +23,7 @@ const ACTION_TYPES = [
 ];
 
 export const NewActionForm = ({ onSubmit }: NewActionFormProps) => {
-  const [action, setAction] = useState<string>("Contact initial");
+  const [action, setAction] = useState<string>(ACTION_TYPES[0]);
   const [customAction, setCustomAction] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,9 +32,8 @@ export const NewActionForm = ({ onSubmit }: NewActionFormProps) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const finalAction = action === "Autre" ? customAction : action;
-    
-    if (!finalAction.trim()) {
+    const finalAction = action === "Autre" ? customAction.trim() : action;
+    if (!finalAction) {
       toast.error("Veuillez spécifier un type d'action");
       setIsSubmitting(false);
       return;
@@ -44,11 +42,8 @@ export const NewActionForm = ({ onSubmit }: NewActionFormProps) => {
     try {
       await onSubmit(finalAction, notes.trim() || null);
       toast.success("Action ajoutée avec succès");
-      
-      // Réinitialiser le formulaire
-      if (action === "Autre") {
-        setCustomAction("");
-      }
+      // Réinitialiser
+      if (action === "Autre") setCustomAction("");
       setNotes("");
     } catch (error) {
       console.error("Error submitting action:", error);
@@ -78,7 +73,6 @@ export const NewActionForm = ({ onSubmit }: NewActionFormProps) => {
               </SelectContent>
             </Select>
           </div>
-          
           {action === "Autre" && (
             <div className="space-y-2">
               <Label htmlFor="customAction">Action personnalisée</Label>
@@ -91,7 +85,6 @@ export const NewActionForm = ({ onSubmit }: NewActionFormProps) => {
               />
             </div>
           )}
-          
           <div className="space-y-2">
             <Label htmlFor="notes">Notes détaillées</Label>
             <Textarea
@@ -102,7 +95,6 @@ export const NewActionForm = ({ onSubmit }: NewActionFormProps) => {
               rows={4}
             />
           </div>
-          
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? "Enregistrement..." : "Enregistrer l'action"}
           </Button>

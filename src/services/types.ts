@@ -109,6 +109,27 @@ export interface TechnicianReportResult {
 }
 
 // --- Types et constantes AFFAIRE ---
+// Statut unique et centralisé pour toutes les affaires métiers
+export type StatutAffaire =
+  | "Initial"
+  | "En discussion"
+  | "Proposition faite"
+  | "Contrat signé"
+  | "En cours"
+  | "Achevé"
+  | "Annulé";
+
+export const STATUTS_AFFAIRES: StatutAffaire[] = [
+  "Initial",
+  "En discussion",
+  "Proposition faite",
+  "Contrat signé",
+  "En cours",
+  "Achevé",
+  "Annulé"
+];
+
+// --- Affaire
 export interface Affaire {
   id: string;
   contact_id: string;
@@ -138,21 +159,21 @@ export interface AffaireFormData {
   date_paiement: string | null;
   notes: string | null;
 }
-export type StatutAffaire =
-  | "Initial"
-  | "En cours"
-  | "Gagnée"
-  | "Perdue"
-  | "Facturée"
-  | "Annulée";
-export const STATUTS_AFFAIRES: StatutAffaire[] = [
-  "Initial",
-  "En cours",
-  "Gagnée",
-  "Perdue",
-  "Facturée",
-  "Annulée"
-];
+export interface HistoriqueAction {
+  id: string;
+  affaire_id: string;
+  action: string;
+  date: string;
+  utilisateur: string | null;
+  notes: string | null;
+}
+export interface HistoriqueActionFormData {
+  affaire_id: string;
+  action: string;
+  date: string;
+  utilisateur: string | null;
+  notes: string | null;
+}
 
 // --- Fonction notification email mock (laisse-la ici pour la compatibilité)
 export const sendNotificationEmail = async (
