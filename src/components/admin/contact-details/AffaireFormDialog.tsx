@@ -4,7 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../../ui/dialog";
+} from "@/components/ui/dialog";
 import { AffaireForm } from "./AffaireForm";
 
 export interface AffaireFormDialogProps {
