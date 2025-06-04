@@ -6,9 +6,9 @@ import { StatusUpdate } from "./declaration-details/StatusUpdate";
 import { MondayInfo } from "./declaration-details/MondayInfo";
 import { ProviderAssignmentForm } from "./declaration-details/ProviderAssignmentForm";
 import { QuoteApprovalForm } from "./declaration-details/QuoteApprovalForm";
-import type { Declaration, DeclarationFile } from "@/services/types";
+import type { Declaration, DeclarationFile } from "../../services/types";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../../integrations/supabase/client";
 
 interface DeclarationDetailsProps {
   declaration: Declaration;
@@ -28,7 +28,7 @@ export const DeclarationDetails = ({
   // Récupérer les fichiers de devis associés à la déclaration
   useEffect(() => {
     const fetchQuoteFiles = async () => {
-      if (declaration.status === "Orçamento recebido") {
+      if (declaration.status === "QUOTE_RECEIVED") {
         const { data, error } = await supabase
           .from('declaration_files')
           .select('*')
@@ -36,7 +36,12 @@ export const DeclarationDetails = ({
           .eq('file_type', 'quote');
           
         if (!error && data) {
-          setQuoteFiles(data);
+          const typedFiles: DeclarationFile[] = data.map(file => ({
+            ...file,
+            uploaded_at: file.uploaded_at || null,
+            uploaded_by: file.uploaded_by || null
+          }));
+          setQuoteFiles(typedFiles);
         }
       }
     };
@@ -66,12 +71,12 @@ export const DeclarationDetails = ({
         declaration={declaration} 
         onSuccess={() => onStatusUpdate(declaration.id, declaration.status)}
         isReadOnly={![
-          "Novo", 
-          "Em espera do encontro de diagnostico"
-        ].includes(declaration.status as string)}
+          "NEW", 
+          "AWAITING_DIAGNOSTIC"
+        ].includes(declaration.status)}
       />
       
-      {declaration.status === "Orçamento recebido" && (
+      {declaration.status === "QUOTE_RECEIVED" && (
         <QuoteApprovalForm 
           declaration={declaration} 
           quoteFiles={quoteFiles}
@@ -80,9 +85,9 @@ export const DeclarationDetails = ({
         />
       )}
       
-      <MediaFiles files={declaration.mediaFiles} />
+      <MediaFiles files={declaration.mediaFiles || []} />
       
-      <MondayInfo mondayId={declaration.mondayId} />
+      <MondayInfo mondayId={declaration.mondayId || undefined} />
       
       <StatusUpdate 
         currentStatus={declaration.status}

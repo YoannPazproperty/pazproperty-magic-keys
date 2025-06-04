@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { DeclarationList } from "../../DeclarationList";
-import { getDeclarations } from "../../../services/declarationService";
-import { updateStatusAndNotify } from "../../../services/notifications";
+import { getDeclarations } from "../../../../services/declarationService";
+import { updateStatusAndNotify } from "../../../../services/notifications";
 import { toast } from "sonner";
-import type { Declaration } from "../../../services/types";
+import type { Declaration } from "../../../../services/types";
 
 export const DeclarationsTab = () => {
   const [declarations, setDeclarations] = useState<Declaration[]>([]);

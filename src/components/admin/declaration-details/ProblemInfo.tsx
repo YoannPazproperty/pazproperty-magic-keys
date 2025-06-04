@@ -1,3 +1,4 @@
+
 import { Badge } from "../../ui/badge";
 import type { Declaration } from "../../../services/types";
 import { translateIssueType, translateUrgency } from "../../../utils/translationUtils";
@@ -24,15 +25,15 @@ export const ProblemInfo = ({
         <p><span className="font-medium">Code postal:</span> {declaration.postalCode}</p>
       )}
       <p>
-        <span className="font-medium">Type:</span> {translateIssueType(declaration.issueType)}
+        <span className="font-medium">Type:</span> {translateIssueType(declaration.issueType || null)}
       </p>
       <p>
-        <span className="font-medium">Urgence:</span> {translateUrgency(declaration.urgency)}
+        <span className="font-medium">Urgence:</span> {translateUrgency(declaration.urgency || null)}
       </p>
       <p>
         <span className="font-medium">Statut:</span>{" "}
         <Badge className={getStatusBadgeColor(declaration.status)}>
-          {translateStatus(declaration.status)}
+          {translateStatus(declaration.status || null)}
         </Badge>
       </p>
     </div>

@@ -1,7 +1,7 @@
 
 import { Eye } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   Table,
   TableBody,
@@ -10,15 +10,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import type { Declaration } from "@/services/types";
+} from "../ui/table";
+import type { Declaration } from "../../services/types";
 import { 
   translateIssueType, 
   translateUrgency, 
   translateStatus, 
   formatDate,
   getStatusBadgeColor
-} from "@/utils/translationUtils";
+} from "../../utils/translationUtils";
 
 interface DeclarationListTableProps {
   declarations: Declaration[];
@@ -82,11 +82,11 @@ export const DeclarationListTable = ({
           declarations.map((declaration) => (
             <TableRow key={declaration.id}>
               <TableCell className="font-medium">
-                {formatDate(declaration.submittedAt)}
+                {formatDate(declaration.submittedAt || null)}
               </TableCell>
               <TableCell>{declaration.name}</TableCell>
               <TableCell>{declaration.property}</TableCell>
-              <TableCell>{translateIssueType(declaration.issueType)}</TableCell>
+              <TableCell>{translateIssueType(declaration.issueType || null)}</TableCell>
               <TableCell>
                 <Badge
                   variant="outline"
@@ -98,12 +98,12 @@ export const DeclarationListTable = ({
                       : "border-green-500 text-green-500"
                   }
                 >
-                  {translateUrgency(declaration.urgency)}
+                  {translateUrgency(declaration.urgency || null)}
                 </Badge>
               </TableCell>
               <TableCell>
                 <Badge className={getStatusBadgeColor(declaration.status)}>
-                  {translateStatus(declaration.status)}
+                  {translateStatus(declaration.status || null)}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">

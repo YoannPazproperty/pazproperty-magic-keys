@@ -1,3 +1,4 @@
+
 /**
  * Declaration Notification Facade
  * Sert d'interface unique vers les fonctions de notifications (notamment updateStatusAndNotify)

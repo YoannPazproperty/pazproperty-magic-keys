@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,7 @@ export const DeclarationDetailsDialog = ({
         <DialogHeader>
           <DialogTitle>Détails de la déclaration</DialogTitle>
           <DialogDescription>
-            Soumise le {formatDate(declaration.submittedAt)}
+            Soumise le {formatDate(declaration.submittedAt || null)}
           </DialogDescription>
         </DialogHeader>
         

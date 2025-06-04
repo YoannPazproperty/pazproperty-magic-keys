@@ -1,7 +1,7 @@
 
-import { Button } from "@/components/ui/button";
-import { updateStatusAndNotify } from "@/services/notifications";
-import type { Declaration } from "@/services/types";
+import { Button } from "../../ui/button";
+import { updateStatusAndNotify } from "../../../services/notifications";
+import type { Declaration } from "../../../services/types";
 import { toast } from "sonner";
 
 interface StatusUpdateProps {
@@ -11,7 +11,7 @@ interface StatusUpdateProps {
 
 export const StatusUpdate = ({ currentStatus, onStatusUpdate }: StatusUpdateProps) => {
   const handleStatusUpdate = async (status: Declaration["status"]) => {
-    if (status === "Em espera do encontro de diagnostico" && currentStatus !== status) {
+    if (status === "AWAITING_DIAGNOSTIC" && currentStatus !== status) {
       toast.warning("Ce statut nécessite l'affectation d'un prestataire", {
         description: "Veuillez d'abord affecter un prestataire avant de changer le statut",
         duration: 5000
@@ -19,7 +19,7 @@ export const StatusUpdate = ({ currentStatus, onStatusUpdate }: StatusUpdateProp
       return;
     }
 
-    if (status === "Encontramento de diagnostico planeado" && currentStatus !== status) {
+    if (status === "DIAGNOSTIC_SCHEDULED" && currentStatus !== status) {
       toast.warning("Ce statut nécessite la planification d'un rendez-vous", {
         description: "Veuillez planifier un rendez-vous avant de changer le statut",
         duration: 5000
@@ -48,56 +48,56 @@ export const StatusUpdate = ({ currentStatus, onStatusUpdate }: StatusUpdateProp
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleStatusUpdate("Novo")}
-          className={currentStatus === "Novo" ? "bg-yellow-100" : ""}
+          onClick={() => handleStatusUpdate("NEW")}
+          className={currentStatus === "NEW" ? "bg-yellow-100" : ""}
         >
           Novo
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleStatusUpdate("Em espera do encontro de diagnostico")}
-          className={currentStatus === "Em espera do encontro de diagnostico" ? "bg-blue-50" : ""}
+          onClick={() => handleStatusUpdate("AWAITING_DIAGNOSTIC")}
+          className={currentStatus === "AWAITING_DIAGNOSTIC" ? "bg-blue-50" : ""}
         >
           Em espera do encontro
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleStatusUpdate("Encontramento de diagnostico planeado")}
-          className={currentStatus === "Encontramento de diagnostico planeado" ? "bg-sky-100" : ""}
+          onClick={() => handleStatusUpdate("DIAGNOSTIC_SCHEDULED")}
+          className={currentStatus === "DIAGNOSTIC_SCHEDULED" ? "bg-sky-100" : ""}
         >
           Encontro planeado
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleStatusUpdate("Orçamento recebido")}
-          className={currentStatus === "Orçamento recebido" ? "bg-purple-100" : ""}
+          onClick={() => handleStatusUpdate("QUOTE_RECEIVED")}
+          className={currentStatus === "QUOTE_RECEIVED" ? "bg-purple-100" : ""}
         >
           Orçamento recebido
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleStatusUpdate("Em curso de reparação")}
-          className={currentStatus === "Em curso de reparação" ? "bg-orange-100" : ""}
+          onClick={() => handleStatusUpdate("IN_REPAIR")}
+          className={currentStatus === "IN_REPAIR" ? "bg-orange-100" : ""}
         >
           Em curso de reparação
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleStatusUpdate("Resolvido")}
-          className={currentStatus === "Resolvido" ? "bg-green-100" : ""}
+          onClick={() => handleStatusUpdate("RESOLVED")}
+          className={currentStatus === "RESOLVED" ? "bg-green-100" : ""}
         >
           Resolvido
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleStatusUpdate("Annulé")}
-          className={currentStatus === "Annulé" ? "bg-red-100" : ""}
+          onClick={() => handleStatusUpdate("CANCELLED")}
+          className={currentStatus === "CANCELLED" ? "bg-red-100" : ""}
         >
           Annulé
         </Button>

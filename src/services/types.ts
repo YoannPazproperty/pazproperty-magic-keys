@@ -2,6 +2,17 @@
  * Types globaux pour les déclarations, notifications et affaires
  */
 
+// --- Statuts de déclaration normalisés
+export type DeclarationStatus =
+  | "NEW"
+  | "TRANSMITTED"
+  | "AWAITING_DIAGNOSTIC"
+  | "DIAGNOSTIC_SCHEDULED"
+  | "CANCELLED"
+  | "QUOTE_RECEIVED"
+  | "IN_REPAIR"
+  | "RESOLVED";
+
 // --- Prestataires de services
 export interface ServiceProvider {
   id: string;
@@ -27,7 +38,7 @@ export interface Declaration {
   property?: string | null;
   city?: string | null;
   postalCode?: string | null;
-  status: "Novo" | "Em espera do encontro de diagnostico" | "Encontramento de diagnostico planeado" | "Orçamento reçu" | "Em cours de reparação" | "Resolvido" | "Annulé" | "Transmitido";
+  status: DeclarationStatus;
   issueType?: string | null;
   description?: string | null;
   urgency?: string | null;
@@ -40,7 +51,10 @@ export interface Declaration {
   quote_approved?: boolean | null;
   quote_rejection_reason?: string | null;
   quote_file_path?: string | null;
+  quote_response_date?: string | null;
   submittedAt?: string | null;
+  mondayId?: string | null;
+  nif?: string | null;
 }
 
 // --- Fichiers liés aux déclarations
@@ -50,7 +64,7 @@ export type DeclarationFile = {
   file_path: string;
   file_type: "quote" | "image" | "video" | string;
   file_name: string;
-  uploaded_at: string;
+  uploaded_at?: string | null;
   uploaded_by?: string | null;
 };
 

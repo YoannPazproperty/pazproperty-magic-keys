@@ -1,41 +1,31 @@
+
 import { useState, useEffect } from "react";
 import { ContactsList } from "../../ContactsList";
-import { getContactsList } from "../../../services/contacts/contactQueries";
+import { getContacts } from "../../../../services/contacts/contactQueries";
 import { toast } from "sonner";
-import type { CommercialContact } from "../../../services/types";
+import type { CommercialContact } from "../../../../services/types";
 
 export const CrmTab = () => {
   const [contacts, setContacts] = useState<CommercialContact[]>([]);
-  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     loadContacts();
   }, []);
 
   const loadContacts = async () => {
-    setIsLoadingContacts(true);
+    setIsLoading(true);
     try {
-      const allContacts = await getContactsList();
+      const allContacts = await getContacts();
+      console.log("Loaded contacts:", allContacts);
       setContacts(allContacts);
     } catch (error) {
       console.error("Error loading contacts:", error);
-      toast.error("Erro ao carregar contatos");
+      toast.error("Erreur lors du chargement des contacts");
     } finally {
-      setIsLoadingContacts(false);
+      setIsLoading(false);
     }
   };
 
-  return (
-    <>
-      <div className="rounded-lg border bg-card p-6 mb-4">
-        <h2 className="text-2xl font-semibold mb-4">CRM</h2>
-        <p className="text-muted-foreground mb-4">Gerencie seus contatos comerciais aqui.</p>
-      </div>
-      <ContactsList 
-        contacts={contacts}
-        isLoading={isLoadingContacts}
-        onRefresh={loadContacts}
-      />
-    </>
-  );
+  return <ContactsList contacts={contacts} isLoading={isLoading} />;
 };

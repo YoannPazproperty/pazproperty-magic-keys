@@ -1,65 +1,36 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { PlusCircle, FileEdit, Trash2, Clock, Euro } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { getAffairesByContactId, deleteAffaire } from "@/services/affaires/affairesService";
-import type { Affaire, StatutAffaire } from "@/services/types";
-import { STATUTS_AFFAIRES } from "@/services/types";
+
+import { useState } from "react";
+import { Button } from "../../../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
+import { Badge } from "../../../ui/badge";
+import { Trash2, Edit, Plus } from "lucide-react";
 import { AffaireFormDialog } from "../AffaireFormDialog";
 import { AffaireDetailsDialog } from "../AffaireDetailsDialog";
+import type { Affaire, CommercialContact } from "../../../../services/types";
+import { useAffaires } from "../../../../hooks/useAffaires";
+import { Skeleton } from "../../../ui/skeleton";
+import { formatDate } from "../../../../utils/translationUtils";
 
 interface AffairesTabProps {
-  contactId: string;
-  contactName: string;
+  contact: CommercialContact;
 }
 
-export const AffairesTab = ({ contactId, contactName }: AffairesTabProps) => {
-  const [affaires, setAffaires] = useState<Affaire[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export const AffairesTab = ({ contact }: AffairesTabProps) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [editingAffaire, setEditingAffaire] = useState<Affaire | null>(null);
   const [selectedAffaire, setSelectedAffaire] = useState<Affaire | null>(null);
-  const [affaireToDelete, setAffaireToDelete] = useState<Affaire | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const loadAffaires = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getAffairesByContactId(contactId);
-      setAffaires(data);
-    } catch (error) {
-      console.error("Error loading affaires:", error);
-      toast.error("Erreur lors du chargement des affaires");
-    } finally {
-      setIsLoading(false);
+  const { affaires, isLoading, deleteAffaire, refreshAffaires } = useAffaires(contact.id);
+
+  const handleDelete = async (affaireId: string) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette affaire ?")) {
+      await deleteAffaire(affaireId);
     }
   };
 
-  useEffect(() => {
-    loadAffaires();
-  }, [contactId]);
-
-  const handleAddNew = () => {
-    setSelectedAffaire(null);
-    setIsFormOpen(true);
-  };
-
   const handleEdit = (affaire: Affaire) => {
-    setSelectedAffaire(affaire);
+    setEditingAffaire(affaire);
     setIsFormOpen(true);
   };
 
@@ -68,188 +39,158 @@ export const AffairesTab = ({ contactId, contactName }: AffairesTabProps) => {
     setIsDetailsOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!affaireToDelete) return;
-    try {
-      await deleteAffaire(affaireToDelete.id);
-      loadAffaires();
-    } catch (error) {
-      console.error("Error deleting affaire:", error);
-    } finally {
-      setAffaireToDelete(null);
-    }
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setEditingAffaire(null);
+    refreshAffaires();
   };
 
-  const formatMontant = (montant: number | null) => {
-    if (montant === null) return "-";
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(montant);
+  const handleDetailsClose = () => {
+    setIsDetailsOpen(false);
+    setSelectedAffaire(null);
   };
 
-  /**
-   * Badge de statut : on centralise l’affichage depuis la liste des statuts
-   */
-  const getStatutBadge = (statut: StatutAffaire) => {
+  const getStatutColor = (statut: string) => {
     switch (statut) {
       case "Initial":
-        return <Badge variant="outline">Initial</Badge>;
+        return "bg-gray-100 text-gray-800";
       case "En discussion":
-        return <Badge variant="secondary">En discussion</Badge>;
+        return "bg-blue-100 text-blue-800";
       case "Proposition faite":
-        return <Badge variant="default">Proposition faite</Badge>;
+        return "bg-yellow-100 text-yellow-800";
       case "Contrat signé":
-        return <Badge className="bg-blue-500 hover:bg-blue-600">Contrat signé</Badge>;
+        return "bg-green-100 text-green-800";
       case "En cours":
-        return <Badge className="bg-amber-500 hover:bg-amber-600">En cours</Badge>;
+        return "bg-orange-100 text-orange-800";
       case "Achevé":
-        return <Badge className="bg-green-500 hover:bg-green-600">Achevé</Badge>;
+        return "bg-emerald-100 text-emerald-800";
       case "Annulé":
-        return <Badge variant="destructive">Annulé</Badge>;
+        return "bg-red-100 text-red-800";
       default:
-        return <Badge variant="outline">{statut}</Badge>;
+        return "bg-gray-100 text-gray-800";
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid gap-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4 py-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Affaires liées à {contactName}</CardTitle>
-          <Button onClick={handleAddNew}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Nouvelle affaire
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : affaires.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Aucune affaire trouvée pour ce contact.</p>
-              <Button variant="outline" className="mt-4" onClick={handleAddNew}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Ajouter une affaire
-              </Button>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead className="hidden md:table-cell">Honoraires</TableHead>
-                    <TableHead className="hidden md:table-cell">Rémunération</TableHead>
-                    <TableHead className="hidden md:table-cell">Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {affaires.map((affaire) => (
-                    <TableRow 
-                      key={affaire.id} 
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleViewDetails(affaire)}
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">
+          Affaires ({affaires.length})
+        </h3>
+        <Button onClick={() => setIsFormOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvelle affaire
+        </Button>
+      </div>
+
+      {affaires.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-center text-muted-foreground">
+            Aucune affaire trouvée pour ce contact
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {affaires.map((affaire) => (
+            <Card key={affaire.id} className="cursor-pointer hover:shadow-md transition-shadow">
+              <CardHeader 
+                className="pb-3"
+                onClick={() => handleViewDetails(affaire)}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <CardTitle className="text-lg">{affaire.client_nom}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge className={getStatutColor(affaire.statut)}>
+                        {affaire.statut}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        Créé le {affaire.created_at ? formatDate(new Date(affaire.created_at).toISOString()) : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(affaire)}
                     >
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{affaire.client_nom}</p>
-                          <p className="text-sm text-muted-foreground">{affaire.client_email || ""}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatutBadge(affaire.statut)}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex items-center">
-                          <Euro className="h-4 w-4 mr-1 text-muted-foreground" />
-                          {formatMontant(affaire.honoraires_percus)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex items-center">
-                          <Euro className="h-4 w-4 mr-1 text-muted-foreground" />
-                          {formatMontant(affaire.remuneration_prevue)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <div className="flex items-center text-muted-foreground">
-                          <Clock className="h-4 w-4 mr-1" />
-                          <span className="whitespace-nowrap">
-                            {formatDistanceToNow(new Date(affaire.created_at), { addSuffix: true, locale: fr })}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-1" onClick={(e) => e.stopPropagation()}>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(affaire);
-                            }}
-                          >
-                            <FileEdit className="h-4 w-4" />
-                            <span className="sr-only">Modifier</span>
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setAffaireToDelete(affaire);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Supprimer</span>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(affaire.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent 
+                className="pt-0"
+                onClick={() => handleViewDetails(affaire)}
+              >
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Email:</span>
+                    <p className="text-muted-foreground">{affaire.client_email || "Non renseigné"}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Téléphone:</span>
+                    <p className="text-muted-foreground">{affaire.client_telephone || "Non renseigné"}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Rémunération prévue:</span>
+                    <p className="text-muted-foreground">
+                      {affaire.remuneration_prevue ? `${affaire.remuneration_prevue}€` : "Non définie"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium">Honoraires perçus:</span>
+                    <p className="text-muted-foreground">
+                      {affaire.honoraires_percus ? `${affaire.honoraires_percus}€` : "0€"}
+                    </p>
+                  </div>
+                </div>
+                {affaire.description && (
+                  <div className="mt-3 pt-3 border-t">
+                    <span className="font-medium text-sm">Description:</span>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {affaire.description}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      {/* Formulaire d'ajout/édition d'affaire */}
-      <AffaireFormDialog 
+      <AffaireFormDialog
         isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSuccess={loadAffaires}
-        contactId={contactId}
-        affaireToEdit={selectedAffaire}
+        onClose={handleFormClose}
+        contactId={contact.id}
+        initialData={editingAffaire}
       />
 
-      {/* Détails d'une affaire */}
       <AffaireDetailsDialog
+        affaire={selectedAffaire}
         isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
-        onUpdate={loadAffaires}
-        affaireId={selectedAffaire?.id ?? null}
+        onClose={handleDetailsClose}
       />
-
-      {/* Dialogue de confirmation de suppression */}
-      <AlertDialog open={!!affaireToDelete} onOpenChange={(open) => !open && setAffaireToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette affaire ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. Toutes les informations concernant cette affaire et son historique seront définitivement supprimées.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
