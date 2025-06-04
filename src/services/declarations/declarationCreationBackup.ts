@@ -2,7 +2,6 @@
 import { Declaration } from "../types";
 import { saveDeclarations, loadDeclarations } from "../storageService";
 import { generateUniqueId } from "./declarationStorage";
-import { notifyNewDeclaration } from "./declarationNotification";
 import { storeFile } from "../storage/fileStorage";
 import { createSupabaseDeclaration } from "./supabaseDeclarationStorage";
 import { isSupabaseConnected, createBucketIfNotExists } from "../supabaseService";
@@ -32,9 +31,9 @@ export const addWithMedia = async (
     const newDeclaration: Declaration = {
       ...declarationData,
       id: generateUniqueId(),
-      status: "Novo", // Update from "pending" to "Novo"
+      status: "Novo",
       submittedAt: new Date().toISOString(),
-      mediaFiles: mediaUrls  // Changé de string à string[]
+      mediaFiles: mediaUrls
     };
     
     if (supabaseConnected) {
@@ -55,9 +54,6 @@ export const addWithMedia = async (
           toast.success("Declaração salva com sucesso", {
             description: "Sua declaração foi registrada no Supabase."
           });
-          
-          // Send notification with the declaration ID only after successful save
-          await notifyNewDeclaration(newDeclaration.id);
         }
       } catch (supabaseError) {
         console.error("declarationCreation: Error saving to Supabase:", supabaseError);
@@ -79,9 +75,6 @@ export const addWithMedia = async (
       toast.info("Salvo no modo offline", {
         description: "Declaração salva localmente. Será sincronizada quando houver conexão."
       });
-      
-      // Only send notification if we have an ID, even in offline mode
-      await notifyNewDeclaration(newDeclaration.id);
     }
     
     return newDeclaration;

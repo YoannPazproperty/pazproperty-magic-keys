@@ -13,23 +13,3 @@ import { updateStatusAndNotify } from "@/services/notifications";
  * @param additionalUpdates - Autres champs à mettre à jour (optionnel)
  */
 export { updateStatusAndNotify };
-
-/**
- * Notifie lors de la création d'une nouvelle déclaration
- * @param declarationId - ID de la déclaration nouvellement créée
- */
-export const notifyNewDeclaration = async (declarationId: string): Promise<void> => {
-  try {
-    console.log(`notifyNewDeclaration: Processing notification for declaration ${declarationId}`);
-    
-    // Pour l'instant, cette fonction fait juste un log
-    // Dans le futur, elle pourra envoyer des emails, webhooks, etc.
-    
-    // Optionnel : on pourrait mettre à jour le statut si nécessaire
-    // await updateStatusAndNotify(declarationId, "Novo");
-    
-    console.log(`notifyNewDeclaration: Notification processed for declaration ${declarationId}`);
-  } catch (error) {
-    console.error("notifyNewDeclaration: Error processing notification:", error);
-  }
-};

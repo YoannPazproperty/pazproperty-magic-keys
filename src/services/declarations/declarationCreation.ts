@@ -1,6 +1,5 @@
 
 import { Declaration } from "../types";
-import { notifyNewDeclaration } from "./declarationNotification";
 import { storeFile } from "../storage/fileStorage";
 import { createSupabaseDeclaration } from "./supabaseDeclarationStorage";
 import { isSupabaseConnected, createBucketIfNotExists } from "../supabaseService";
@@ -42,9 +41,9 @@ export const addWithMedia = async (
     const newDeclaration: Declaration = {
       ...declarationData,
       id: generateUniqueId(),
-      status: "Novo", // Update from "pending" to "Novo"
+      status: "Novo",
       submittedAt: new Date().toISOString(),
-      mediaFiles: mediaUrls  // Ça va être un tableau de string
+      mediaFiles: mediaUrls
     };
     
     // Create declaration in Supabase
@@ -61,9 +60,6 @@ export const addWithMedia = async (
     toast.success("Declaração salva com sucesso", {
       description: "Sua declaração foi registrada no Supabase."
     });
-    
-    // Send notification with the declaration ID instead of the entire declaration object
-    await notifyNewDeclaration(newDeclaration.id);
 
     // Check if user is authenticated and assign customer role if needed
     const { data: { session } } = await supabase.auth.getSession();
