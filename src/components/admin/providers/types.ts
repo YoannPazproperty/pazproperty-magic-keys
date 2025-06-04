@@ -4,7 +4,7 @@ import type { ServiceProvider } from "../../../services/types";
 
 export const providerFormSchema = z.object({
   empresa: z.string().min(1, { message: "Empresa é obrigatória" }),
-  tipo_de_obras: z.enum(["Eletricidade", "Canalização", "Alvenaria", "Caixilharias", "Obras gerais"]),
+  tipo_de_obras: z.string().min(1, { message: "Tipo de obras é obrigatório" }),
   nome_gerente: z.string().min(1, { message: "Nome do gerente é obrigatório" }),
   telefone: z.string().optional(),
   email: z.string().email({ message: "Email inválido" }),

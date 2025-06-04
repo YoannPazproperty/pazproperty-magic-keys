@@ -34,7 +34,7 @@ export function ServiceProviderFormDialog({
 
   const defaultValues: ProviderFormValues = {
     empresa: providerToEdit?.empresa || "",
-    tipo_de_obras: providerToEdit?.tipo_de_obras || "Obras gerais",
+    tipo_de_obras: (providerToEdit?.tipo_de_obras as string) || "Obras gerais",
     nome_gerente: providerToEdit?.nome_gerente || "",
     telefone: providerToEdit?.telefone || "",
     email: providerToEdit?.email || "",
@@ -185,7 +185,7 @@ export function ServiceProviderFormDialog({
       if (providerToEdit) {
         form.reset({
           empresa: providerToEdit.empresa || "",
-          tipo_de_obras: providerToEdit.tipo_de_obras || "Obras gerais",
+          tipo_de_obras: (providerToEdit.tipo_de_obras as string) || "Obras gerais",
           nome_gerente: providerToEdit.nome_gerente || "",
           telefone: providerToEdit.telefone || "",
           email: providerToEdit.email || "",

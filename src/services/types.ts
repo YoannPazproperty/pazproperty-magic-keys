@@ -20,7 +20,8 @@ export type DeclarationStatus =
   | "Resolvido"
   | "Em espera do encontro de diagnostico"
   | "Encontramento de diagnostico planeado"
-  | "Annulé";
+  | "Annulé"
+  | string;
 
 // --- Prestataires de services
 export interface ServiceProvider {
@@ -103,12 +104,16 @@ export type NotificationLog = {
   id: string;
   declaration_id: string;
   notification_type: string;
-  recipient_email: string;
-  recipient_type: "provider" | "tenant" | "admin";
+  recipient_email?: string | null;
+  recipient_type?: string | null;
   sent_at: string;
-  success: boolean;
+  success?: boolean;
   error_message?: string | null;
-  message_content: string;
+  message_content?: string | null;
+  // Legacy properties for backward compatibility
+  email?: string | null;
+  type?: string;
+  status?: string | null;
 };
 
 // --- Rapports techniciens
@@ -141,7 +146,8 @@ export type StatutAffaire =
   | "Contrat signé"
   | "En cours"
   | "Achevé"
-  | "Annulé";
+  | "Annulé"
+  | string;
 
 export const STATUTS_AFFAIRES: StatutAffaire[] = [
   "Initial",

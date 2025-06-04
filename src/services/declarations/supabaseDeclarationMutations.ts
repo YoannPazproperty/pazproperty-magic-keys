@@ -6,6 +6,32 @@ import { toast } from "sonner";
 
 const DECLARATIONS_TABLE = 'declarations';
 
+// Status mapping from app statuses to Supabase enum values
+const supabaseStatusMap: Record<string, string> = {
+  NEW: "Novo",
+  TRANSMITTED: "Transmitido",
+  AWAITING_DIAGNOSTIC: "Em espera do encontro de diagnostico",
+  DIAGNOSTIC_SCHEDULED: "Encontramento de diagnostico planeado",
+  CANCELLED: "Annulé",
+  QUOTE_RECEIVED: "Orçamento recebido",
+  IN_REPAIR: "Em curso de reparação",
+  RESOLVED: "Resolvido",
+  // Direct mappings for already correct statuses
+  "Novo": "Novo",
+  "Transmitido": "Transmitido",
+  "Orçamento recebido": "Orçamento recebido",
+  "Em curso de reparação": "Em curso de reparação",
+  "Resolvido": "Resolvido",
+  "Em espera do encontro de diagnostico": "Em espera do encontro de diagnostico",
+  "Encontramento de diagnostico planeado": "Encontramento de diagnostico planeado",
+  "Annulé": "Annulé"
+};
+
+// Helper function to map status to Supabase format
+const mapStatusToSupabase = (status: string): string => {
+  return supabaseStatusMap[status] || status;
+};
+
 // Create a new declaration in Supabase
 export const createSupabaseDeclaration = async (declaration: Declaration): Promise<Declaration | null> => {
   try {
@@ -19,8 +45,11 @@ export const createSupabaseDeclaration = async (declaration: Declaration): Promi
     
     console.log('Tentative de création de déclaration dans Supabase:', declaration);
     
-    // Convert to Supabase format
-    const supabaseDeclaration = convertToSupabaseFormat(declaration);
+    // Convert to Supabase format and map status
+    const supabaseDeclaration = {
+      ...convertToSupabaseFormat(declaration),
+      status: mapStatusToSupabase(declaration.status)
+    };
     
     console.log('Format Supabase de la déclaration:', supabaseDeclaration);
     
@@ -74,6 +103,11 @@ export const updateSupabaseDeclaration = async (id: string, updates: Partial<Dec
       supabaseUpdates.mediaFiles = updates.mediaFiles && updates.mediaFiles.length > 0 
         ? JSON.stringify(updates.mediaFiles) 
         : null;
+    }
+    
+    // Map status if it's being updated
+    if (updates.status) {
+      supabaseUpdates.status = mapStatusToSupabase(updates.status);
     }
     
     const { data, error } = await supabase

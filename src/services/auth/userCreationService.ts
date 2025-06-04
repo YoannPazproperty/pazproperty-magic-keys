@@ -1,6 +1,6 @@
 
 import { supabase } from "../../integrations/supabase/client";
-import type { CreateUserOptions, UserWithMetadata } from "../../hooks/auth/types";
+import type { CreateUserOptions, UserWithMetadata, UserRole } from "../../hooks/auth/types";
 
 export interface CreateUserResult {
   success: boolean;
@@ -15,7 +15,7 @@ export interface UserCreationData {
   email: string;
   password: string;
   name?: string;
-  role?: string;
+  role?: UserRole | string;
   metadata?: Record<string, any>;
 }
 
@@ -70,10 +70,13 @@ export const createUserWithInvitation = async (
   console.log(`Creating user with context: ${context}`, userData);
   
   try {
+    // Ensure role is typed correctly
+    const role = userData.role as UserRole | undefined;
+    
     const result = await createUser({
       email: userData.email,
       password: userData.password,
-      role: userData.role,
+      role: role,
       metadata: userData.metadata
     });
 

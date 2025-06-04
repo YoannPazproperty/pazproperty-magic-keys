@@ -6,6 +6,32 @@ import { toast } from "sonner";
 
 const DECLARATIONS_TABLE = 'declarations';
 
+// Status mapping from app statuses to Supabase enum values
+const supabaseStatusMap: Record<string, string> = {
+  NEW: "Novo",
+  TRANSMITTED: "Transmitido",
+  AWAITING_DIAGNOSTIC: "Em espera do encontro de diagnostico",
+  DIAGNOSTIC_SCHEDULED: "Encontramento de diagnostico planeado",
+  CANCELLED: "Annulé",
+  QUOTE_RECEIVED: "Orçamento recebido",
+  IN_REPAIR: "Em curso de reparação",
+  RESOLVED: "Resolvido",
+  // Direct mappings for already correct statuses
+  "Novo": "Novo",
+  "Transmitido": "Transmitido",
+  "Orçamento recebido": "Orçamento recebido",
+  "Em curso de reparação": "Em curso de reparação",
+  "Resolvido": "Resolvido",
+  "Em espera do encontro de diagnostico": "Em espera do encontro de diagnostico",
+  "Encontramento de diagnostico planeado": "Encontramento de diagnostico planeado",
+  "Annulé": "Annulé"
+};
+
+// Helper function to map status to Supabase format
+const mapStatusToSupabase = (status: string): string => {
+  return supabaseStatusMap[status] || status;
+};
+
 // Get all declarations with optional filters
 export const getSupabaseDeclarations = async (statusFilter: Declaration["status"] | null = null): Promise<Declaration[]> => {
   try {
@@ -20,7 +46,8 @@ export const getSupabaseDeclarations = async (statusFilter: Declaration["status"
     let query = supabase.from(DECLARATIONS_TABLE).select('*');
     
     if (statusFilter) {
-      query = query.eq('status', statusFilter);
+      const mappedStatus = mapStatusToSupabase(statusFilter);
+      query = query.eq('status', mappedStatus);
     }
     
     const { data, error } = await query.order('submittedAt', { ascending: false });

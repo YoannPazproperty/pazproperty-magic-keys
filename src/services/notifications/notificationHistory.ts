@@ -1,6 +1,7 @@
+
 /**
  * getDeclarationNotificationHistory
- * Centralise la récupération des historiques de notifications d’une déclaration :
+ * Centralise la récupération des historiques de notifications d'une déclaration :
  *  - Supabase si connecté (live multi-user)
  *  - Sinon fallback localStorage (offline)
  * Compatible avec le typage global NotificationLog du projet
@@ -12,7 +13,7 @@ import type { NotificationLog } from "@/services/types"; // Prends bien le type 
 const NOTIFICATIONS_STORAGE_KEY = "notifications";
 
 /**
- * Récupère l’historique des notifications pour une déclaration :
+ * Récupère l'historique des notifications pour une déclaration :
  * - Priorité à Supabase (si connecté)
  * - Sinon fallback sur localStorage (trié date décroissante)
  */
@@ -30,9 +31,21 @@ export const getDeclarationNotificationHistory = async (
         .order("sent_at", { ascending: false });
 
       if (!error && Array.isArray(data)) {
-        return (data as NotificationLog[]).map((log) => ({
-          ...log,
-          sent_at: log.sent_at || "", // fallback string vide si absent
+        // Convert Supabase data to NotificationLog format
+        return data.map((log: any): NotificationLog => ({
+          id: log.id,
+          declaration_id: log.declaration_id || "",
+          notification_type: log.type || "",
+          recipient_email: log.email || null,
+          recipient_type: "tenant", // Default value since not stored in old schema
+          sent_at: log.sent_at || "",
+          success: log.status === 'sent',
+          error_message: log.status === 'failed' ? 'Send failed' : null,
+          message_content: `Notification sent to ${log.email}`,
+          // Legacy properties for backward compatibility
+          email: log.email,
+          type: log.type,
+          status: log.status
         }));
       } else if (error) {
         console.warn("[NotificationHistory] Erreur récupération Supabase:", error);

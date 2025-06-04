@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { isSupabaseConnected } from "../supabaseService";
 
@@ -48,16 +49,16 @@ export const logNotificationToSupabase = async (notification: NotificationLog): 
     // Format pour Supabase (évite les champs inconnus)
     const supabaseData = {
       declaration_id: notification.declaration_id,
-      email: notification.email,
-      type: notification.type,
-      status: notification.status,
+      email: notification.recipient_email || notification.email,
+      type: notification.notification_type || notification.type,
+      status: notification.status || (notification.success ? 'sent' : 'failed'),
       sent_at: notification.sent_at || new Date().toISOString(),
     };
 
     const { error } = await supabase.from("notifications").insert(supabaseData);
 
     if (error) {
-      console.error("[Notification] Erreur d’insertion Supabase:", error);
+      console.error("[Notification] Erreur d'insertion Supabase:", error);
       return false;
     }
 
@@ -73,7 +74,7 @@ export const logNotificationToSupabase = async (notification: NotificationLog): 
  * Fonction principale qui log d'abord dans Supabase puis toujours localement (défensif)
  */
 export const logNotification = async (notification: NotificationLog): Promise<boolean> => {
-  await logNotificationToSupabase(notification); // On n’arrête jamais le process
+  await logNotificationToSupabase(notification); // On n'arrête jamais le process
   logNotificationLocally(notification);
   return true;
 };
