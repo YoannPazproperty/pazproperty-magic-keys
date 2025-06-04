@@ -31,24 +31,22 @@ const WhyChooseUs = () => {
 const FeatureList = () => {
   const { t } = useLanguage();
   
+  const features = [
+    { titleKey: 'why.local', descKey: 'why.local.desc' },
+    { titleKey: 'why.availability', descKey: 'why.availability.desc' },
+    { titleKey: 'why.tech', descKey: 'why.tech.desc' },
+    { titleKey: 'why.transparency', descKey: 'why.transparency.desc' }
+  ];
+  
   return (
     <div className="space-y-4">
-      <Feature
-        title={t('why.local')}
-        description={t('why.local.desc')}
-      />
-      <Feature
-        title={t('why.availability')}
-        description={t('why.availability.desc')}
-      />
-      <Feature
-        title={t('why.tech')}
-        description={t('why.tech.desc')}
-      />
-      <Feature
-        title={t('why.transparency')}
-        description={t('why.transparency.desc')}
-      />
+      {features.map((feature, index) => (
+        <Feature
+          key={index}
+          title={t(feature.titleKey)}
+          description={t(feature.descKey)}
+        />
+      ))}
     </div>
   );
 };

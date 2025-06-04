@@ -4,10 +4,32 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Home, Wrench, Settings } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ROUTES, SERVICE_ANCHORS } from "@/constants/routes";
 
 const ServicesOverview = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+
+  const services = [
+    { 
+      icon: Home, 
+      titleKey: 'services.rental.title', 
+      descKey: 'services.rental.description', 
+      path: `${ROUTES.SERVICES}${SERVICE_ANCHORS.MANAGEMENT}` 
+    },
+    { 
+      icon: Wrench, 
+      titleKey: 'services.maintenance.title', 
+      descKey: 'services.maintenance.description', 
+      path: `${ROUTES.SERVICES}${SERVICE_ANCHORS.MAINTENANCE}` 
+    },
+    { 
+      icon: Settings, 
+      titleKey: 'services.consulting.title', 
+      descKey: 'services.consulting.description', 
+      path: `${ROUTES.SERVICES}${SERVICE_ANCHORS.CONSULTING}` 
+    }
+  ];
 
   const handleServiceNavigation = (path: string) => {
     navigate(path);
@@ -15,7 +37,7 @@ const ServicesOverview = () => {
   };
 
   const handleAllServicesNavigation = () => {
-    navigate("/servicos");
+    navigate(ROUTES.SERVICES);
     window.scrollTo(0, 0);
   };
 
@@ -30,26 +52,15 @@ const ServicesOverview = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <ServiceCard
-            icon={<Home className="h-8 w-8" color="#ffb100" />}
-            title={t('services.rental.title')}
-            description={t('services.rental.description')}
-            onClick={() => handleServiceNavigation("/servicos#gestao")}
-          />
-          
-          <ServiceCard
-            icon={<Wrench className="h-8 w-8" color="#ffb100" />}
-            title={t('services.maintenance.title')}
-            description={t('services.maintenance.description')}
-            onClick={() => handleServiceNavigation("/servicos#manutencao")}
-          />
-          
-          <ServiceCard
-            icon={<Settings className="h-8 w-8" color="#ffb100" />}
-            title={t('services.consulting.title')}
-            description={t('services.consulting.description')}
-            onClick={() => handleServiceNavigation("/servicos#consultoria")}
-          />
+          {services.map((service, index) => (
+            <ServiceCard
+              key={index}
+              icon={<service.icon className="h-8 w-8" color="#ffb100" />}
+              title={t(service.titleKey)}
+              description={t(service.descKey)}
+              onClick={() => handleServiceNavigation(service.path)}
+            />
+          ))}
         </div>
         
         <div className="text-center mt-12">
