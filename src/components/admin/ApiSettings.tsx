@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
@@ -8,8 +8,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+} from "../ui/card";
+import { Alert, AlertDescription } from "../ui/alert";
 import { InfoIcon } from "lucide-react";
 
 export const ApiSettings = () => {

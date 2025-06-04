@@ -1,12 +1,11 @@
-
 import { Declaration } from "../types";
 import { storeFile } from "../storage/fileStorage";
 import { createSupabaseDeclaration } from "./supabaseDeclarationStorage";
 import { isSupabaseConnected, createBucketIfNotExists } from "../supabaseService";
 import { toast } from "sonner";
 import { generateUniqueId } from "./declarationStorage";
-import { supabase } from "@/integrations/supabase/client";
-import { assignCustomerRole } from "@/hooks/auth/roleService";
+import { supabase } from "../../integrations/supabase/client";
+import { assignCustomerRole } from "../../hooks/auth/roleService";
 
 // Create a new declaration with media files
 export const addWithMedia = async (

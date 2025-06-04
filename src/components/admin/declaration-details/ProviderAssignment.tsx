@@ -1,8 +1,7 @@
-
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Declaration, ServiceProvider } from "@/services/types";
-import { useProviders } from "@/hooks/useProviders";
-import { useProviderAssignment } from "@/hooks/useProviderAssignment";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import type { Declaration, ServiceProvider } from "../../../services/types";
+import { useProviders } from "../../../hooks/useProviders";
+import { useProviderAssignment } from "../../../hooks/useProviderAssignment";
 
 interface ProviderAssignmentProps {
   declaration: Declaration;

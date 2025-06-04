@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { NotificationPreferencesCard } from "./NotificationPreferencesCard";
 import { WebhooksCard } from "./WebhooksCard";
-import { NotificationPreference } from "@/services/types";
-import { getNotificationPreferences } from "@/services/notificationService";
+import { NotificationPreference } from "../../../services/types";
+import { getNotificationPreferences } from "../../../services/notificationService";
 
 export const NotificationSettings = () => {
   const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreference>({

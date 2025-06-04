@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { deployToCurrentTarget, getCurrentDeploymentTarget } from '@/services/deploymentService';
+import { Button } from "./ui/button";
+import { deployToCurrentTarget, getCurrentDeploymentTarget } from '../services/deploymentService';
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 

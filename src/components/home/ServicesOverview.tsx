@@ -1,10 +1,9 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { ArrowRight, Home, Wrench, Settings } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { ROUTES, SERVICE_ANCHORS } from "@/constants/routes";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { ROUTES, SERVICE_ANCHORS } from "../../constants/routes";
 
 const ServicesOverview = () => {
   const navigate = useNavigate();

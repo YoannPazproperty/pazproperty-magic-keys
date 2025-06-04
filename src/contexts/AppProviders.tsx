@@ -1,8 +1,7 @@
-
 import React, { ReactNode } from 'react';
-import { LanguageProvider } from '@/contexts/LanguageContext';
-import { UserCreationProvider } from '@/contexts/UserCreationContext';
-import { AuthProvider } from '@/hooks/auth';
+import { LanguageProvider } from './LanguageContext';
+import { UserCreationProvider } from './UserCreationContext';
+import { AuthProvider } from '../hooks/auth';
 
 interface AppProvidersProps {
   children: ReactNode;

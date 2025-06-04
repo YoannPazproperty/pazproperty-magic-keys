@@ -1,10 +1,9 @@
-
 /**
  * Declaration Notification Facade
  * Sert d'interface unique vers les fonctions de notifications (notamment updateStatusAndNotify)
  * pour garantir la compatibilité avec le reste de l'application et préparer les automatisations à venir.
  */
-import { updateStatusAndNotify } from "@/services/notifications";
+import { updateStatusAndNotify } from "../notifications";
 
 /**
  * Met à jour le statut d'une déclaration et notifie les parties concernées si besoin.

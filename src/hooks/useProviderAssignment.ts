@@ -1,7 +1,7 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { updateStatusAndNotify } from "@/services/notifications";
+import { supabase } from "../integrations/supabase/client";
+import { updateStatusAndNotify } from "../services/notifications";
 import { toast } from "sonner";
 
 export const useProviderAssignment = () => {

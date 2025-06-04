@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -6,12 +5,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "../ui/dialog";
+import { Button } from "../ui/button";
 import { DeclarationDetails } from "./DeclarationDetails";
-import type { Declaration } from "@/services/types";
-import { formatDate, getStatusBadgeColor, translateStatus } from "@/utils/translationUtils";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import type { Declaration } from "../../services/types";
+import { formatDate, getStatusBadgeColor, translateStatus } from "../../utils/translationUtils";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface DeclarationDetailsDialogProps {
   declaration: Declaration | null;

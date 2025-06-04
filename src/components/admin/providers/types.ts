@@ -1,6 +1,5 @@
-
 import { z } from "zod";
-import type { ServiceProvider } from "@/services/types";
+import type { ServiceProvider } from "../../../services/types";
 
 export const providerFormSchema = z.object({
   empresa: z.string().min(1, { message: "Empresa é obrigatória" }),

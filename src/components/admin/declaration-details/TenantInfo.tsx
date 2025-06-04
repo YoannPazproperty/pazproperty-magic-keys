@@ -1,5 +1,4 @@
-
-import type { Declaration } from "@/services/types";
+import type { Declaration } from "../../../services/types";
 
 interface TenantInfoProps {
   declaration: Declaration;

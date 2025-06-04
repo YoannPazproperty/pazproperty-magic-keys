@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Select, 
@@ -6,13 +5,13 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
+} from "./ui/select";
 import { 
   getDeploymentTargets, 
   setDeploymentTarget, 
   getCurrentDeploymentTarget,
   DeploymentTarget 
-} from '@/services/deploymentService';
+} from '../services/deploymentService';
 
 interface DeploymentTargetSelectorProps {
   onChange?: (target: DeploymentTarget) => void;

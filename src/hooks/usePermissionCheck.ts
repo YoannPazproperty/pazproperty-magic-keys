@@ -1,6 +1,5 @@
-
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/auth';
+import { useAuth } from './auth';
 
 interface PermissionResult {
   hasAccess: boolean;

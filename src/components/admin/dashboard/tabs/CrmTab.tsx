@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
-import { ContactsList } from "@/components/admin/ContactsList";
-import { getContactsList } from "@/services/contacts/contactQueries";
+import { ContactsList } from "../../ContactsList";
+import { getContactsList } from "../../../services/contacts/contactQueries";
 import { toast } from "sonner";
-import type { CommercialContact } from "@/services/types";
+import type { CommercialContact } from "../../../services/types";
 
 export const CrmTab = () => {
   const [contacts, setContacts] = useState<CommercialContact[]>([]);

@@ -1,6 +1,5 @@
-
-import { supabase } from "@/integrations/supabase/client";
-import { adminClient } from "@/integrations/supabase/adminClient";
+import { supabase } from "../../../integrations/supabase/client";
+import { adminClient } from "../../../integrations/supabase/adminClient";
 
 /**
  * Checks if a user with the given email exists in Supabase Auth

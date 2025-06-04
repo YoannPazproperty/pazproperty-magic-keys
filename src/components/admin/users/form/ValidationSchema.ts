@@ -1,5 +1,4 @@
-
-import { isValidCompanyEmail } from "@/services/admin/company-users";
+import { isValidCompanyEmail } from "../../../services/admin/company-users";
 
 export const validateForm = (formValues: {
   name: string;

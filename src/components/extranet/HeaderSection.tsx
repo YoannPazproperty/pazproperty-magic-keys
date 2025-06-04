@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { LogOut, User } from "lucide-react";
 
 interface HeaderSectionProps {

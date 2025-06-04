@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { 
   UserCreationContext, 
   UserCreationData, 
   createUserWithInvitation
-} from '@/services/auth/userCreationService';
+} from '../../services/auth/userCreationService';
 
 export const useUserCreation = (defaultContext?: UserCreationContext) => {
   const [isCreating, setIsCreating] = useState(false);

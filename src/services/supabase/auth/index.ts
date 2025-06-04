@@ -6,4 +6,4 @@ export * from './maintenance';
 export * from './diagnostics';
 
 // Re-export Supabase client to maintain current API
-export { supabase } from '@/integrations/supabase/client';
+export { supabase } from '../../../integrations/supabase/client';

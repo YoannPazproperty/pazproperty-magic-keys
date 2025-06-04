@@ -1,8 +1,7 @@
-
 import React from 'react';
 import DeploymentTargetSelector from './DeploymentTargetSelector';
 import DeployButton from './DeployButton';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 const DeploymentPanel = () => {
   return (

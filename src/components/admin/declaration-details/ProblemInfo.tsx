@@ -1,7 +1,6 @@
-
-import { Badge } from "@/components/ui/badge";
-import type { Declaration } from "@/services/types";
-import { translateIssueType, translateUrgency } from "@/utils/translationUtils";
+import { Badge } from "../../ui/badge";
+import type { Declaration } from "../../../services/types";
+import { translateIssueType, translateUrgency } from "../../../utils/translationUtils";
 
 interface ProblemInfoProps {
   declaration: Declaration;

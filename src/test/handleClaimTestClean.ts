@@ -1,5 +1,4 @@
-
-import MCP, { ClaimData } from '@/services/mcp';
+import MCP, { ClaimData } from '../services/mcp';
 
 // Test data for claim creation
 const testClaim: ClaimData = {

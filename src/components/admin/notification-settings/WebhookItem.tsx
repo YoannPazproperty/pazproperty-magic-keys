@@ -1,5 +1,4 @@
-
-import { Button } from "@/components/ui/button";
+import { Button } from "../../ui/button";
 
 interface WebhookItemProps {
   webhook: {

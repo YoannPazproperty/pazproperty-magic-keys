@@ -1,7 +1,7 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { adminClient } from "@/integrations/supabase/adminClient";
-import { UserRole } from "@/hooks/auth/types";
+import { supabase } from "../../../integrations/supabase/client";
+import { adminClient } from "../../../integrations/supabase/adminClient";
+import { UserRole } from "../../../hooks/auth/types";
 import { validateRoleForEmail } from "./roleManagement";
 import { checkUserExists } from "./userVerification";
 

@@ -1,8 +1,7 @@
-
 import React, { useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { UserCreationForm } from "@/components/auth/UserCreationForm";
-import { useUserCreationContext } from "@/contexts/UserCreationContext";
+import { Dialog, DialogContent } from "../../ui/dialog";
+import { UserCreationForm } from "../../auth/UserCreationForm";
+import { useUserCreationContext } from "../../../contexts/UserCreationContext";
 
 interface UserFormDialogProps {
   isOpen: boolean;

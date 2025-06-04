@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Form } from "@/components/ui/form";
+import { Form } from "./ui/form";
 import DiagnosticSection from './technicien/DiagnosticSection';
 import InterventionSection from './technicien/InterventionSection';
 import InterventionCheckbox from './technicien/InterventionCheckbox';

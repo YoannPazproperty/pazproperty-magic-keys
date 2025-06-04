@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { Check } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const WhyChooseUs = () => {
   const { t } = useLanguage();

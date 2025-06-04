@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { UserCreationContext as UserContextType } from '@/services/auth/userCreationService';
+import { UserCreationContext as UserContextType } from '../services/auth/userCreationService';
 
 interface UserCreationContextProps {
   context: UserContextType;

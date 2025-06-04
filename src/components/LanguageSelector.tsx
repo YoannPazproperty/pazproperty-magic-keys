@@ -1,12 +1,12 @@
 
 import React from 'react';
-import { useLanguage, Language } from '@/contexts/LanguageContext';
+import { useLanguage, Language } from '../contexts/LanguageContext';
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
   DropdownMenuContent, 
   DropdownMenuItem 
-} from '@/components/ui/dropdown-menu';
+} from './ui/dropdown-menu';
 import { Globe } from 'lucide-react';
 
 const LanguageSelector = () => {
