@@ -25,15 +25,15 @@ export const ProblemInfo = ({
         <p><span className="font-medium">Code postal:</span> {declaration.postalCode}</p>
       )}
       <p>
-        <span className="font-medium">Type:</span> {translateIssueType(declaration.issueType || null)}
+        <span className="font-medium">Type:</span> {translateIssueType(declaration.issueType || "")}
       </p>
       <p>
-        <span className="font-medium">Urgence:</span> {translateUrgency(declaration.urgency || null)}
+        <span className="font-medium">Urgence:</span> {translateUrgency(declaration.urgency || "")}
       </p>
       <p>
         <span className="font-medium">Statut:</span>{" "}
         <Badge className={getStatusBadgeColor(declaration.status)}>
-          {translateStatus(declaration.status || null)}
+          {translateStatus(declaration.status || "")}
         </Badge>
       </p>
     </div>

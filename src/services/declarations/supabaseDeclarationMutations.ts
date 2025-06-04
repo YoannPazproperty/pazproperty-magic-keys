@@ -29,7 +29,7 @@ const supabaseStatusMap: Record<string, string> = {
 
 // Helper function to map status to Supabase format
 const mapStatusToSupabase = (status: string): string => {
-  return supabaseStatusMap[status] || status;
+  return supabaseStatusMap[status] || "Novo";
 };
 
 // Create a new declaration in Supabase

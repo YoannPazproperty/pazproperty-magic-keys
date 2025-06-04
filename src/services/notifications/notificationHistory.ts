@@ -33,19 +33,19 @@ export const getDeclarationNotificationHistory = async (
       if (!error && Array.isArray(data)) {
         // Convert Supabase data to NotificationLog format
         return data.map((log: any): NotificationLog => ({
-          id: log.id,
+          id: log.id || "missing-id",
           declaration_id: log.declaration_id || "",
-          notification_type: log.type || "",
+          notification_type: log.type || "GENERIC",
           recipient_email: log.email || null,
           recipient_type: "tenant", // Default value since not stored in old schema
-          sent_at: log.sent_at || "",
+          sent_at: log.sent_at || new Date().toISOString(),
           success: log.status === 'sent',
           error_message: log.status === 'failed' ? 'Send failed' : null,
-          message_content: `Notification sent to ${log.email}`,
+          message_content: `Notification sent to ${log.email || "unknown"}`,
           // Legacy properties for backward compatibility
-          email: log.email,
-          type: log.type,
-          status: log.status
+          email: log.email || null,
+          type: log.type || "GENERIC",
+          status: log.status || "unknown"
         }));
       } else if (error) {
         console.warn("[NotificationHistory] Erreur récupération Supabase:", error);

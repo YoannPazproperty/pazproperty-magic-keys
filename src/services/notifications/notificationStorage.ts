@@ -49,8 +49,8 @@ export const logNotificationToSupabase = async (notification: NotificationLog): 
     // Format pour Supabase (évite les champs inconnus)
     const supabaseData = {
       declaration_id: notification.declaration_id,
-      email: notification.recipient_email || notification.email,
-      type: notification.notification_type || notification.type,
+      email: notification.recipient_email || notification.email || "NON_RENSEIGNE",
+      type: notification.notification_type || notification.type || "GENERIC",
       status: notification.status || (notification.success ? 'sent' : 'failed'),
       sent_at: notification.sent_at || new Date().toISOString(),
     };
