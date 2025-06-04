@@ -1,4 +1,3 @@
-
 import { Declaration } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { convertToSupabaseFormat, convertFromSupabaseFormat } from "./supabaseFormatters";
@@ -16,135 +15,120 @@ const supabaseStatusMap: Record<string, string> = {
   QUOTE_RECEIVED: "Orçamento recebido",
   IN_REPAIR: "Em curso de reparação",
   RESOLVED: "Resolvido",
-  // Direct mappings for already correct statuses
+  // Direct mappings
   "Novo": "Novo",
   "Transmitido": "Transmitido",
   "Orçamento recebido": "Orçamento recebido",
-  "Em curso de reparação": "Em curso de reparação",
+  "Em cours de reparação": "Em cours de reparação",
   "Resolvido": "Resolvido",
   "Em espera do encontro de diagnostico": "Em espera do encontro de diagnostico",
   "Encontramento de diagnostico planeado": "Encontramento de diagnostico planeado",
   "Annulé": "Annulé"
 };
 
-// Helper function to map status to Supabase format
-const mapStatusToSupabase = (status: string): string => {
+// Helper with explicit return type to silence TS errors
+const mapStatusToSupabase = (
+  status: string
+): "Novo" | "Transmitido" | "Orçamento recebido" | "Em cours de reparação" |
+   "Resolvido" | "Em espera do encontro de diagnostico" |
+   "Encontramento de diagnostico planeado" | "Annulé" => {
   return supabaseStatusMap[status] || "Novo";
 };
 
-// Create a new declaration in Supabase
+// Create a new declaration
 export const createSupabaseDeclaration = async (declaration: Declaration): Promise<Declaration | null> => {
   try {
     if (!supabase) {
-      console.error('Supabase non disponible');
-      toast.error("Erro de conexão", {
-        description: "Não foi possível conectar ao Supabase para criar a declaração."
+      toast.error("Erreur de connexion", {
+        description: "Supabase non disponible pour la création."
       });
       throw new Error("Supabase client not available");
     }
-    
-    console.log('Tentative de création de déclaration dans Supabase:', declaration);
-    
-    // Convert to Supabase format and map status
+
     const supabaseDeclaration = {
       ...convertToSupabaseFormat(declaration),
       status: mapStatusToSupabase(declaration.status)
     };
-    
-    console.log('Format Supabase de la déclaration:', supabaseDeclaration);
-    
+
     const { data, error } = await supabase
       .from(DECLARATIONS_TABLE)
       .insert(supabaseDeclaration)
       .select()
       .single();
-    
+
     if (error) {
-      console.error('Erreur lors de la création de la déclaration dans Supabase:', error);
-      console.error('Détails de la déclaration qui a échoué:', supabaseDeclaration);
-      
-      toast.error("Erro ao salvar no Supabase", {
-        description: error.message
-      });
-      
-      throw new Error(`Error creating declaration in Supabase: ${error.message}`);
+      toast.error("Erreur Supabase", { description: error.message });
+      console.error("❌ Erreur insert Supabase :", supabaseDeclaration, error);
+      throw new Error(error.message);
     }
-    
-    console.log('Déclaration créée avec succès dans Supabase:', data);
-    // Convert from Supabase format
+
     return convertFromSupabaseFormat(data);
   } catch (err) {
-    console.error('Erreur lors de la création de la déclaration:', err);
-    
-    toast.error("Erro inesperado", {
-      description: "Não foi possível salvar a declaração no Supabase."
+    console.error("❌ Erreur de création de déclaration :", err);
+    toast.error("Erreur inattendue", {
+      description: "Échec de la création de la déclaration."
     });
-    
     throw err;
   }
 };
 
 // Update an existing declaration
-export const updateSupabaseDeclaration = async (id: string, updates: Partial<Declaration>): Promise<Declaration | null> => {
+export const updateSupabaseDeclaration = async (
+  id: string,
+  updates: Partial<Declaration>
+): Promise<Declaration | null> => {
   try {
     if (!supabase) {
-      console.error('Supabase non disponible');
-      toast.error("Erro de conexão", {
-        description: "Não foi possível conectar ao Supabase para atualizar a declaração."
+      toast.error("Erreur de connexion", {
+        description: "Supabase non disponible pour la mise à jour."
       });
       throw new Error("Supabase client not available");
     }
-    
-    // Create a supabase-compatible update object
+
     const supabaseUpdates: any = { ...updates };
-    
-    // If mediaFiles is included in the updates, convert it
+
     if (updates.mediaFiles !== undefined) {
-      supabaseUpdates.mediaFiles = updates.mediaFiles && updates.mediaFiles.length > 0 
-        ? JSON.stringify(updates.mediaFiles) 
+      supabaseUpdates.mediaFiles = updates.mediaFiles.length > 0
+        ? JSON.stringify(updates.mediaFiles)
         : null;
     }
-    
-    // Map status if it's being updated
+
     if (updates.status) {
-      supabaseUpdates.status = mapStatusToSupabase(updates.status);
+      supabaseUpdates.status = mapStatusToSupabase(updates.status as string);
     }
-    
+
     const { data, error } = await supabase
       .from(DECLARATIONS_TABLE)
       .update(supabaseUpdates)
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
-    
+
     if (error) {
-      console.error(`Erreur lors de la mise à jour de la déclaration ${id}:`, error);
-      
-      toast.error("Erro ao atualizar declaração", {
-        description: error.message
-      });
-      
-      throw new Error(`Error updating declaration: ${error.message}`);
+      toast.error("Erreur Supabase", { description: error.message });
+      console.error("❌ Erreur update Supabase :", supabaseUpdates, error);
+      throw new Error(error.message);
     }
-    
+
     return convertFromSupabaseFormat(data);
   } catch (err) {
-    console.error(`Erreur lors de la mise à jour de la déclaration ${id}:`, err);
-    
-    toast.error("Erro ao atualizar declaração", {
-      description: "Ocorreu um erro inesperado."
+    console.error("❌ Erreur de mise à jour de déclaration :", err);
+    toast.error("Erreur inattendue", {
+      description: "Échec de la mise à jour."
     });
-    
     throw err;
   }
 };
 
-// Update declaration status
-export const updateSupabaseDeclarationStatus = async (id: string, status: Declaration["status"]): Promise<boolean> => {
+// Update only the status
+export const updateSupabaseDeclarationStatus = async (
+  id: string,
+  status: Declaration["status"]
+): Promise<boolean> => {
   try {
     const result = await updateSupabaseDeclaration(id, { status });
     return result !== null;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
