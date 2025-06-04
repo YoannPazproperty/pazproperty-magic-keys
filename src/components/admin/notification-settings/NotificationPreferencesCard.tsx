@@ -1,100 +1,54 @@
 
-import { useState, useEffect } from "react";
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
-import { Button } from "../../ui/button";
-import { Checkbox } from "../../ui/checkbox";
+import { Switch } from "../../ui/switch";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
-import { toast } from "sonner";
-import { supabase } from "../../../integrations/supabase/client";
 import type { NotificationPreference } from "../../../services/types";
 
-export const NotificationPreferencesCard = () => {
-  const [preferences, setPreferences] = useState<NotificationPreference | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+interface NotificationPreferencesCardProps {
+  notificationPreferences: NotificationPreference;
+  setNotificationPreferences: React.Dispatch<React.SetStateAction<NotificationPreference>>;
+}
 
-  useEffect(() => {
-    loadPreferences();
-  }, []);
-
-  const loadPreferences = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      if (data) {
-        setPreferences(data);
-      } else {
-        // Create default preferences
-        const defaultPrefs: Partial<NotificationPreference> = {
-          email: true,
-          push: false,
-          sms: false,
-          recipientEmail: null,
-          recipientPhone: null,
-        };
-        setPreferences(defaultPrefs as NotificationPreference);
-      }
-    } catch (error) {
-      console.error('Error loading preferences:', error);
-      toast.error('Erreur lors du chargement des préférences');
-    } finally {
-      setIsLoading(false);
-    }
+export const NotificationPreferencesCard: React.FC<NotificationPreferencesCardProps> = ({
+  notificationPreferences,
+  setNotificationPreferences
+}) => {
+  const handleEmailToggle = (checked: boolean) => {
+    setNotificationPreferences(prev => ({
+      ...prev,
+      email: checked
+    }));
   };
 
-  const savePreferences = async () => {
-    if (!preferences) return;
-
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('notification_preferences')
-        .upsert(preferences);
-
-      if (error) throw error;
-
-      toast.success('Préférences sauvegardées');
-    } catch (error) {
-      console.error('Error saving preferences:', error);
-      toast.error('Erreur lors de la sauvegarde');
-    } finally {
-      setIsSaving(false);
-    }
+  const handleSmsToggle = (checked: boolean) => {
+    setNotificationPreferences(prev => ({
+      ...prev,
+      sms: checked
+    }));
   };
 
-  const updatePreference = (key: keyof NotificationPreference, value: any) => {
-    if (!preferences) return;
-    setPreferences({
-      ...preferences,
-      [key]: value,
-    });
+  const handlePushToggle = (checked: boolean) => {
+    setNotificationPreferences(prev => ({
+      ...prev,
+      push: checked
+    }));
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Préférences de notification</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleRecipientEmailChange = (value: string) => {
+    setNotificationPreferences(prev => ({
+      ...prev,
+      recipientEmail: value
+    }));
+  };
 
-  if (!preferences) return null;
+  const handleRecipientPhoneChange = (value: string) => {
+    setNotificationPreferences(prev => ({
+      ...prev,
+      recipientPhone: value
+    }));
+  };
 
   return (
     <Card>
@@ -105,62 +59,58 @@ export const NotificationPreferencesCard = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="email"
-              checked={preferences.email || false}
-              onCheckedChange={(checked) => updatePreference('email', checked)}
-            />
-            <Label htmlFor="email">Notifications par email</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="push"
-              checked={preferences.push || false}
-              onCheckedChange={(checked) => updatePreference('push', checked)}
-            />
-            <Label htmlFor="push">Notifications push</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="sms"
-              checked={preferences.sms || false}
-              onCheckedChange={(checked) => updatePreference('sms', checked)}
-            />
-            <Label htmlFor="sms">Notifications SMS</Label>
-          </div>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="email-notifications"
+            checked={notificationPreferences.email}
+            onCheckedChange={handleEmailToggle}
+          />
+          <Label htmlFor="email-notifications">Notifications par email</Label>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="recipientEmail">Email de réception</Label>
+        {notificationPreferences.email && (
+          <div className="space-y-2">
+            <Label htmlFor="recipient-email">Email de réception</Label>
             <Input
-              id="recipientEmail"
+              id="recipient-email"
               type="email"
-              value={preferences.recipientEmail || ''}
-              onChange={(e) => updatePreference('recipientEmail', e.target.value)}
-              placeholder="admin@example.com"
+              value={notificationPreferences.recipientEmail || ''}
+              onChange={(e) => handleRecipientEmailChange(e.target.value)}
+              placeholder="email@exemple.com"
             />
           </div>
+        )}
 
-          <div>
-            <Label htmlFor="recipientPhone">Téléphone de réception</Label>
-            <Input
-              id="recipientPhone"
-              type="tel"
-              value={preferences.recipientPhone || ''}
-              onChange={(e) => updatePreference('recipientPhone', e.target.value)}
-              placeholder="+33123456789"
-            />
-          </div>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="sms-notifications"
+            checked={notificationPreferences.sms || false}
+            onCheckedChange={handleSmsToggle}
+          />
+          <Label htmlFor="sms-notifications">Notifications par SMS</Label>
         </div>
 
-        <Button onClick={savePreferences} disabled={isSaving}>
-          {isSaving ? 'Sauvegarde...' : 'Sauvegarder les préférences'}
-        </Button>
+        {notificationPreferences.sms && (
+          <div className="space-y-2">
+            <Label htmlFor="recipient-phone">Numéro de téléphone</Label>
+            <Input
+              id="recipient-phone"
+              type="tel"
+              value={notificationPreferences.recipientPhone || ''}
+              onChange={(e) => handleRecipientPhoneChange(e.target.value)}
+              placeholder="+33 6 12 34 56 78"
+            />
+          </div>
+        )}
+
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="push-notifications"
+            checked={notificationPreferences.push || false}
+            onCheckedChange={handlePushToggle}
+          />
+          <Label htmlFor="push-notifications">Notifications push</Label>
+        </div>
       </CardContent>
     </Card>
   );

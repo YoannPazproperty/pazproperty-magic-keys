@@ -184,7 +184,7 @@ export const ProvidersList = () => {
       )}
 
       <ServiceProviderFormDialog
-        provider={selectedProvider}
+        selectedProvider={selectedProvider}
         isOpen={isFormOpen}
         onClose={handleFormClose}
         onSuccess={handleFormSuccess}

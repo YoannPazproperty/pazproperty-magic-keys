@@ -182,12 +182,12 @@ export const AffairesTab = ({ contact }: AffairesTabProps) => {
       <AffaireFormDialog
         isOpen={isFormOpen}
         onClose={handleFormClose}
-        contact={contact}
-        affaire={editingAffaire}
+        contactId={contact.id}
+        affaireId={editingAffaire?.id}
       />
 
       <AffaireDetailsDialog
-        affaire={selectedAffaire}
+        affaireId={selectedAffaire?.id || null}
         isOpen={isDetailsOpen}
         onClose={handleDetailsClose}
       />

@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import type { Affaire, AffaireFormData, HistoriqueAction, HistoriqueActionFormData } from "@/services/types";
+import { supabase } from "../../integrations/supabase/client";
+import type { Affaire, AffaireFormData, HistoriqueAction, HistoriqueActionFormData, StatutAffaire } from "../types";
 import { toast } from "sonner";
 
 /**
@@ -18,7 +18,10 @@ export const getAllAffaires = async (): Promise<Affaire[]> => {
       throw error;
     }
     
-    return data || [];
+    return (data || []).map(affaire => ({
+      ...affaire,
+      statut: affaire.statut as StatutAffaire
+    }));
   } catch (err) {
     console.error('Exception lors de la récupération des affaires:', err);
     throw err;
@@ -41,7 +44,10 @@ export const getAffairesByContactId = async (contactId: string): Promise<Affaire
       throw error;
     }
     
-    return data || [];
+    return (data || []).map(affaire => ({
+      ...affaire,
+      statut: affaire.statut as StatutAffaire
+    }));
   } catch (err) {
     console.error(`Exception lors de la récupération des affaires pour le contact ${contactId}:`, err);
     throw err;
@@ -64,7 +70,10 @@ export const getAffaireById = async (affaireId: string): Promise<Affaire | null>
       throw error;
     }
     
-    return data;
+    return {
+      ...data,
+      statut: data.statut as StatutAffaire
+    };
   } catch (err) {
     console.error(`Exception lors de la récupération de l'affaire ${affaireId}:`, err);
     throw err;
@@ -88,7 +97,10 @@ export const createAffaire = async (affaire: AffaireFormData): Promise<Affaire |
     }
     
     toast.success('Affaire créée avec succès');
-    return data;
+    return {
+      ...data,
+      statut: data.statut as StatutAffaire
+    };
   } catch (err) {
     console.error('Exception lors de la création de l\'affaire:', err);
     toast.error('Erreur lors de la création de l\'affaire');
@@ -114,7 +126,10 @@ export const updateAffaire = async (affaireId: string, updates: Partial<AffaireF
     }
     
     toast.success('Affaire mise à jour avec succès');
-    return data;
+    return {
+      ...data,
+      statut: data.statut as StatutAffaire
+    };
   } catch (err) {
     console.error(`Exception lors de la mise à jour de l'affaire ${affaireId}:`, err);
     toast.error('Erreur lors de la mise à jour de l\'affaire');

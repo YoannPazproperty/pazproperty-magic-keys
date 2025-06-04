@@ -117,6 +117,7 @@ export interface TechnicianReport {
   workDescription: string | null;
   date: string | null;
 }
+
 export interface TechnicianReportResult {
   success: boolean;
   message: string;
@@ -161,6 +162,7 @@ export interface Affaire {
   created_at?: string;
   updated_at?: string | null;
 }
+
 export interface AffaireFormData {
   contact_id: string;
   client_nom: string;
@@ -174,6 +176,7 @@ export interface AffaireFormData {
   date_paiement: string | null;
   notes: string | null;
 }
+
 export interface HistoriqueAction {
   id: string;
   affaire_id: string;
@@ -182,6 +185,7 @@ export interface HistoriqueAction {
   utilisateur: string | null;
   notes: string | null;
 }
+
 export interface HistoriqueActionFormData {
   affaire_id: string;
   action: string;

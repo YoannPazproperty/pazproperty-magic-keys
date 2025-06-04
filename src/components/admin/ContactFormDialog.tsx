@@ -1,17 +1,16 @@
-
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { Input } from "../ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Textarea } from "../ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import type { CommercialContact } from "@/services/types";
-import { createContact, updateContact } from "@/services/contacts/contactQueries";
+import type { CommercialContact } from "../../services/types";
+import { createContact, updateContact } from "../../services/contacts/contactQueries";
 
 // Define the form schema with required fields matching CommercialContact requirements
 const contactFormSchema = z.object({

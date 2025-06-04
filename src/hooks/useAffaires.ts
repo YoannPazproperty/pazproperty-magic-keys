@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import type { Affaire } from "../services/types";
+import type { Affaire, StatutAffaire } from "../services/types";
 import { supabase } from "../integrations/supabase/client";
 
 export const useAffaires = (contactId: string) => {
@@ -19,7 +19,12 @@ export const useAffaires = (contactId: string) => {
 
       if (error) throw error;
 
-      setAffaires(data || []);
+      const mappedAffaires: Affaire[] = (data || []).map(affaire => ({
+        ...affaire,
+        statut: affaire.statut as StatutAffaire
+      }));
+
+      setAffaires(mappedAffaires);
     } catch (error) {
       console.error("Error loading affaires:", error);
       toast.error("Erreur lors du chargement des affaires");

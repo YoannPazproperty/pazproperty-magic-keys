@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Table,
@@ -24,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import type { CommercialContact } from "@/services/types";
-import { deleteContact } from "@/services/contacts/contactQueries";
+import { deleteContact } from "../../services/contacts/contactQueries";
 import { ContactFormDialog } from "./ContactFormDialog";
 import { ContactDetailsDialog } from "./contact-details/ContactDetailsDialog";
 

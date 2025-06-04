@@ -10,3 +10,21 @@ export const userFormSchema = z.object({
 });
 
 export type UserFormData = z.infer<typeof userFormSchema>;
+
+export const validateForm = (data: any): { isValid: boolean; errors: string[] } => {
+  try {
+    userFormSchema.parse(data);
+    return { isValid: true, errors: [] };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        isValid: false,
+        errors: error.errors.map(err => err.message)
+      };
+    }
+    return {
+      isValid: false,
+      errors: ['Erreur de validation inconnue']
+    };
+  }
+};

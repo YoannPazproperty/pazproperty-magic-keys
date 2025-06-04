@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import type { CommercialContact } from "@/services/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
+import { Skeleton } from "../../ui/skeleton";
+import type { CommercialContact } from "../../../services/types";
 import { AffairesTab } from "./tabs/AffairesTab";
 import { ContactInfoTab } from "./tabs/ContactInfoTab";
 
@@ -31,7 +31,7 @@ export const ContactDetailsDialog = ({
       setIsLoading(true);
       try {
         // Import dynamically to avoid circular dependencies
-        const { getContactById } = await import("@/services/contacts/contactQueries");
+        const { getContactById } = await import("../../../services/contacts/contactQueries");
         const contactData = await getContactById(contactId);
         setContact(contactData);
       } catch (error) {
@@ -84,7 +84,7 @@ export const ContactDetailsDialog = ({
             </TabsContent>
             
             <TabsContent value="affaires">
-              <AffairesTab contactId={contact.id} contactName={contact.nome} />
+              <AffairesTab contact={contact} />
             </TabsContent>
           </Tabs>
         ) : isLoading ? (

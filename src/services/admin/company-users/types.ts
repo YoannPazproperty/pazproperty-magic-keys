@@ -21,7 +21,7 @@ export interface CompanyUser {
   email: string;
   name: string;
   level: CompanyUserLevel;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface CompanyUserResult {
