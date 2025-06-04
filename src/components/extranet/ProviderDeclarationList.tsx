@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { 
   Table, 
   TableBody, 
@@ -10,13 +10,13 @@ import {
   TableHead, 
   TableHeader, 
   TableRow 
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate, getStatusBadgeColor, translateStatus } from "@/utils/translationUtils";
+} from "../ui/table";
+import { Skeleton } from "../ui/skeleton";
+import { formatDate, getStatusBadgeColor, translateStatus } from "../../utils/translationUtils";
 import { toast } from "sonner";
-import { Declaration } from "@/services/types";
+import { Declaration } from "../../services/types";
 import { DeclarationDetailsDialog } from "../admin/DeclarationDetailsDialog";
-import { useProviderDeclarations } from "@/hooks/useProviderDeclarations";
+import { useProviderDeclarations } from "../../hooks/useProviderDeclarations";
 
 export function ProviderDeclarationList() {
   const { declarations, isLoading, refresh } = useProviderDeclarations();
@@ -85,7 +85,7 @@ export function ProviderDeclarationList() {
                   <TableCell className="font-medium">{declaration.id}</TableCell>
                   <TableCell>{declaration.name}</TableCell>
                   <TableCell>{declaration.issueType}</TableCell>
-                  <TableCell>{formatDate(declaration.submittedAt)}</TableCell>
+                  <TableCell>{formatDate(declaration.submittedAt || null)}</TableCell>
                   <TableCell>
                     <Badge className={getStatusBadgeColor(declaration.status as string)}>
                       {translateStatus(declaration.status as string)}

@@ -1,14 +1,14 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateStatusAndNotify } from "@/services/notifications";
+import { Button } from "../../ui/button";
+import { Textarea } from "../../ui/textarea";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
+import { RadioGroup, RadioGroupItem } from "../../ui/radio-group";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { updateStatusAndNotify } from "../../../services/notifications";
 import { toast } from "sonner";
-import type { Declaration, DeclarationFile } from "@/services/types";
+import type { Declaration, DeclarationFile } from "../../../services/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Euro, File } from "lucide-react";
@@ -26,7 +26,7 @@ export const QuoteApprovalForm = ({
   onSuccess,
   isReadOnly = false
 }: QuoteApprovalFormProps) => {
-  const [quoteApproved, setQuoteApproved] = useState<boolean | undefined>(declaration.quote_approved);
+  const [quoteApproved, setQuoteApproved] = useState<boolean | undefined>(declaration.quote_approved ?? undefined);
   const [rejectionReason, setRejectionReason] = useState<string>(declaration.quote_rejection_reason || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,7 +45,7 @@ export const QuoteApprovalForm = ({
     try {
       const success = await updateStatusAndNotify(
         declaration.id,
-        "Em curso de reparação",
+        "IN_REPAIR",
         {
           quote_approved: quoteApproved,
           quote_rejection_reason: !quoteApproved ? rejectionReason : undefined
@@ -93,9 +93,11 @@ export const QuoteApprovalForm = ({
                     <File className="w-5 h-5 mr-2 text-blue-500" />
                     <div>
                       <p className="font-medium">{file.file_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Téléversé le {format(new Date(file.uploaded_at), 'PPP à HH:mm', {locale: fr})}
-                      </p>
+                      {file.uploaded_at && (
+                        <p className="text-xs text-muted-foreground">
+                          Téléversé le {format(new Date(file.uploaded_at), 'PPP à HH:mm', {locale: fr})}
+                        </p>
+                      )}
                     </div>
                   </a>
                 ))}

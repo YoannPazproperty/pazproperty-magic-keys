@@ -1,3 +1,4 @@
+
 /**
  * Types globaux pour les déclarations, notifications et affaires
  */

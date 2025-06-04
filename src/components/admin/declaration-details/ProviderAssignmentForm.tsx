@@ -1,20 +1,20 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Button } from "../../ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
+import { Label } from "../../ui/label";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { useProviders } from "@/hooks/useProviders";
-import { updateStatusAndNotify } from "@/services/notifications";
+import { Popover, PopoverContent, PopoverTrigger } from "../../ui/popover";
+import { Calendar } from "../../ui/calendar";
+import { useProviders } from "../../../hooks/useProviders";
+import { updateStatusAndNotify } from "../../../services/notifications";
 import { toast } from "sonner";
-import type { Declaration, ServiceProvider } from "@/services/types";
-import { cn } from "@/lib/utils";
+import type { Declaration, ServiceProvider } from "../../../services/types";
+import { cn } from "../../../lib/utils";
 
 interface ProviderAssignmentFormProps {
   declaration: Declaration;
@@ -68,7 +68,7 @@ export const ProviderAssignmentForm = ({
       
       const success = await updateStatusAndNotify(
         declaration.id,
-        "Em espera do encontro de diagnostico",
+        "AWAITING_DIAGNOSTIC",
         { prestador_id: selectedProviderId }
       );
 
@@ -105,7 +105,7 @@ export const ProviderAssignmentForm = ({
 
       const success = await updateStatusAndNotify(
         declaration.id,
-        "Encontramento de diagnostico planeado",
+        "DIAGNOSTIC_SCHEDULED",
         { 
           meeting_date: dateTime.toISOString(),
           meeting_notes: meetingNotes 
@@ -201,7 +201,7 @@ export const ProviderAssignmentForm = ({
                       "w-full justify-start text-left font-normal",
                       !meetingDate && "text-muted-foreground"
                     )}
-                    disabled={isReadOnly || declaration.status === "Encontramento de diagnostico planeado"}
+                    disabled={isReadOnly || declaration.status === "DIAGNOSTIC_SCHEDULED"}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {meetingDate ? format(meetingDate, "PPP", {locale: fr}) : <span>Choisir une date</span>}
@@ -213,7 +213,7 @@ export const ProviderAssignmentForm = ({
                     selected={meetingDate}
                     onSelect={setMeetingDate}
                     initialFocus
-                    disabled={isReadOnly || declaration.status === "Encontramento de diagnostico planeado"}
+                    disabled={isReadOnly || declaration.status === "DIAGNOSTIC_SCHEDULED"}
                   />
                 </PopoverContent>
               </Popover>
@@ -223,7 +223,7 @@ export const ProviderAssignmentForm = ({
                 value={meetingTime}
                 onChange={(e) => setMeetingTime(e.target.value)}
                 className="w-32"
-                disabled={isReadOnly || declaration.status === "Encontramento de diagnostico planeado"}
+                disabled={isReadOnly || declaration.status === "DIAGNOSTIC_SCHEDULED"}
               />
             </div>
           </div>
@@ -235,11 +235,11 @@ export const ProviderAssignmentForm = ({
               value={meetingNotes}
               onChange={(e) => setMeetingNotes(e.target.value)}
               placeholder="Informations complémentaires sur le rendez-vous..."
-              disabled={isReadOnly || declaration.status === "Encontramento de diagnostico planeado"}
+              disabled={isReadOnly || declaration.status === "DIAGNOSTIC_SCHEDULED"}
             />
           </div>
           
-          {declaration.status === "Em espera do encontro de diagnostico" && !isReadOnly && (
+          {declaration.status === "AWAITING_DIAGNOSTIC" && !isReadOnly && (
             <Button
               onClick={handleMeetingSchedule}
               disabled={!meetingDate || isSubmitting}

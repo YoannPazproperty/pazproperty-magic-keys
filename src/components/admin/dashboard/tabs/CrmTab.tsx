@@ -27,5 +27,11 @@ export const CrmTab = () => {
     }
   };
 
-  return <ContactsList contacts={contacts} isLoading={isLoading} />;
+  return (
+    <ContactsList 
+      contacts={contacts} 
+      isLoading={isLoading} 
+      onRefresh={loadContacts}
+    />
+  );
 };

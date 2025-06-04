@@ -1,157 +1,167 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { Button } from "../../ui/button";
+import { Checkbox } from "../../ui/checkbox";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Bell } from "lucide-react";
-import {
-  NotificationPreference
-} from "@/services/types";
-import {
-  saveNotificationPreferences
-} from "@/services/notificationService";
+import { supabase } from "../../../integrations/supabase/client";
+import type { NotificationPreference } from "../../../services/types";
 
-interface NotificationPreferencesCardProps {
-  notificationPreferences: NotificationPreference;
-  setNotificationPreferences: (prefs: NotificationPreference) => void;
-}
+export const NotificationPreferencesCard = () => {
+  const [preferences, setPreferences] = useState<NotificationPreference | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-export const NotificationPreferencesCard = ({ 
-  notificationPreferences, 
-  setNotificationPreferences 
-}: NotificationPreferencesCardProps) => {
-  
-  const handleSaveNotificationPreferences = () => {
+  useEffect(() => {
+    loadPreferences();
+  }, []);
+
+  const loadPreferences = async () => {
     try {
-      saveNotificationPreferences(notificationPreferences);
-      toast.success("Préférences de notification enregistrées");
+      const { data, error } = await supabase
+        .from('notification_preferences')
+        .select('*')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setPreferences(data);
+      } else {
+        // Create default preferences
+        const defaultPrefs: Partial<NotificationPreference> = {
+          email: true,
+          push: false,
+          sms: false,
+          recipientEmail: null,
+          recipientPhone: null,
+        };
+        setPreferences(defaultPrefs as NotificationPreference);
+      }
     } catch (error) {
-      console.error("Error saving notification preferences:", error);
-      toast.error("Erreur lors de l'enregistrement des préférences");
+      console.error('Error loading preferences:', error);
+      toast.error('Erreur lors du chargement des préférences');
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const savePreferences = async () => {
+    if (!preferences) return;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('notification_preferences')
+        .upsert(preferences);
+
+      if (error) throw error;
+
+      toast.success('Préférences sauvegardées');
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const updatePreference = (key: keyof NotificationPreference, value: any) => {
+    if (!preferences) return;
+    setPreferences({
+      ...preferences,
+      [key]: value,
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Préférences de notification</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!preferences) return null;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Préférences de notification</CardTitle>
         <CardDescription>
-          Configurez comment vous souhaitez recevoir les notifications.
+          Configurez comment vous souhaitez recevoir les notifications
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="notify-email" 
-            checked={notificationPreferences.email}
-            onCheckedChange={(checked) => 
-              setNotificationPreferences({
-                ...notificationPreferences,
-                email: checked === true
-              })
-            }
-          />
-          <label
-            htmlFor="notify-email"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Notifications par email
-          </label>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="email"
+              checked={preferences.email || false}
+              onCheckedChange={(checked) => updatePreference('email', checked)}
+            />
+            <Label htmlFor="email">Notifications par email</Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="push"
+              checked={preferences.push || false}
+              onCheckedChange={(checked) => updatePreference('push', checked)}
+            />
+            <Label htmlFor="push">Notifications push</Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="sms"
+              checked={preferences.sms || false}
+              onCheckedChange={(checked) => updatePreference('sms', checked)}
+            />
+            <Label htmlFor="sms">Notifications SMS</Label>
+          </div>
         </div>
-        
-        {notificationPreferences.email && (
-          <div className="ml-6 space-y-2">
-            <label htmlFor="recipient-email" className="text-sm font-medium">
-              Email du destinataire
-            </label>
+
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="recipientEmail">Email de réception</Label>
             <Input
-              id="recipient-email"
+              id="recipientEmail"
               type="email"
-              placeholder="email@exemple.com"
-              value={notificationPreferences.recipientEmail || ''}
-              onChange={(e) => 
-                setNotificationPreferences({
-                  ...notificationPreferences,
-                  recipientEmail: e.target.value
-                })
-              }
+              value={preferences.recipientEmail || ''}
+              onChange={(e) => updatePreference('recipientEmail', e.target.value)}
+              placeholder="admin@example.com"
             />
           </div>
-        )}
-        
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="notify-sms" 
-            checked={notificationPreferences.sms}
-            onCheckedChange={(checked) => 
-              setNotificationPreferences({
-                ...notificationPreferences,
-                sms: checked === true
-              })
-            }
-          />
-          <label
-            htmlFor="notify-sms"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Notifications par SMS
-          </label>
-        </div>
-        
-        {notificationPreferences.sms && (
-          <div className="ml-6 space-y-2">
-            <label htmlFor="recipient-phone" className="text-sm font-medium">
-              Numéro de téléphone
-            </label>
+
+          <div>
+            <Label htmlFor="recipientPhone">Téléphone de réception</Label>
             <Input
-              id="recipient-phone"
+              id="recipientPhone"
               type="tel"
-              placeholder="+33 6 12 34 56 78"
-              value={notificationPreferences.recipientPhone || ''}
-              onChange={(e) => 
-                setNotificationPreferences({
-                  ...notificationPreferences,
-                  recipientPhone: e.target.value
-                })
-              }
+              value={preferences.recipientPhone || ''}
+              onChange={(e) => updatePreference('recipientPhone', e.target.value)}
+              placeholder="+33123456789"
             />
           </div>
-        )}
-        
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="notify-push" 
-            checked={notificationPreferences.push}
-            onCheckedChange={(checked) => 
-              setNotificationPreferences({
-                ...notificationPreferences,
-                push: checked === true
-              })
-            }
-          />
-          <label
-            htmlFor="notify-push"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Notifications push dans l'interface
-          </label>
         </div>
-      </CardContent>
-      <CardFooter>
-        <Button onClick={handleSaveNotificationPreferences}>
-          <Bell className="mr-2 h-4 w-4" />
-          Enregistrer les préférences
+
+        <Button onClick={savePreferences} disabled={isSaving}>
+          {isSaving ? 'Sauvegarde...' : 'Sauvegarder les préférences'}
         </Button>
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 };

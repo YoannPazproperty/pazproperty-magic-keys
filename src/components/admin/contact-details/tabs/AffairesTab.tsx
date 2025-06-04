@@ -103,7 +103,7 @@ export const AffairesTab = ({ contact }: AffairesTabProps) => {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {affaires.map((affaire) => (
+          {affaires.map((affaire: Affaire) => (
             <Card key={affaire.id} className="cursor-pointer hover:shadow-md transition-shadow">
               <CardHeader 
                 className="pb-3"
@@ -182,8 +182,8 @@ export const AffairesTab = ({ contact }: AffairesTabProps) => {
       <AffaireFormDialog
         isOpen={isFormOpen}
         onClose={handleFormClose}
-        contactId={contact.id}
-        initialData={editingAffaire}
+        contact={contact}
+        affaire={editingAffaire}
       />
 
       <AffaireDetailsDialog

@@ -1,218 +1,194 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
 import { ServiceProviderFormDialog } from "./ServiceProviderFormDialog";
-import { Button } from "@/components/ui/button";
-import { Plus, Edit, Trash } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { ServiceProvider } from "@/services/types";
-import { deleteProvider } from "@/services/providers/providerQueries";
+import { getProviders } from "../../services/providers/providerQueries";
+import { deleteProvider } from "../../services/providers/providerQueries";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Edit, Trash2, Plus, Search } from "lucide-react";
+import type { ServiceProvider } from "../../services/types";
 
-interface ProvidersListProps {
-  providers: ServiceProvider[];
-  isLoading: boolean;
-  onRefresh: () => void;
-}
+export const ProvidersList = () => {
+  const [providers, setProviders] = useState<ServiceProvider[]>([]);
+  const [filteredProviders, setFilteredProviders] = useState<ServiceProvider[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | undefined>(undefined);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-export function ProvidersList({ providers, isLoading, onRefresh }: ProvidersListProps) {
-  const [formDialogOpen, setFormDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | null>(null);
-  const [providerToDelete, setProviderToDelete] = useState<ServiceProvider | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  useEffect(() => {
+    loadProviders();
+  }, []);
 
-  const handleEdit = (provider: ServiceProvider) => {
-    setSelectedProvider(provider);
-    setFormDialogOpen(true);
-  };
+  useEffect(() => {
+    const filtered = providers.filter(provider =>
+      provider.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      provider.nome_gerente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      provider.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      provider.tipo_de_obras.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredProviders(filtered);
+  }, [providers, searchTerm]);
 
-  const handleDelete = async (provider: ServiceProvider) => {
-    setProviderToDelete(provider);
-    setErrorMessage(null);
-    setDeleteDialogOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!providerToDelete) return;
-    
-    setIsDeleting(true);
-    setErrorMessage(null);
-    
+  const loadProviders = async () => {
+    setIsLoading(true);
     try {
-      console.log(`Confirming deletion of provider: ${providerToDelete.empresa}`);
-      const success = await deleteProvider(providerToDelete.id);
-      
-      if (success) {
-        toast.success("Prestador excluído com sucesso");
-        setDeleteDialogOpen(false);
-        setProviderToDelete(null);
-        onRefresh();
-      } else {
-        const consoleError = console.error;
-        console.error = (...args) => {
-          // Capture error messages about declarations
-          const errorString = args.join(' ');
-          if (errorString.includes('declarations') && !errorMessage) {
-            setErrorMessage("Este prestador está associado a declarações. As associações foram removidas e você pode tentar excluir novamente.");
-          }
-          return consoleError.apply(console, args);
-        };
-        
-        toast.error("Erro ao excluir prestador", {
-          description: "Verifique os logs do console para mais detalhes."
-        });
-        console.error = consoleError;
-      }
+      const data = await getProviders();
+      setProviders(data);
     } catch (error) {
-      console.error("Exception during provider deletion:", error);
-      toast.error("Erro ao excluir prestador", {
-        description: "Ocorreu uma exceção durante a exclusão."
-      });
+      console.error("Error loading providers:", error);
+      toast.error("Erreur lors du chargement des prestataires");
     } finally {
-      setIsDeleting(false);
+      setIsLoading(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="rounded-lg border bg-card p-8">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
+  const handleEdit = (provider: ServiceProvider) => {
+    setSelectedProvider(provider);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = async (providerId: string) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer ce prestataire ?")) {
+      try {
+        await deleteProvider(providerId);
+        await loadProviders();
+        toast.success("Prestataire supprimé avec succès");
+      } catch (error) {
+        console.error("Error deleting provider:", error);
+        toast.error("Erreur lors de la suppression du prestataire");
+      }
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setIsFormOpen(false);
+    setSelectedProvider(undefined);
+    loadProviders();
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setSelectedProvider(undefined);
+  };
+
+  const getTypeColor = (type: string) => {
+    const colors = {
+      "Eletricidade": "bg-yellow-100 text-yellow-800",
+      "Canalização": "bg-blue-100 text-blue-800",
+      "Alvenaria": "bg-gray-100 text-gray-800",
+      "Caixilharias": "bg-green-100 text-green-800",
+      "Obras gerais": "bg-purple-100 text-purple-800",
+    };
+    return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
+  };
 
   return (
-    <>
-      <div className="rounded-lg border bg-card">
-        <div className="flex justify-between items-center p-4">
-          <h2 className="text-lg font-semibold">Prestadores de Serviços</h2>
-          <Button onClick={() => setFormDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Prestador
-          </Button>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Prestataires de services</h2>
+          <p className="text-muted-foreground">
+            Gérez les prestataires de services et leurs spécialités
+          </p>
         </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Empresa</TableHead>
-              <TableHead>Tipo de Obras</TableHead>
-              <TableHead>Nome do Gerente</TableHead>
-              <TableHead>Contato</TableHead>
-              <TableHead>Cidade</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {providers.map((provider) => (
-              <TableRow key={provider.id}>
-                <TableCell className="font-medium">{provider.empresa}</TableCell>
-                <TableCell>{provider.tipo_de_obras}</TableCell>
-                <TableCell>{provider.nome_gerente}</TableCell>
-                <TableCell>
-                  {provider.email}
-                  {provider.telefone && <div className="text-sm text-muted-foreground">{provider.telefone}</div>}
-                </TableCell>
-                <TableCell>{provider.cidade || "-"}</TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(provider)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(provider)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {providers.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  Nenhum prestador de serviços cadastrado
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <Button onClick={() => setIsFormOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau prestataire
+        </Button>
       </div>
 
-      <ServiceProviderFormDialog
-        isOpen={formDialogOpen}
-        onClose={() => {
-          setFormDialogOpen(false);
-          setSelectedProvider(null);
-        }}
-        onSuccess={() => {
-          setFormDialogOpen(false);
-          setSelectedProvider(null);
-          onRefresh();
-        }}
-        providerToEdit={selectedProvider}
-      />
+      <div className="flex items-center space-x-2">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Rechercher par entreprise, manager, email ou type..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o prestador "{providerToDelete?.empresa}"?
-              Esta ação não pode ser desfeita.
-              {errorMessage && (
-                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md">
-                  {errorMessage}
+      {isLoading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                 </div>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setProviderToDelete(null);
-              setErrorMessage(null);
-            }} disabled={isDeleting}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} disabled={isDeleting}>
-              {isDeleting ? (
-                <>
-                  <span className="animate-spin mr-2">⟳</span>
-                  Excluindo...
-                </>
-              ) : (
-                "Excluir"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : filteredProviders.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="text-muted-foreground">
+              {searchTerm ? "Aucun prestataire trouvé pour cette recherche" : "Aucun prestataire trouvé"}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredProviders.map((provider) => (
+            <Card key={provider.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <CardTitle className="text-lg">{provider.empresa}</CardTitle>
+                    <CardDescription>{provider.nome_gerente}</CardDescription>
+                  </div>
+                  <Badge className={getTypeColor(provider.tipo_de_obras)}>
+                    {provider.tipo_de_obras}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="text-sm">
+                  <p><span className="font-medium">Email:</span> {provider.email}</p>
+                  {provider.telefone && (
+                    <p><span className="font-medium">Téléphone:</span> {provider.telefone}</p>
+                  )}
+                  {provider.cidade && (
+                    <p><span className="font-medium">Ville:</span> {provider.cidade}</p>
+                  )}
+                  {provider.nif && (
+                    <p><span className="font-medium">NIF:</span> {provider.nif}</p>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(provider)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(provider.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <ServiceProviderFormDialog
+        provider={selectedProvider}
+        isOpen={isFormOpen}
+        onClose={handleFormClose}
+        onSuccess={handleFormSuccess}
+      />
+    </div>
   );
-}
+};
