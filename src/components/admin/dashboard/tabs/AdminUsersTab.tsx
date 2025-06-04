@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,7 +70,7 @@ export const AdminUsersTab = () => {
     loadUsers();
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return "Date inconnue";
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -206,7 +207,7 @@ export const AdminUsersTab = () => {
             setSelectedUser(null);
           }}
           onSuccess={handleDeleteSuccess}
-          userId={selectedUser?.user_id || null}
+          userId={selectedUser?.user_id || ""}
           userName={selectedUser?.name || ''}
           userEmail={selectedUser?.email || ''}
         />

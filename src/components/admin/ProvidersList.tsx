@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -185,6 +184,7 @@ export const ProvidersList = () => {
 
       <ServiceProviderFormDialog
         selectedProvider={selectedProvider}
+        providerToEdit={selectedProvider}
         isOpen={isFormOpen}
         onClose={handleFormClose}
         onSuccess={handleFormSuccess}

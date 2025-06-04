@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 import type { ServiceProvider } from "../../../services/types";
 
@@ -20,4 +21,5 @@ export interface ServiceProviderFormDialogProps {
   onClose: () => void;
   onSuccess: () => void;
   providerToEdit?: ServiceProvider;
+  selectedProvider?: ServiceProvider;
 }

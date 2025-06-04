@@ -13,4 +13,5 @@ const LoadingScreen = ({ checkingRole }: LoadingScreenProps) => {
   );
 };
 
+export { LoadingScreen };
 export default LoadingScreen;

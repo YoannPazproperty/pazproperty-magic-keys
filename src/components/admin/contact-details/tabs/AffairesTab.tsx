@@ -50,6 +50,10 @@ export const AffairesTab = ({ contact }: AffairesTabProps) => {
     setSelectedAffaire(null);
   };
 
+  const handleDetailsUpdate = () => {
+    refreshAffaires();
+  };
+
   const getStatutColor = (statut: string) => {
     switch (statut) {
       case "Initial":
@@ -190,6 +194,7 @@ export const AffairesTab = ({ contact }: AffairesTabProps) => {
         affaireId={selectedAffaire?.id || null}
         isOpen={isDetailsOpen}
         onClose={handleDetailsClose}
+        onUpdate={handleDetailsUpdate}
       />
     </div>
   );

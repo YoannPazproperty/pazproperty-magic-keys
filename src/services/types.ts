@@ -12,7 +12,15 @@ export type DeclarationStatus =
   | "CANCELLED"
   | "QUOTE_RECEIVED"
   | "IN_REPAIR"
-  | "RESOLVED";
+  | "RESOLVED"
+  | "Novo"
+  | "Transmitido"
+  | "Orçamento recebido"
+  | "Em curso de reparação"
+  | "Resolvido"
+  | "Em espera do encontro de diagnostico"
+  | "Encontramento de diagnostico planeado"
+  | "Annulé";
 
 // --- Prestataires de services
 export interface ServiceProvider {
@@ -25,7 +33,7 @@ export interface ServiceProvider {
   endereco?: string | null;
   codigo_postal?: string | null;
   nif?: string | null;
-  tipo_de_obras: "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais";
+  tipo_de_obras: "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais" | string;
   created_at?: string;
   deleted_at?: string | null;
 }
@@ -75,7 +83,7 @@ export interface CommercialContact {
   nome: string;
   email: string;
   telefone: string | null;
-  tipo: "Proprietario" | "Inquilino" | "Outros" | "Agente Imobiliario";
+  tipo: "Proprietario" | "Inquilino" | "Outros" | "Agente Imobiliario" | string;
   mensagem: string;
   created_at: string;
 }
@@ -159,7 +167,7 @@ export interface Affaire {
   remuneration_payee: number | null;
   date_paiement: string | null;
   notes: string | null;
-  created_at?: string;
+  created_at?: string | null;
   updated_at?: string | null;
 }
 

@@ -26,14 +26,22 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-interface UserCreationFormProps {
+export interface UserCreationFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
+  context?: string;
+  showRoleSelector?: boolean;
+  allowedRoles?: string[];
+  additionalMetadata?: { is_company_user: boolean; domain: string };
 }
 
 export const UserCreationForm: React.FC<UserCreationFormProps> = ({
   onSuccess,
   onCancel,
+  context,
+  showRoleSelector = true,
+  allowedRoles = ["admin", "employee", "provider", "customer", "user", "referral_partner", "manager"],
+  additionalMetadata,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
@@ -59,6 +67,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
         role: data.role as UserRole,
         metadata: {
           userName: data.userName,
+          ...additionalMetadata,
         },
       });
 
@@ -96,6 +105,7 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
         <CardTitle>Créer un utilisateur</CardTitle>
         <CardDescription>
           Remplissez les informations pour créer un nouvel utilisateur
+          {context && ` (Contexte: ${context})`}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -133,35 +143,41 @@ export const UserCreationForm: React.FC<UserCreationFormProps> = ({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rôle</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value || ""}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez un rôle" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="admin">Administrateur</SelectItem>
-                      <SelectItem value="employee">Employé</SelectItem>
-                      <SelectItem value="provider">Prestataire</SelectItem>
-                      <SelectItem value="customer">Client</SelectItem>
-                      <SelectItem value="user">Utilisateur</SelectItem>
-                      <SelectItem value="referral_partner">Partenaire</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {showRoleSelector && (
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rôle</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionnez un rôle" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {allowedRoles.map((role) => (
+                          <SelectItem key={role} value={role}>
+                            {role === "admin" ? "Administrateur" :
+                             role === "employee" ? "Employé" :
+                             role === "provider" ? "Prestataire" :
+                             role === "customer" ? "Client" :
+                             role === "user" ? "Utilisateur" :
+                             role === "referral_partner" ? "Partenaire" :
+                             role === "manager" ? "Manager" : role}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
