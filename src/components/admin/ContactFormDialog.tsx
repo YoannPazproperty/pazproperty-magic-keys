@@ -10,7 +10,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import type { CommercialContact } from "../../services/types";
-import { createContact, updateContact } from "../../services/contacts/contactQueries";
 
 // Define the form schema with required fields matching CommercialContact requirements
 const contactFormSchema = z.object({
@@ -49,8 +48,9 @@ export function ContactFormDialog({ isOpen, onClose, onSuccess, contactToEdit }:
     setIsSubmitting(true);
     
     try {
+      const contactQueries = await import("../../services/contacts/contactQueries");
       if (isEditing && contactToEdit) {
-        const updatedContact = await updateContact(contactToEdit.id, data);
+        const updatedContact = await contactQueries.updateContact(contactToEdit.id, data);
         
         if (updatedContact) {
           toast.success("Contato atualizado com sucesso");
@@ -60,7 +60,7 @@ export function ContactFormDialog({ isOpen, onClose, onSuccess, contactToEdit }:
         }
       } else {
         // Ensure all required fields are present for create operation
-        const newContact = await createContact({
+        const newContact = await contactQueries.createContact({
           nome: data.nome,
           email: data.email,
           telefone: data.telefone || null,

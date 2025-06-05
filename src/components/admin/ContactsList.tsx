@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import type { CommercialContact } from "@/services/types";
-import { deleteContact } from "../../services/contacts/contactQueries";
 import { ContactFormDialog } from "./ContactFormDialog";
 import { ContactDetailsDialog } from "./contact-details/ContactDetailsDialog";
 
@@ -59,6 +58,7 @@ export const ContactsList = ({ contacts, isLoading, onRefresh }: ContactsListPro
     if (!contactToDelete) return;
     
     try {
+      const { deleteContact } = await import("../../services/contacts/contactQueries");
       const success = await deleteContact(contactToDelete.id);
       
       if (success) {

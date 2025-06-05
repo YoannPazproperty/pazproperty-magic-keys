@@ -15,11 +15,21 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    // Désactiver l’optimisation de cette dépendance
+    // Désactiver l'optimisation de cette dépendance
     exclude: ["lovable-tagger"]
   },
   server: {
     port: 8080,
     host: "0.0.0.0",
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          vendor: ['@tanstack/react-query', '@supabase/supabase-js']
+        }
+      }
+    }
+  }
 });
