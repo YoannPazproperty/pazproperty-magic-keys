@@ -1,7 +1,5 @@
 import express from "express";
-import dotenv from "dotenv";
-
-dotenv.config(); // Charge les variables d'environnement depuis .env
+import declarationRoutes from './routes/declarationRoutes';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -14,7 +12,6 @@ app.get("/ping", (req, res) => {
 });
 
 // --- Ici viendront tes routes pour le MCP ---
-import declarationRoutes from './routes/declarationRoutes';
 app.use('/api/declarations', declarationRoutes);
 // -------------------------------------------
 
