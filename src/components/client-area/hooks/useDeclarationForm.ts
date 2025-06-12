@@ -1,196 +1,142 @@
-
-import { useState, useEffect } from "react";
-import { UseFormReturn } from "react-hook-form";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { toast } from "sonner";
-import { FormValues, mapIssueTypeToMondayFormat } from "../schema";
-import { addWithMedia, sendToExternalService } from "@/services/declarationService";
-import { isSupabaseConnected, isStorageConnected } from "@/services/supabaseService";
+import { Declaration } from "@/services/types";
+import { createSupabaseDeclaration } from "@/services/declarations/supabaseDeclarationMutations";
+import { declarationFormSchema } from "../schema";
+import { supabase } from "@/integrations/supabase/client";
 
-interface ConnectionStatus {
-  initialized: boolean;
-  database: boolean;
-  storage: boolean;
-}
+const uploadFiles = async (files: File[]): Promise<string[]> => {
+  const uploadedUrls: string[] = [];
 
-interface UseDeclarationFormProps {
-  form: UseFormReturn<FormValues>;
-  onSuccess: () => void;
-  connectionStatus?: ConnectionStatus;
-}
+  for (const file of files) {
+    const filePath = `public/${Date.now()}-${file.name}`;
+    const { data, error } = await supabase.storage
+      .from("declaration-media")
+      .upload(filePath, file);
 
-export const useDeclarationForm = ({ form, onSuccess, connectionStatus }: UseDeclarationFormProps) => {
+    if (error) {
+      toast.error("Erro no upload do ficheiro", { description: error.message });
+      throw error;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("declaration-media")
+      .getPublicUrl(data.path);
+
+    uploadedUrls.push(publicUrlData.publicUrl);
+  }
+
+  return uploadedUrls;
+};
+
+export const useDeclarationForm = (formRef: React.RefObject<HTMLFormElement>) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
-  const [supabaseStatus, setSupabaseStatus] = useState<{
-    database: boolean;
-    storage: boolean;
-  } | null>(connectionStatus ? {
-    database: connectionStatus.database,
-    storage: connectionStatus.storage
-  } : null);
 
-  // Update local state when connectionStatus changes
-  useEffect(() => {
-    if (connectionStatus) {
-      setSupabaseStatus({
-        database: connectionStatus.database,
-        storage: connectionStatus.storage
+  const form = useForm<z.infer<typeof declarationFormSchema>>({
+    resolver: zodResolver(declarationFormSchema),
+    defaultValues: {
+      nif: "",
+      firstName: "",
+      lastName: "",
+      telefone: "",
+      email: "",
+      confirmEmail: "",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      postalCode: "",
+      problemType: undefined,
+      description: "",
+      urgency: "low",
+    },
+  });
+
+  const handleMediaDrop = (
+    acceptedFiles: File[],
+    rejectedFiles: any[],
+    event: React.DragEvent<HTMLDivElement>
+  ) => {
+    if (rejectedFiles && rejectedFiles.length > 0) {
+      toast.error("Erro no upload", {
+        description: "Alguns ficheiros foram rejeitados.",
       });
     }
-  }, [connectionStatus]);
-
-  // Check Supabase connection status on load if not provided
-  useEffect(() => {
-    if (!connectionStatus) {
-      const checkSupabaseConnection = async () => {
-        try {
-          console.log("useDeclarationForm: Checking Supabase connection on load...");
-          
-          // Check database connection
-          const dbConnected = await isSupabaseConnected();
-          console.log("useDeclarationForm: Database connection status:", dbConnected);
-          
-          // Check storage connection
-          const storageConnected = await isStorageConnected();
-          console.log("useDeclarationForm: Storage connection status:", storageConnected);
-          
-          setSupabaseStatus({
-            database: dbConnected,
-            storage: storageConnected
-          });
-          
-          if (dbConnected && storageConnected) {
-            toast.success("Conectado ao Supabase", { 
-              description: "Banco de dados e armazenamento operacionais."
-            });
-          } else if (dbConnected) {
-            toast.info("Conectado parcialmente ao Supabase", { 
-              description: "Banco de dados conectado, armazenamento pode estar limitado."
-            });
-          } else {
-            toast.error("Erro de conexão", { 
-              description: "Não é possível usar o aplicativo sem conexão ao Supabase."
-            });
-          }
-        } catch (error) {
-          console.error("useDeclarationForm: Error checking Supabase connection:", error);
-          setSupabaseStatus({
-            database: false,
-            storage: false
-          });
-          toast.error("Erro ao verificar conexão", { 
-            description: "Não é possível usar o aplicativo sem conexão ao Supabase."
-          });
-        }
-      };
-      
-      checkSupabaseConnection();
-    }
-  }, [connectionStatus]);
-
-  const handleFileChange = (files: File[]) => {
-    console.log("useDeclarationForm: Files changed:", files);
-    setMediaFiles(files);
+    setMediaFiles((prevFiles) => [...prevFiles, ...acceptedFiles]);
   };
 
-  const handleSubmit = async (values: FormValues) => {
-    console.log("useDeclarationForm: Form submission started");
+  const handleRemoveMedia = (index: number) => {
+    setMediaFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  };
+
+  const onSubmit = async (values: z.infer<typeof declarationFormSchema>) => {
     setIsSubmitting(true);
-    
     try {
-      // Vérifier si Supabase est connecté avant de soumettre
-      if (!supabaseStatus?.database || !supabaseStatus?.storage) {
-        toast.error("Sem conexão ao Supabase", { 
-          description: "Não é possível enviar o formulário sem conexão ao Supabase."
-        });
-        setIsSubmitting(false);
-        return;
+      let uploadedFileUrls: string[] = [];
+      if (mediaFiles.length > 0) {
+        uploadedFileUrls = await uploadFiles(mediaFiles);
       }
-      
-      console.log("useDeclarationForm: Form data:", values);
-      console.log("useDeclarationForm: Media files:", mediaFiles);
-      console.log("useDeclarationForm: Supabase status:", supabaseStatus);
-      
-      // Prepare declaration data
-      const fullAddress = `${values.addressLine1}${values.addressLine2 ? ', ' + values.addressLine2 : ''}`;
-      const issueType = mapIssueTypeToMondayFormat(values.problemType);
-      
-      const declarationData = {
+
+      const newDeclaration: Declaration = {
+        id: crypto.randomUUID(),
         name: `${values.firstName} ${values.lastName}`,
         email: values.email,
         phone: values.telefone,
-        property: fullAddress,
+        property: `${values.addressLine1}${
+          values.addressLine2 ? `, ${values.addressLine2}` : ""
+        }`,
         city: values.city,
         postalCode: values.postalCode,
-        issueType: issueType,
+        issueType: values.problemType,
         description: values.description,
         urgency: values.urgency,
-        nif: values.nif,
-        mediaFiles: null,
-        mondayId: null,
-        prestador_id: null,
-        prestador_assigned_at: null
+        status: "Novo",
+        submittedAt: new Date().toISOString(),
+        mediaFiles: uploadedFileUrls,
       };
-      
-      console.log("useDeclarationForm: Submitting declaration data:", declarationData);
-      
+
+      await createSupabaseDeclaration(newDeclaration);
+      toast.success("Declaração enviada com sucesso!");
+
+      // Envoyer l'email de confirmation au client
       try {
-        // Add declaration with media files
-        const newDeclaration = await addWithMedia(declarationData, mediaFiles);
-        console.log("useDeclarationForm: Declaration saved:", newDeclaration);
-        
-        // Send to Monday.com with improved error handling
-        try {
-          console.log("useDeclarationForm: Sending to Monday.com:", newDeclaration);
-          const mondayResult = await sendToExternalService(newDeclaration);
-          
-          if (mondayResult) {
-            toast.success("Enviado para Monday.com", {
-              description: `ID: ${mondayResult}`
-            });
-            console.log("useDeclarationForm: Successfully sent to Monday.com with ID:", mondayResult);
-          } else {
-            toast.warning("Não enviado para Monday.com", {
-              description: "Será processado manualmente pela equipe."
-            });
-            console.error("useDeclarationForm: Failed to send to Monday.com");
-          }
-        } catch (mondayError) {
-          console.error("useDeclarationForm: Error sending to Monday.com:", mondayError);
-          toast.warning("Erro ao enviar para Monday.com", {
-            description: "Será processado manualmente pela equipe."
-          });
-        }
-        
-        // Reset form and media files
-        form.reset();
-        setMediaFiles([]);
-        
-        // Trigger success callback with delay to ensure states are updated
-        console.log("useDeclarationForm: Triggering onSuccess with 500ms delay...");
-        setTimeout(() => {
-          setIsSubmitting(false);
-          onSuccess();
-          console.log("useDeclarationForm: onSuccess executed");
-        }, 500);
-      } catch (declarationError) {
-        console.error("useDeclarationForm: Error creating declaration:", declarationError);
-        setIsSubmitting(false);
+        await supabase.functions.invoke("send-customer-confirmation", {
+          body: {
+            customerName: `${values.firstName} ${values.lastName}`,
+            customerEmail: values.email,
+          },
+        });
+        toast.info("Email de confirmação enviado.");
+      } catch (emailError) {
+        console.error("Failed to send confirmation email:", emailError);
+        // Ne pas bloquer l'utilisateur, juste logguer l'erreur
       }
+
+      setIsSubmitting(false);
+      if (formRef.current) {
+        formRef.current.reset();
+      }
+      setMediaFiles([]);
+      form.reset();
     } catch (error) {
-      console.error("useDeclarationForm: Error submitting form:", error);
-      toast.error("Erro ao enviar", {
-        description: "Ocorreu um erro ao enviar sua declaração. Por favor, tente novamente."
+      console.error("Error submitting declaration:", error);
+      toast.error("Erro ao enviar declaração", {
+        description:
+          "Ocorreu um erro. Por favor, tente novamente mais tarde.",
       });
       setIsSubmitting(false);
     }
   };
 
   return {
+    form,
+    onSubmit,
     isSubmitting,
+    handleMediaDrop,
+    handleRemoveMedia,
     mediaFiles,
-    handleFileChange,
-    handleSubmit,
-    supabaseStatus
   };
 };

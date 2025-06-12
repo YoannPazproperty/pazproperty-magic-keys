@@ -1,4 +1,3 @@
-
 /**
  * Types globaux pour les déclarations, notifications et affaires
  */
@@ -65,6 +64,8 @@ export interface Declaration {
   submittedAt?: string | null;
   mondayId?: string | null;
   nif?: string | null;
+  appointment_date?: string | null;
+  appointment_notes?: string | null;
 }
 
 // --- Fichiers liés aux déclarations

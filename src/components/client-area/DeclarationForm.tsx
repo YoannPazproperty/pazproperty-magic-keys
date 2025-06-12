@@ -1,118 +1,121 @@
+"use client";
 
-import React from "react";
-import { useForm, FormProvider } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
+import { useRef } from "react";
+import { z } from "zod";
 import { Form } from "@/components/ui/form";
-import FormHeader from "./form-sections/FormHeader";
-import PersonalInfoFields from "./form-sections/PersonalInfoFields";
-import AddressFields from "./form-sections/AddressFields";
-import ProblemTypeField from "./form-sections/ProblemTypeField";
-import DescriptionField from "./form-sections/DescriptionField";
-import MediaUploadField from "./form-sections/MediaUploadField";
-import { formSchema, FormValues } from "./schema";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useDeclarationForm } from "./hooks/useDeclarationForm";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import MediaUpload from "./MediaUpload";
+import FormSection from "./FormSection";
+import FormField from "./FormField";
+import { declarationFormSchema } from "./schema";
 
-interface ConnectionStatus {
-  initialized: boolean;
-  database: boolean;
-  storage: boolean;
-}
-
-interface DeclarationFormProps {
-  onSuccess: () => void;
-  connectionStatus?: ConnectionStatus;
-}
-
-const DeclarationForm: React.FC<DeclarationFormProps> = ({ 
-  onSuccess, 
-  connectionStatus = { initialized: false, database: false, storage: false } 
-}) => {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      nif: "",
-      firstName: "",
-      lastName: "",
-      telefone: "",
-      email: "",
-      confirmEmail: "",
-      addressLine1: "",
-      addressLine2: "",
-      city: "",
-      postalCode: "",
-      problemType: "canalização",
-      description: "",
-      urgency: "medium",
-    },
-  });
-
-  const { 
-    isSubmitting, 
-    handleFileChange, 
-    handleSubmit 
-  } = useDeclarationForm({ 
-    form, 
-    onSuccess,
-    connectionStatus 
-  });
-
-  // Fonction pour gérer la soumission du formulaire
-  const onSubmit = async (values: FormValues) => {
-    console.log("Formulaire soumis, traitement en cours...", values);
-    await handleSubmit(values);
-  };
+const DeclarationForm = () => {
+  const formRef = useRef<HTMLFormElement>(null);
+  const {
+    form,
+    onSubmit,
+    isSubmitting,
+    handleMediaDrop,
+    handleRemoveMedia,
+    mediaFiles,
+  } = useDeclarationForm(formRef);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-      <FormHeader />
-      
-      <FormProvider {...form}>
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>Formulário de Declaração</CardTitle>
+        <CardDescription>
+          Preencha os detalhes abaixo para submeter a sua declaração.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <PersonalInfoFields />
-            <AddressFields />
-            <ProblemTypeField />
-            <DescriptionField />
-            <MediaUploadField 
-              onChange={handleFileChange} 
-              connectionStatus={connectionStatus}
-            />
-            
-            {isSubmitting && (
-              <Alert variant="default" className="bg-blue-50 border-blue-200 animate-pulse">
-                <AlertTitle className="text-blue-700 flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Enviando sua declaração...
-                </AlertTitle>
-                <AlertDescription className="text-blue-600">
-                  Por favor, aguarde enquanto processamos sua declaração. Este processo pode levar alguns segundos.
-                </AlertDescription>
-              </Alert>
-            )}
-            
-            <div className="flex justify-end">
-              <Button 
-                type="submit" 
-                className="bg-brand-blue hover:bg-primary/90"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Enviando...
-                  </span>
-                ) : (
-                  "Enviar Declaração"
-                )}
-              </Button>
-            </div>
+          <form
+            ref={formRef}
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-8"
+          >
+            <FormSection title="Informações Pessoais">
+              <div className="grid md:grid-cols-2 gap-4">
+                <FormField form={form} name="firstName" label="Nome" />
+                <FormField form={form} name="lastName" label="Apelido" />
+                <FormField form={form} name="email" label="Email" type="email" />
+                <FormField
+                  form={form}
+                  name="confirmEmail"
+                  label="Confirmar Email"
+                  type="email"
+                />
+                <FormField form={form} name="telefone" label="Telefone" />
+                <FormField form={form} name="nif" label="NIF" />
+              </div>
+            </FormSection>
+
+            <FormSection title="Detalhes do Imóvel">
+              <FormField form={form} name="addressLine1" label="Endereço Linha 1" />
+              <FormField form={form} name="addressLine2" label="Endereço Linha 2 (Opcional)" />
+              <div className="grid md:grid-cols-2 gap-4">
+                <FormField form={form} name="city" label="Cidade" />
+                <FormField form={form} name="postalCode" label="Código Postal" />
+              </div>
+            </FormSection>
+
+            <FormSection title="Descrição do Problema">
+              <FormField
+                form={form}
+                name="problemType"
+                label="Tipo de Problema"
+                type="select"
+                options={[
+                  { value: "canalização", label: "Canalização" },
+                  { value: "eletricidade", label: "Eletricidade" },
+                  { value: "predial", label: "Predial" },
+                  { value: "outro", label: "Outro" },
+                ]}
+              />
+              <FormField
+                form={form}
+                name="description"
+                label="Descrição Detalhada"
+                type="textarea"
+              />
+              <FormField
+                form={form}
+                name="urgency"
+                label="Nível de Urgência"
+                type="select"
+                options={[
+                  { value: "low", label: "Baixa" },
+                  { value: "medium", label: "Média" },
+                  { value: "high", label: "Alta" },
+                  { value: "emergency", label: "Emergência" },
+                ]}
+              />
+            </FormSection>
+
+            <FormSection title="Ficheiros Multimédia">
+              <MediaUpload
+                onDrop={handleMediaDrop}
+                files={mediaFiles}
+                onRemove={handleRemoveMedia}
+              />
+            </FormSection>
+
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "A enviar..." : "Enviar Declaração"}
+            </Button>
           </form>
         </Form>
-      </FormProvider>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,21 +1,14 @@
 import { Request, Response } from 'express';
-import McpWorkflowService from '../services/mcpWorkflowService';
+import { McpWorkflowService } from '../services/mcpWorkflowService';
 
-// Fournir les variables directement pour contourner le problème du .env
-const serviceOptions = {
-  supabaseUrl: 'https://ubztjjxmldogpwawcnrj.supabase.co',
-  supabaseServiceKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVienRqanhtbGRvZ3B3YXdjbnJqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDI4NTgyMywiZXhwIjoyMDU5ODYxODIzfQ.8DEsR5_oGretND3y8pL6L11zUsqeYMArNehZpQUWnyg'
-};
+const mcpWorkflowService = new McpWorkflowService();
 
-const mcpWorkflowService = new McpWorkflowService(serviceOptions);
-
-export const assignProviderToDeclaration = async (req: Request, res: Response): Promise<void> => {
+export const handleProviderAssignment = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { declarationId } = req.params;
-    const { providerId } = req.body;
+    const { declarationId, providerId } = req.body;
 
-    if (!providerId) {
-      res.status(400).json({ success: false, message: 'Provider ID is required.' });
+    if (!declarationId || !providerId) {
+      res.status(400).json({ success: false, message: 'declarationId and providerId are required.' });
       return;
     }
 
@@ -23,7 +16,7 @@ export const assignProviderToDeclaration = async (req: Request, res: Response): 
 
     res.status(200).json(result);
   } catch (error: any) {
-    console.error('Error in assignProviderToDeclaration controller:', error);
+    console.error('Error in handleProviderAssignment controller:', error);
     res.status(500).json({ success: false, message: error.message || 'An internal server error occurred.' });
   }
 };

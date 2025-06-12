@@ -1,8 +1,9 @@
 import { Router } from 'express';
-import { assignProviderToDeclaration } from '../controllers/declarationController';
+import { handleProviderAssignment } from '../controllers/declarationController';
 
 const router = Router();
 
-router.post('/:declarationId/assign-provider', assignProviderToDeclaration);
+// Cette route sera appelée par le trigger Supabase
+router.post('/', handleProviderAssignment);
 
 export default router;

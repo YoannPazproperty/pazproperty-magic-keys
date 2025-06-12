@@ -1,4 +1,3 @@
-
 import { Declaration } from "../types";
 
 /**
@@ -20,28 +19,40 @@ export const convertToSupabaseFormat = (declaration: Declaration) => {
 };
 
 // Convert Supabase format back to Declaration
-export const convertFromSupabaseFormat = (record: any): Declaration => {
-  let mediaFiles = null;
-  
-  // Parse mediaFiles string back to array if it exists
-  if (record.mediaFiles) {
+export const convertFromSupabaseFormat = (item: any): Declaration => {
+  const mediaFilesRaw = item.mediaFiles;
+  let mediaFiles: string[] = [];
+
+  if (typeof mediaFilesRaw === 'string') {
     try {
-      // Si c'est déjà un array, on le garde tel quel
-      if (Array.isArray(record.mediaFiles)) {
-        mediaFiles = record.mediaFiles;
+      const parsed = JSON.parse(mediaFilesRaw);
+      if (Array.isArray(parsed)) {
+        mediaFiles = parsed;
       } else {
-        // Sinon on essaie de parser le JSON
-        mediaFiles = JSON.parse(record.mediaFiles);
+        mediaFiles = [String(parsed)];
       }
-    } catch (error) {
-      console.error("Error parsing media files:", error);
-      // Si on ne peut pas parser, on le traite comme un tableau avec un seul élément
-      mediaFiles = record.mediaFiles ? [record.mediaFiles] : null;
+    } catch (e) {
+      mediaFiles = [mediaFilesRaw];
     }
+  } else if (Array.isArray(mediaFilesRaw)) {
+    mediaFiles = mediaFilesRaw;
   }
   
   return {
-    ...record,
-    mediaFiles
+    id: item.id,
+    name: item.name,
+    email: item.email,
+    phone: item.phone,
+    property: item.property,
+    city: item.city,
+    postalCode: item.postal_code,
+    issueType: item.issue_type,
+    description: item.description,
+    urgency: item.urgency,
+    status: item.status || "Novo",
+    submittedAt: item.submitted_at,
+    mediaFiles,
+    appointment_date: item.appointment_date,
+    appointment_notes: item.appointment_notes
   };
 };

@@ -28,12 +28,12 @@ export interface ClaimData {
   mediaFiles: string[]; // Array de chemins ou d'objets fichiers
 }
 
-class McpWorkflowService {
+export class McpWorkflowService {
   private supabase: SupabaseClient<Database>;
 
-  constructor(options?: { supabaseUrl?: string, supabaseServiceKey?: string }) {
-    const supabaseUrl = options?.supabaseUrl || process.env.SUPABASE_URL;
-    const supabaseServiceKey = options?.supabaseServiceKey || process.env.SUPABASE_SERVICE_KEY;
+  constructor() {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error("--- DEBUG from McpWorkflowService ---");
@@ -49,35 +49,10 @@ class McpWorkflowService {
 
   async assignProviderAndNotifyWorkflow(declarationId: string, providerId: string) {
     console.log(`McpWorkflowService: Starting workflow for declaration ${declarationId} with provider ${providerId}`);
-
-    // Étape 1: Mettre à jour la déclaration avec le nouveau statut et l'ID du prestataire
-    const updateData: { status: DeclarationStatus; prestador_id: string } = {
-      status: 'Em espera do encontro de diagnostico',
-      prestador_id: providerId,
-    };
-
-    const { data: updatedDeclaration, error: updateError } = await this.supabase
-      .from('declarations')
-      .update(updateData)
-      .eq('id', declarationId)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error(`McpWorkflowService: Error updating declaration:`, updateError);
-      throw new Error(`Failed to update declaration ${declarationId}: ${updateError.message}`);
-    }
-
-    if (!updatedDeclaration) {
-        throw new Error(`Declaration with ID ${declarationId} not found after update.`);
-    }
-
-    console.log(`McpWorkflowService: Successfully updated declaration ${declarationId}.`);
     
-    // ... Le reste de la logique reste le même
     const declarationDetails = await this._getDeclarationDetailsById(declarationId);
     if (!declarationDetails) {
-      throw new Error(`Could not retrieve details for declaration ${declarationId} after update.`);
+      throw new Error(`Could not retrieve details for declaration ${declarationId}.`);
     }
 
     const providerDetails = await this._getProviderDetailsById(providerId);
@@ -86,51 +61,48 @@ class McpWorkflowService {
     }
 
     // --- Logging ---
-    const logAction = async (actor: string, declaration_id: string, action_type: string, details: string) => {
-        const logEntry: HistoriqueActionInsert = {
-            id: uuidv4(),
-            created_at: new Date().toISOString(),
-            utilisateur: actor,
-            affaire_id: declaration_id,
-            action: action_type,
-            notes: details,
-        };
-        const { error } = await this.supabase.from('historique_actions').insert(logEntry);
-        if (error) console.error('Error logging action:', error);
-    };
-
-    logAction(
-      'System',
-      declarationId,
-      'status_update',
-      'Status changed to Em espera do encontro de diagnostico'
-    );
-    logAction(
+    await this._logAction(
       'System',
       declarationId,
       'provider_assigned',
-      `Provider ${providerDetails.empresa} assigned.`
+      `Provider ${providerDetails.empresa} assigned by trigger.`
     );
 
-    // Étape 2: Simuler la notification au prestataire
-    console.log('--- Simulating Email Notification to Provider ---');
-    console.log(`To: ${providerDetails.email}`);
-    console.log(`Subject: Nova declaração de sinistro atribuída: ${declarationDetails.id}`);
-    console.log('Body:');
-    console.log(`  - Cliente: ${declarationDetails.name}`);
-    console.log(`  - Contacto: ${declarationDetails.email}, ${declarationDetails.phone}`);
-    console.log(`  - Morada: ${declarationDetails.property}, ${declarationDetails.postalCode} ${declarationDetails.city}`);
-    console.log(`  - Problema: ${declarationDetails.issueType}`);
-    console.log('-------------------------------------------------');
+    // Étape 2: Appeler l'Edge Function pour notifier le prestataire
+    const notificationPayload = {
+      declarationId: declarationId,
+      providerEmail: providerDetails.email,
+      providerName: providerDetails.empresa,
+      customerName: declarationDetails.name,
+      customerPhone: declarationDetails.phone,
+      customerEmail: declarationDetails.email,
+      customerAddress: `${declarationDetails.property}, ${declarationDetails.postalCode} ${declarationDetails.city}`,
+      interventionType: declarationDetails.issueType,
+      freeTextMessage: declarationDetails.description,
+      mediaLinks: declarationDetails.mediaFiles ? JSON.parse(declarationDetails.mediaFiles) : [],
+    };
 
+    const { data: funcData, error: funcError } = await this.supabase.functions.invoke(
+      'send-provider-notification',
+      { body: notificationPayload }
+    );
+
+    if (funcError) {
+      console.error('McpWorkflowService: Error invoking send-provider-notification function:', funcError);
+      await this._logAction('System', declarationId, 'notification_failed', `Failed to send email to ${providerDetails.empresa}: ${funcError.message}`);
+    } else {
+      console.log('McpWorkflowService: Successfully invoked send-provider-notification function.', funcData);
+      await this._logAction('System', declarationId, 'notification_sent', `Email sent to ${providerDetails.empresa}.`);
+    }
+    
     return {
       success: true,
-      message: `Workflow started for declaration ${declarationId}. Provider ${providerDetails.empresa} assigned and notified.`,
-      data: updatedDeclaration,
+      message: `Workflow initiated for declaration ${declarationId}. Provider ${providerDetails.empresa} will be notified.`,
+      data: { declarationId: declarationId }
     };
   }
 
-  // --- Méthodes privées pour les détails ---
+  // --- Méthodes privées ---
 
   private async _getDeclarationDetailsById(declarationId: string): Promise<DeclarationRow | null> {
     const { data, error } = await this.supabase
@@ -140,7 +112,7 @@ class McpWorkflowService {
       .single();
 
     if (error) {
-      console.error(`McpWorkflowService: Error fetching declaration details:`, error);
+      console.error(`McpWorkflowService: Error fetching declaration details for ID ${declarationId}:`, error);
       return null;
     }
     return data;
@@ -154,50 +126,22 @@ class McpWorkflowService {
       .single();
 
     if (error) {
-      console.error(`McpWorkflowService: Error fetching provider details:`, error);
+      console.error(`McpWorkflowService: Error fetching provider details for ID ${providerId}:`, error);
       return null;
     }
     return data;
   }
 
-  async logAction(actionName: string, metadata: any): Promise<void> {
-    console.log(`McpWorkflowService: Logging action - ${actionName} with metadata:`, metadata);
-    // TODO: Implement actual logging to a database table (e.g., 'historique_actions') if needed
-    // For example:
-    // const { error } = await this.supabase.from('historique_actions').insert([{ 
-    //   action: actionName, 
-    //   details: metadata, 
-    //   declaration_id: metadata.declarationId, // if applicable
-    //   user_id: metadata.userId // if applicable
-    // }]);
-    // if (error) console.error('McpWorkflowService: Error logging action:', error);
-  }
-  
-  // TODO: Add other methods like handleClaimCreation if needed by API endpoints
-
-  private async _updateDeclaration(declarationId: string, newStatus: DeclarationStatus, updates?: object): Promise<DeclarationRow | null> {
-    const updateData: { status: DeclarationStatus; [key: string]: any } = {
-      status: newStatus,
+  private async _logAction(actor: string, declaration_id: string, action_type: string, details: string) {
+    const logEntry: HistoriqueActionInsert = {
+        id: uuidv4(),
+        created_at: new Date().toISOString(),
+        utilisateur: actor,
+        affaire_id: declaration_id,
+        action: action_type,
+        notes: details,
     };
-
-    if (updates) {
-      // ... existing code ...
-    }
-
-    const { data: updatedDeclaration, error: updateError } = await this.supabase
-      .from('declarations')
-      .update(updateData)
-      .eq('id', declarationId)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error(`McpWorkflowService: Error updating declaration:`, updateError);
-      return null;
-    }
-
-    return updatedDeclaration;
+    const { error } = await this.supabase.from('historique_actions').insert(logEntry);
+    if (error) console.error('Error logging action:', error);
   }
 }
-
-export default McpWorkflowService; 

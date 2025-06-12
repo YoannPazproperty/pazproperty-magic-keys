@@ -1,10 +1,11 @@
-
 import { Resend } from "npm:resend@2.0.0";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const APP_URL = Deno.env.get("APP_URL") || "http://localhost:3000";
 
 interface NotificationPayload {
+  declarationId: string;
   providerEmail: string;
   providerName: string;
   customerName: string;
@@ -35,19 +36,22 @@ Deno.serve(async (req) => {
     });
     
     // Validate required fields
-    if (!payload.providerEmail || !payload.providerName) {
-      throw new Error("Les champs 'providerEmail' et 'providerName' sont obligatoires");
+    if (!payload.providerEmail || !payload.providerName || !payload.declarationId) {
+      throw new Error("Os campos 'providerEmail', 'providerName' e 'declarationId' são obrigatórios");
     }
     
+    // Generate scheduling link
+    const schedulingLink = `${APP_URL}/agendamento/${payload.declarationId}`;
+
     // Generate media links HTML if provided
     let mediaLinksHtml = '';
     if (payload.mediaLinks && payload.mediaLinks.length > 0) {
       const linksHtml = payload.mediaLinks.map((link, index) => 
-        `<li><a href="${link}" target="_blank">Media ${index + 1}</a></li>`
+        `<li><a href="${link}" target="_blank">Mídia ${index + 1}</a></li>`
       ).join('');
       mediaLinksHtml = `<ul>${linksHtml}</ul>`;
     } else {
-      mediaLinksHtml = "<p>Aucun media transmis</p>";
+      mediaLinksHtml = "<p>Nenhuma mídia transmitida</p>";
     }
 
     // Create email HTML content
@@ -57,7 +61,7 @@ Deno.serve(async (req) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Nouvelle intervention assignée</title>
+      <title>Nova intervenção atribuída</title>
       <style>
         body {
           font-family: Arial, sans-serif;
@@ -117,6 +121,10 @@ Deno.serve(async (req) => {
           font-size: 14px;
           color: #777;
         }
+        .logo {
+          max-width: 150px;
+          margin-bottom: 10px;
+        }
         ul {
           padding-left: 20px;
         }
@@ -126,6 +134,16 @@ Deno.serve(async (req) => {
         }
         a:hover {
           text-decoration: underline;
+        }
+        .action-button {
+          display: inline-block;
+          background-color: #3498db;
+          color: white;
+          padding: 12px 25px;
+          text-decoration: none;
+          border-radius: 5px;
+          font-size: 16px;
+          margin-top: 20px;
         }
         @media only screen and (max-width: 480px) {
           body {
@@ -140,39 +158,42 @@ Deno.serve(async (req) => {
     <body>
       <div class="container">
         <div class="header">
-          <h1>Pazproperty: Nouvelle Intervention</h1>
+          <h1>Pazproperty: Nova Intervenção</h1>
         </div>
         <div class="content">
-          <p>Bonjour ${payload.providerName},</p>
-          <p>Une nouvelle intervention vous a été assignée.</p>
+          <p>Olá ${payload.providerName},</p>
+          <p>Uma nova intervenção foi-lhe atribuída.</p>
           
-          <h2>Détails du locataire :</h2>
+          <a href="${schedulingLink}" class="action-button" target="_blank">Ver Detalhes e Agendar</a>
+
+          <h2>Detalhes do inquilino:</h2>
           <div class="details">
-            <p><strong>Nom :</strong> ${payload.customerName}</p>
-            <p><strong>Téléphone :</strong> ${payload.customerPhone}</p>
-            <p><strong>Email :</strong> ${payload.customerEmail}</p>
-            <p><strong>Adresse :</strong> ${payload.customerAddress}</p>
+            <p><strong>Nome:</strong> ${payload.customerName}</p>
+            <p><strong>Telefone:</strong> ${payload.customerPhone}</p>
+            <p><strong>Email:</strong> ${payload.customerEmail}</p>
+            <p><strong>Endereço:</strong> ${payload.customerAddress}</p>
           </div>
           
-          <h2>Type d'intervention :</h2>
+          <h2>Tipo de intervenção:</h2>
           <div class="intervention-type">
             ${payload.interventionType}
           </div>
           
-          <h2>Message du client :</h2>
+          <h2>Mensagem do cliente:</h2>
           <div class="message-box">
-            ${payload.freeTextMessage || "Aucun message supplémentaire"}
+            ${payload.freeTextMessage || "Nenhuma mensagem adicional"}
           </div>
           
-          <h2>Médias transmis :</h2>
+          <h2>Mídias transmitidas:</h2>
           ${mediaLinksHtml}
           
-          <p>Merci de prendre contact avec le locataire dans les plus brefs délais.</p>
+          <p>Por favor, utilize o botão acima para ver todos os detalhes e agendar a sua intervenção.</p>
           
-          <p>Bien cordialement,<br>L'équipe Pazproperty.</p>
+          <p>Com os melhores cumprimentos,<br>A equipa Pazproperty.</p>
         </div>
         <div class="footer">
-          <p>&copy; 2024 Pazproperty. Tous droits réservés.</p>
+          <img src="https://ubztjjxmldogpwawcnrj.supabase.co/storage/v1/object/public/assets/PP%20Logo%20Principal.png" alt="Pazproperty Logo" class="logo">
+          <p>&copy; 2024 Pazproperty. Todos os direitos reservados.</p>
         </div>
       </div>
     </body>
@@ -184,7 +205,7 @@ Deno.serve(async (req) => {
     const { data, error: sendError } = await resend.emails.send({
       from: "Pazproperty <yoann@pazproperty.pt>",
       to: payload.providerEmail,
-      subject: "✅ Nouvelle intervention assignée - Pazproperty",
+      subject: "✅ Nova intervenção atribuída - Pazproperty",
       html: emailHtml
     });
 
@@ -193,7 +214,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Erreur lors de l'envoi du mail: ${sendError.message}` 
+          error: `Erro ao enviar o email: ${sendError.message}` 
         }),
         {
           status: 500,
@@ -220,7 +241,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: err instanceof Error ? err.message : "Une erreur inconnue s'est produite" 
+        error: err instanceof Error ? err.message : "Ocorreu um erro desconhecido" 
       }),
       {
         status: 500,
