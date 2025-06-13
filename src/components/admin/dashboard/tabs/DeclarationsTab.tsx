@@ -1,53 +1,18 @@
+import DeclarationsTable from "@/components/admin/DeclarationsTable";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-import { useState, useEffect } from "react";
-import { DeclarationList } from "../../DeclarationList";
-import { getDeclarations } from "../../../../services/declarationService";
-import { updateStatusAndNotify } from "../../../../services/notifications";
-import { toast } from "sonner";
-import type { Declaration } from "../../../../services/types";
-
-export const DeclarationsTab = () => {
-  const [declarations, setDeclarations] = useState<Declaration[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    loadDeclarations();
-  }, []);
-
-  const loadDeclarations = async () => {
-    setIsLoading(true);
-    try {
-      const allDeclarations = await getDeclarations();
-      console.log("Loaded declarations:", allDeclarations);
-      setDeclarations(allDeclarations);
-    } catch (error) {
-      console.error("Error loading declarations:", error);
-      toast.error("Erreur lors du chargement des déclarations");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleStatusUpdate = async (id: string, status: Declaration["status"]) => {
-    try {
-      const success = await updateStatusAndNotify(id, status);
-      if (success) {
-        await loadDeclarations();
-        toast.success("Statut mis à jour");
-      } else {
-        toast.error("Erreur lors de la mise à jour du statut");
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Erreur lors de la mise à jour du statut");
-    }
-  };
+const DeclarationsTab = () => {
+  const { t } = useLanguage();
 
   return (
-    <DeclarationList 
-      declarations={declarations} 
-      onStatusUpdate={handleStatusUpdate}
-      isLoading={isLoading} 
-    />
+    <div>
+      <h2 className="text-2xl font-bold tracking-tight mb-4">{t('admin.declarations.title')}</h2>
+      <p className="text-muted-foreground mb-6">
+        {t('admin.declarations.description')}
+      </p>
+      <DeclarationsTable />
+    </div>
   );
 };
+
+export default DeclarationsTab;

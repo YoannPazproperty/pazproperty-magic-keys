@@ -136,6 +136,27 @@ export const translations: TranslationsType = {
     'contact.form.type.owner': 'Proprietário',
     'contact.form.type.tenant': 'Inquilino',
     'contact.form.type.prospect': 'Potencial Cliente',
+
+    // Admin Dashboard
+    'admin.declarations.title': 'Acompanhamento das declarações',
+    'admin.declarations.description': 'Liste de todas as declarações soumises pelos locataires.',
+    
+    // Declarations Table
+    'table.header.customer': 'Cliente',
+    'table.header.issueType': 'Tipo de Problema',
+    'table.header.submissionDate': 'Data de Submissão',
+    'table.header.status': 'Status',
+    'table.header.actions': 'Ações',
+    'table.action.assignProvider': 'Assignar Prestador',
+    'table.loading': 'A carregar declarações...',
+    'table.error': 'Erro ao carregar declarações:',
+
+    // Assign Provider Dialog
+    'dialog.assign.title': 'Assignar um Prestador',
+    'dialog.assign.placeholder': 'Selecione um prestador',
+    'dialog.assign.cancel': 'Cancelar',
+    'dialog.assign.confirm': 'Confirmar Atribuição',
+    'dialog.assign.assigning': 'A assignar...',
   },
   
   // Français
@@ -269,7 +290,28 @@ export const translations: TranslationsType = {
     'contact.form.sending': 'Envoi en cours...',
     'contact.form.type.owner': 'Propriétaire',
     'contact.form.type.tenant': 'Locataire',
-    'contact.form.type.prospect': 'Prospect',
+    'contact.form.type.prospect': 'Potentiel Client',
+
+    // Admin Dashboard
+    'admin.declarations.title': 'Suivi des déclarations',
+    'admin.declarations.description': 'Liste de toutes les déclarations soumises par les locataires.',
+    
+    // Declarations Table
+    'table.header.customer': 'Client',
+    'table.header.issueType': 'Type de Problème',
+    'table.header.submissionDate': 'Date de Soumission',
+    'table.header.status': 'Statut',
+    'table.header.actions': 'Actions',
+    'table.action.assignProvider': 'Assigner Prestataire',
+    'table.loading': 'Chargement des déclarations...',
+    'table.error': 'Erreur lors du chargement des déclarations :',
+
+    // Assign Provider Dialog
+    'dialog.assign.title': 'Assigner un Prestataire',
+    'dialog.assign.placeholder': 'Sélectionnez un prestataire',
+    'dialog.assign.cancel': 'Annuler',
+    'dialog.assign.confirm': 'Confirmer l\'Attribution',
+    'dialog.assign.assigning': 'Assignation...',
   },
   
   // English
@@ -404,5 +446,26 @@ export const translations: TranslationsType = {
     'contact.form.type.owner': 'Owner',
     'contact.form.type.tenant': 'Tenant',
     'contact.form.type.prospect': 'Prospect',
+
+    // Admin Dashboard
+    'admin.declarations.title': 'Acompanhamento das declarações',
+    'admin.declarations.description': 'Liste de todas as declarações soumises pelos locataires.',
+    
+    // Declarations Table
+    'table.header.customer': 'Cliente',
+    'table.header.issueType': 'Tipo de Problema',
+    'table.header.submissionDate': 'Data de Submissão',
+    'table.header.status': 'Status',
+    'table.header.actions': 'Ações',
+    'table.action.assignProvider': 'Assignar Prestador',
+    'table.loading': 'A carregar declarações...',
+    'table.error': 'Erro ao carregar declarações:',
+
+    // Assign Provider Dialog
+    'dialog.assign.title': 'Assignar um Prestador',
+    'dialog.assign.placeholder': 'Selecione um prestador',
+    'dialog.assign.cancel': 'Cancelar',
+    'dialog.assign.confirm': 'Confirmar Atribuição',
+    'dialog.assign.assigning': 'A assignar...',
   }
 };

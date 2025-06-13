@@ -23,7 +23,7 @@ export type DeclarationStatus =
   | string;
 
 // --- Prestataires de services
-export interface ServiceProvider {
+export interface Provider {
   id: string;
   empresa: string;
   nome_gerente: string;
@@ -33,9 +33,16 @@ export interface ServiceProvider {
   endereco?: string | null;
   codigo_postal?: string | null;
   nif?: string | null;
-  tipo_de_obras: "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais" | string;
+  especialidade: "Eletricidade" | "Canalização" | "Alvenaria" | "Caixilharias" | "Obras gerais" | string;
   created_at?: string;
   deleted_at?: string | null;
+}
+
+// Type simple pour les listes déroulantes de prestataires
+export interface ProviderDropdownItem {
+  id: string;
+  name: string;
+  specialty: string;
 }
 
 // --- Déclarations de sinistre
@@ -50,7 +57,7 @@ export interface Declaration {
   status: DeclarationStatus;
   issueType?: string | null;
   description?: string | null;
-  urgency?: string | null;
+  urgency?: "Faible" | "Moyenne" | "Élevée";
   mediaFiles?: string[] | null;
   prestador_id?: string | null;
   prestador_assigned_at?: string | null;
@@ -66,6 +73,13 @@ export interface Declaration {
   nif?: string | null;
   appointment_date?: string | null;
   appointment_notes?: string | null;
+  provider_id?: string;
+  provider_name?: string;
+  remuneration_payee: number | null;
+  date_paiement: string | null;
+  notes: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 // --- Fichiers liés aux déclarations
@@ -208,13 +222,3 @@ export interface HistoriqueActionFormData {
   utilisateur: string | null;
   notes: string | null;
 }
-
-// --- Fonction notification email mock (laisse-la ici pour la compatibilité)
-export const sendNotificationEmail = async (
-  to: string,
-  subject: string,
-  content: string
-): Promise<boolean> => {
-  console.log(`Sending email to ${to} with subject ${subject}`);
-  return true;
-};

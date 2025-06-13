@@ -145,11 +145,19 @@ export const sendNotification = async (
 
 // Send notification email
 export const sendNotificationEmail = async (
-  to: string, 
-  subject: string, 
+  to: string,
+  subject: string,
   content: string
 ): Promise<boolean> => {
-  // This function is a placeholder, it will be implemented elsewhere
-  console.log(`Sending email to ${to} with subject ${subject}`);
-  return true;
+  try {
+    console.log(`Sending email to ${to} with subject "${subject}"`);
+    // Placeholder for actual email sending logic
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+    toast.success("E-mail de notificação enviado (simulado).");
+    return true;
+  } catch (error) {
+    console.error("Failed to send notification email:", error);
+    toast.error("Falha ao enviar e-mail de notificação.");
+    return false;
+  }
 };

@@ -46,7 +46,7 @@ export const AdminLayout = ({
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
       {/* Sidebar */}
       <div
-        className={`${isSidebarOpen ? "w-64" : "w-16"} bg-white border-r transition-width duration-300 ease-in-out flex-shrink-0 hidden md:block`}
+        className={`${isSidebarOpen ? "w-64" : "w-16"} bg-white border-r /*transition-width*/ duration-300 ease-in-out flex-shrink-0 hidden md:block`}
       >
         <div className="h-16 flex items-center px-4 border-b">
           <h1 className={`font-bold text-lg ${isSidebarOpen ? "block" : "hidden"}`}>

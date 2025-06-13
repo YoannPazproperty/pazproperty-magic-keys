@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { DeclarationsTab } from "./tabs/DeclarationsTab";
+import DeclarationsTab from "./tabs/DeclarationsTab";
 import { ConstructionTab } from "./tabs/ConstructionTab";
 import { CrmTab } from "./tabs/CrmTab";
 import { ProvidersTab } from "./tabs/ProvidersTab";
