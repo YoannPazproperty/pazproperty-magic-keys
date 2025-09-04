@@ -4,7 +4,7 @@
  */
 
 // Available deployment targets
-export type DeploymentTarget = 'staging' | 'production';
+export type DeploymentTarget = 'staging';
 
 // Configuration for each target
 export const deploymentTargets = {
@@ -12,11 +12,6 @@ export const deploymentTargets = {
     domain: 'pazproperty-magic-keys.lovable.app',
     label: 'Staging',
     isDefault: true
-  },
-  production: {
-    domain: 'pazproperty.pt',
-    label: 'Production',
-    isDefault: false
   }
 };
 
